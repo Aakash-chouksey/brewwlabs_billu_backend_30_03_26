@@ -40,7 +40,10 @@ exports.addRoll = async (req, res, next) => {
             }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: result, message: "Roll added" });
+        console.log('[ROLL TRACKING CONTROLLER] addRoll result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Roll added" });
     } catch (error) {
         next(error);
     }
@@ -97,7 +100,10 @@ exports.getRollStats = async (req, res, next) => {
             return { outlet, stats, rolls };
         });
 
-        res.json({ success: true, data: result });
+        console.log('[ROLL TRACKING CONTROLLER] getRollStats result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -143,7 +149,10 @@ exports.updateUsage = async (req, res, next) => {
             return { roll, usedLength, notes };
         });
 
-        res.json({ success: true, data: result, message: "Roll usage updated" });
+        console.log('[ROLL TRACKING CONTROLLER] updateUsage result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Roll usage updated" });
     } catch (error) {
         next(error);
     }

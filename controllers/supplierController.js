@@ -24,7 +24,10 @@ exports.getSuppliers = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[SUPPLIER CONTROLLER] getSuppliers result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -60,7 +63,10 @@ exports.createSupplier = async (req, res, next) => {
             }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: result, message: "Supplier created" });
+        console.log('[SUPPLIER CONTROLLER] createSupplier result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Supplier created" });
     } catch (error) {
         next(error);
     }
@@ -90,7 +96,10 @@ exports.updateSupplier = async (req, res, next) => {
             return supplier;
         });
 
-        res.json({ success: true, data: result, message: "Supplier updated" });
+        console.log('[SUPPLIER CONTROLLER] updateSupplier result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Supplier updated" });
     } catch (error) {
         next(error);
     }

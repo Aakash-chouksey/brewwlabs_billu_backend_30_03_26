@@ -51,14 +51,18 @@ exports.getOrders = async (req, res, next) => {
             );
         });
 
-        console.log('[ORDER CONTROLLER] getOrders result:', JSON.stringify(result, null, 2).substring(0, 500));
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
         
-        const responseData = result.data || result;
+        const responseData = result.data ?? result;
+        console.log("DB DATA (Phase 3 - getOrders):", responseData?.count);
+        
         res.json({ 
             success: true, 
-            data: responseData?.rows || [], 
+            data: responseData?.rows ?? [], 
             pagination: {
-                total: responseData?.count || 0,
+                total: responseData?.count ?? 0,
                 limit: parseInt(limit),
                 offset: parseInt(offset)
             }

@@ -206,3 +206,170 @@ Error: Cannot find module '/Users/admin/Downloads/billu'
 
 Node.js v22.22.0
 
+⏱️ [ONBOARDING] Starting: 0ms (Total: 0ms)
+⏱️ [ONBOARDING] Executor setup: 1ms (Total: 1ms)
+[TX START] Tenant: public | ID: tx_1774385240178_ehcb8
+✅ [TENANT MODELS] Cache hit for tenant_public
+⏱️ [TX] getTenantModels took 0ms
+🔌 Connecting to unified schema-per-tenant database...
+✅ Unified database connection established
+[TX:0c2a9d08] START TRANSACTION;...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): START TRANSACTION;
+[TX:0c2a9d08] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+⏱️ [TX] Transaction creation took 5303ms
+[TX:0c2a9d08] SET LOCAL search_path TO "tenant_public"...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SET LOCAL search_path TO "tenant_public"
+⏱️ [TX] SET search_path took 391ms
+⏱️ [ONBOARDING] Transaction started: 5695ms (Total: 5696ms)
+⏱️ [ONBOARDING] Models extracted: 0ms (Total: 5696ms)
+[TX:0c2a9d08] SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "...
+[TX:0c2a9d08] SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_i...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "status", "subscription_plan", "owner_id" AS "ownerId", "business_id" AS "businessId", "type", "is_active" AS "isActive", "settings", "created_at", "updated_at" FROM "public"."businesses" AS "Business" WHERE "Business"."email" = 'Aakash123456@gmail.com';
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_ids" AS "outletIds", "name", "email", "phone", "password_hash" AS "password", "role", "is_verified" AS "isVerified", "is_active" AS "isActive", "last_login" AS "lastLogin", "panel_type" AS "panelType", "status", "salary", "location", "experience", "rating", "total_orders" AS "totalOrders", "performance", "token_version" AS "tokenVersion", "created_at", "updated_at", "business_id", "outlet_id" FROM "public"."users" AS "User" WHERE "User"."email" = 'billuboies123456@test.com' LIMIT 1;
+⏱️ [ONBOARDING] Duplicate check completed: 605ms (Total: 6301ms)
+Business 1260f2e3-078f-4c5c-bd79-d50c46422b5a properly linked to owner f2aa0354-5ede-4d0a-a817-9ec8fa94ab6e
+[TX:0c2a9d08] INSERT INTO "public"."businesses" ("id","name","address","phone","gst_number","e...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): INSERT INTO "public"."businesses" ("id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","type","is_active","settings","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING "id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","business_id","type","is_active","settings","created_at","updated_at";
+⏱️ [ONBOARDING] Business created: 310ms (Total: 6611ms)
+[TX:0c2a9d08] CREATE SCHEMA IF NOT EXISTS "tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a"...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): CREATE SCHEMA IF NOT EXISTS "tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a"
+⏱️ [ONBOARDING] Schema created: 269ms (Total: 6880ms)
+⏱️ [ONBOARDING] Password hashed: 31ms (Total: 6911ms)
+[TX:0c2a9d08] INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name"...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name","email","password_hash","role","is_verified","is_active","panel_type","status","rating","total_orders","performance","token_version","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING "id","business_id","outlet_id","outlet_ids","name","email","phone","password_hash","role","is_verified","is_active","last_login","panel_type","status","salary","location","experience","rating","total_orders","performance","token_version","created_at","updated_at","business_id","outlet_id";
+⏱️ [ONBOARDING] User created: 612ms (Total: 7523ms)
+[TX:0c2a9d08] INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status","created_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id","business_id","schema_name","status","created_at","business_id";
+⏱️ [ONBOARDING] TenantRegistry created: 280ms (Total: 7803ms)
+⏱️ [TX] User operation took 2109ms
+[EXECUTOR DEBUG] executeWithTenant result: {
+  "business": {
+    "subscription_plan": "free",
+    "isActive": true,
+    "settings": {},
+    "id": "1260f2e3-078f-4c5c-bd79-d50c46422b5a",
+    "name": "Billu Boies Cafe",
+    "email": "Aakash123456@gmail.com",
+    "phone": "+91-9876543210",
+    "address": "123 Test Street, Bangalore",
+    "gstNumber": "29ABCDE12384F1Z5",
+    "type": "SOLO",
+    "status": "active",
+    "ownerId": "f2aa0354-5ede-4d0a-a817-9ec8fa94ab6e",
+    "updated_at": "2026-03-24T20:47:26.478Z",
+    "created_at": "2026-03-2
+[TX:0c2a9d08] COMMIT;...
+Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): COMMIT;
+[TX END] Success | Total Duration: 8086ms
+✅ Onboarding completed in 8087ms for Aakash123456@gmail.com
+📊 ONBOARDING BREAKDOWN: {"businessEmail":"Aakash123456@gmail.com","totalTime":8087,"businessId":"1260f2e3-078f-4c5c-bd79-d50c46422b5a","schemaName":"tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a"}
+[CONTROLLER DEBUG] onboarding result: {
+  "success": true,
+  "businessId": "1260f2e3-078f-4c5c-bd79-d50c46422b5a",
+  "outletId": "ce3737e6-0ceb-473a-9738-e9e4de316420",
+  "schemaName": "tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a",
+  "status": "onboarding",
+  "message": "Business created. Schema initialization is running in background.",
+  "duration": "8087ms"
+}
+❌ GLOBAL ERROR: {
+  message: "Cannot read properties of undefined (reading 'id')",
+  stack: "TypeError: Cannot read properties of undefined (reading 'id')\n" +
+    '    at AuthService.generateAccessToken (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/auth.service.js:287:22)\n' +
+    '    at onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:55:45)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)',
+  path: '/api/onboarding/business',
+  method: 'POST',
+  timestamp: '2026-03-24T20:47:28.266Z'
+}
+Executing (default): SET search_path TO public
+Executing (default): SET search_path TO public
+🔧 [PHASE 3] Search path reset to public after POST /api/onboarding/business
+✅ POST /api/onboarding/business → 200 (8667ms | DB: 0ms)
+⚠️ SLOW REQUEST: POST /api/onboarding/business → 200 (8667ms | DB: 0ms)
+⏱️ [ONBOARDING] Starting: 0ms (Total: 0ms)
+⏱️ [ONBOARDING] Executor setup: 0ms (Total: 0ms)
+[TX START] Tenant: public | ID: tx_1774385402664_3ku9k
+✅ [TENANT MODELS] Cache hit for tenant_public
+⏱️ [TX] getTenantModels took 0ms
+🔌 Connecting to unified schema-per-tenant database...
+✅ Unified database connection established
+[TX:0cbc585c] START TRANSACTION;...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): START TRANSACTION;
+[TX:0cbc585c] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+⏱️ [TX] Transaction creation took 4400ms
+[TX:0cbc585c] SET LOCAL search_path TO "tenant_public"...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SET LOCAL search_path TO "tenant_public"
+⏱️ [TX] SET search_path took 305ms
+⏱️ [ONBOARDING] Transaction started: 4707ms (Total: 4707ms)
+⏱️ [ONBOARDING] Models extracted: 0ms (Total: 4707ms)
+[TX:0cbc585c] SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "...
+[TX:0cbc585c] SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_i...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "status", "subscription_plan", "owner_id" AS "ownerId", "business_id" AS "businessId", "type", "is_active" AS "isActive", "settings", "created_at", "updated_at" FROM "public"."businesses" AS "Business" WHERE "Business"."email" = 'freshcafe888@test.com';
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_ids" AS "outletIds", "name", "email", "phone", "password_hash" AS "password", "role", "is_verified" AS "isVerified", "is_active" AS "isActive", "last_login" AS "lastLogin", "panel_type" AS "panelType", "status", "salary", "location", "experience", "rating", "total_orders" AS "totalOrders", "performance", "token_version" AS "tokenVersion", "created_at", "updated_at", "business_id", "outlet_id" FROM "public"."users" AS "User" WHERE "User"."email" = 'adminfresh888@test.com' LIMIT 1;
+⏱️ [ONBOARDING] Duplicate check completed: 599ms (Total: 5306ms)
+Business 302d2af5-83e8-4f15-8b03-5b31d0765ccd properly linked to owner 1fddd299-a7a7-4b50-90da-773445a45410
+[TX:0cbc585c] INSERT INTO "public"."businesses" ("id","name","address","phone","email","status...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): INSERT INTO "public"."businesses" ("id","name","address","phone","email","status","subscription_plan","owner_id","type","is_active","settings","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING "id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","business_id","type","is_active","settings","created_at","updated_at";
+⏱️ [ONBOARDING] Business created: 392ms (Total: 5698ms)
+[TX:0cbc585c] CREATE SCHEMA IF NOT EXISTS "tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd"...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): CREATE SCHEMA IF NOT EXISTS "tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd"
+⏱️ [ONBOARDING] Schema created: 286ms (Total: 5984ms)
+⏱️ [ONBOARDING] Password hashed: 31ms (Total: 6015ms)
+[TX:0cbc585c] INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name"...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name","email","password_hash","role","is_verified","is_active","panel_type","status","rating","total_orders","performance","token_version","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING "id","business_id","outlet_id","outlet_ids","name","email","phone","password_hash","role","is_verified","is_active","last_login","panel_type","status","salary","location","experience","rating","total_orders","performance","token_version","created_at","updated_at","business_id","outlet_id";
+⏱️ [ONBOARDING] User created: 369ms (Total: 6384ms)
+[TX:0cbc585c] INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status","created_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id","business_id","schema_name","status","created_at","business_id";
+⏱️ [ONBOARDING] TenantRegistry created: 304ms (Total: 6688ms)
+⏱️ [TX] User operation took 1981ms
+[EXECUTOR DEBUG] executeWithTenant result: {
+  "business": {
+    "subscription_plan": "free",
+    "isActive": true,
+    "settings": {},
+    "id": "302d2af5-83e8-4f15-8b03-5b31d0765ccd",
+    "name": "FreshCafe",
+    "email": "freshcafe888@test.com",
+    "phone": "123",
+    "address": "Addr",
+    "gstNumber": null,
+    "type": "SOLO",
+    "status": "active",
+    "ownerId": "1fddd299-a7a7-4b50-90da-773445a45410",
+    "updated_at": "2026-03-24T20:50:07.972Z",
+    "created_at": "2026-03-24T20:50:07.972Z",
+    "businessId": null
+  },
+  "admin"
+[TX:0cbc585c] COMMIT;...
+Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): COMMIT;
+[TX END] Success | Total Duration: 6985ms
+✅ Onboarding completed in 6985ms for freshcafe888@test.com
+📊 ONBOARDING BREAKDOWN: {"businessEmail":"freshcafe888@test.com","totalTime":6985,"businessId":"302d2af5-83e8-4f15-8b03-5b31d0765ccd","schemaName":"tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd"}
+[CONTROLLER DEBUG] onboarding result: {
+  "success": true,
+  "businessId": "302d2af5-83e8-4f15-8b03-5b31d0765ccd",
+  "outletId": "bc201405-a51e-4f48-b5d5-8c5c385aa198",
+  "schemaName": "tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd",
+  "status": "onboarding",
+  "message": "Business created. Schema initialization is running in background.",
+  "duration": "6985ms"
+}
+❌ GLOBAL ERROR: {
+  message: "Cannot read properties of undefined (reading 'id')",
+  stack: "TypeError: Cannot read properties of undefined (reading 'id')\n" +
+    '    at AuthService.generateAccessToken (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/auth.service.js:287:22)\n' +
+    '    at onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:55:45)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)',
+  path: '/api/onboarding/business',
+  method: 'POST',
+  timestamp: '2026-03-24T20:50:09.650Z'
+}
+Executing (default): SET search_path TO public
+Executing (default): SET search_path TO public
+🔧 [PHASE 3] Search path reset to public after POST /api/onboarding/business
+✅ POST /api/onboarding/business → 200 (7598ms | DB: 0ms)
+⚠️ SLOW REQUEST: POST /api/onboarding/business → 200 (7598ms | DB: 0ms)

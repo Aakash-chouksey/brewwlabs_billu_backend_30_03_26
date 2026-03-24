@@ -46,7 +46,9 @@ exports.getSalesTrends = async (req, res, next) => {
                 dailyData[date].orders++;
             });
 
-            return Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date));
+            const finalData = Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date));
+            console.log("DB DATA (Phase 3 - SalesTrends):", finalData?.length);
+            return finalData;
         });
 
         console.log('[ANALYTICS CONTROLLER] getSalesTrends result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -116,9 +118,11 @@ exports.getTopProducts = async (req, res, next) => {
                 productMap[pid].revenue += Number(item.subtotal) || 0;
             });
 
-            return Object.values(productMap)
+            const finalData = Object.values(productMap)
                 .sort((a, b) => b.revenue - a.revenue)
                 .slice(0, parseInt(limit));
+            console.log("DB DATA (Phase 3 - TopProducts):", finalData?.length);
+            return finalData;
         });
 
         console.log("STEP 6 - Controller Received:", result);
@@ -249,7 +253,7 @@ exports.getSummary = async (req, res, next) => {
             const totalCustomers = await safeQuery(() => Customer.count({ where: customerWhere }), 0);
             const totalProducts = await safeQuery(() => Product.count({ where: productWhere }), 0);
 
-            return {
+            const finalData = {
                 today: {
                     sales: Math.round(Number(todaySales) * 100) / 100,
                     orders: Number(todayOrders) || 0
@@ -263,6 +267,8 @@ exports.getSummary = async (req, res, next) => {
                     products: totalProducts || 0
                 }
             };
+            console.log("DB DATA (Phase 3 - Summary):", finalData);
+            return finalData;
         });
 
         console.log("STEP 6 - Controller Received:", result);

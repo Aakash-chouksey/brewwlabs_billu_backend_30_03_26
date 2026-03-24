@@ -17,10 +17,11 @@ const safeQuery = async (queryFn, fallback) => {
 
         return result;
     } catch (err) {
-        console.error('⚠️ [SAFE QUERY FALLBACK]:', err.message);
+        console.error('🚨 [SAFE QUERY ERROR]:', err.message);
         
-        // Log details but don't throw to prevent 500 errors
-        return fallback;
+        // Phase 2 Fix: Re-throw the error to expose the root cause
+        // DO NOT return fallback on actual errors
+        throw err;
     }
 };
 

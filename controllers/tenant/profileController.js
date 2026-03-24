@@ -41,7 +41,7 @@ const profileController = {
                     null
                 );
 
-                return { user: user || {}, business: business || null };
+                return { user: user ?? {}, business: business ?? null }; // Phase 7 Fix
             });
 
             res.json({

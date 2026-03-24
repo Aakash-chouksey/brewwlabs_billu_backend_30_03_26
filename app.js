@@ -335,30 +335,17 @@ app.use((err, req, res, next) => {
       });
     }
 
-    // Handle "undefined" column errors
-    if (errorMessage && errorMessage.includes('undefined')) {
-      return res.status(200).json({
-        success: true,
-        message: 'Data temporarily unavailable',
-        data: {}
-      });
-    }
+    // Remove fake success fallbacks (Phase 1 Fix)
+    // These were hiding real errors by returning 200 OK
+    // if (errorMessage && errorMessage.includes('undefined')) { ... }
+    // if (errorMessage && (errorMessage.includes('column') || errorMessage.includes('does not exist'))) { ... }
 
-    // Handle missing column errors
-    if (errorMessage && (errorMessage.includes('column') || errorMessage.includes('does not exist'))) {
-      return res.status(200).json({
-        success: true,
-        message: 'Data field being updated. Please refresh.',
-        data: {}
-      });
-    }
-
-    // Default error response - ALWAYS return 200 with success: false
-    // This prevents frontend crashes
+    // Default error response - ALWAYS return success: false
+    // This ensures real errors are exposed to developers and logs
     const statusCode = error.status || error.statusCode || 500;
     const isDev = process.env.NODE_ENV === 'development';
     
-    return res.status(200).json({
+    return res.status(statusCode).json({
       success: false,
       message: isDev ? errorMessage : 'An unexpected error occurred. Please try again.',
       data: {}

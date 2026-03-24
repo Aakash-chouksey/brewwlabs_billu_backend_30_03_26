@@ -159,6 +159,7 @@ class NeonTransactionSafeExecutor {
             }
         });
 
+        console.log("CURRENT SCHEMA (resolved):", schemaName);
         return { schemaName, models: safeModelsProxy };
     }
 
@@ -176,6 +177,7 @@ class NeonTransactionSafeExecutor {
         try {
             const modelStart = Date.now();
             const { schemaName, models } = await this.getTenantModels(tenantId, options);
+            console.log("CURRENT SCHEMA (executeWithTenant):", schemaName);
             console.log(`⏱️ [TX] getTenantModels took ${Date.now() - modelStart}ms`);
             
             const txStart = Date.now();
@@ -225,7 +227,7 @@ class NeonTransactionSafeExecutor {
             }
         } catch (error) {
             if (transaction && !transaction.finished) await transaction.rollback().catch(() => {});
-            console.error(`[TX END] Failed: ${error.message} | Duration: ${Date.now() - totalStart}ms`);
+            console.error(`🚨 EXECUTOR ERROR (executeWithTenant): ${error.message} | Tenant: ${tenantId}`);
             throw error;
         }
     }
@@ -241,6 +243,8 @@ class NeonTransactionSafeExecutor {
             const schemaName = (tenantId === CONTROL_PLANE || tenantId === 'health_check')
                 ? PUBLIC_SCHEMA 
                 : `${TENANT_SCHEMA_PREFIX}${tenantId}`;
+            
+            console.log("CURRENT SCHEMA (readWithTenant):", schemaName);
             
             // Phase 2 OPTIMIZATION: Use cached global models with search_path
             // This is ~50x faster than schema-bound models with transactions
@@ -279,7 +283,7 @@ class NeonTransactionSafeExecutor {
                 data: result
             };
         } catch (error) {
-            console.error(`[READ ERROR] Tenant: ${tenantId} | ${error.message}`);
+            console.error(`🚨 EXECUTOR ERROR (readWithTenant): ${error.message} | Tenant: ${tenantId}`);
             throw error;
         }
     }

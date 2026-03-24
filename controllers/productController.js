@@ -49,13 +49,14 @@ exports.getProducts = async (req, res, next) => {
                 []
             );
             console.log("STEP 4 - DB RESULT (Products):", Array.isArray(products) ? products.length : 'not an array');
+            console.log("DB DATA (Phase 3):", products ? products.slice(0, 2) : 'no data'); // Phase 3 log
             return products;
         });
 
         console.log("STEP 6 - Controller Received:", result);
         console.log("STEP 6.1 - Data:", result?.data);
         console.log("STEP 7 - Sending Response:", result?.data);
-        res.json({ success: true, data: result?.data || [] });
+        res.json({ success: true, data: result?.data ?? [] }); // Phase 7 Fix
     } catch (error) {
         next(error);
     }

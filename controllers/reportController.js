@@ -52,23 +52,28 @@ exports.getDailySales = async (req, res, next) => {
                 hourlySales[hour].sales += Number(order.billing_total || 0);
             });
 
-            return {
+            const finalData = {
                 date: targetDate.toISOString().split('T')[0],
                 totalSales: Math.round(totalSales * 100) / 100,
-                totalRevenue: Math.round(totalSales * 100) / 100, // Alias
+                totalRevenue: Math.round(totalSales * 100) / 100,
                 totalOrders,
-                orderCount: totalOrders, // Alias
+                orderCount: totalOrders,
                 avgOrderValue: Math.round(avgOrderValue * 100) / 100,
-                averageOrderValue: Math.round(avgOrderValue * 100) / 100, // Alias
+                averageOrderValue: Math.round(avgOrderValue * 100) / 100,
                 hourlySales
             };
+            console.log("DB DATA (Phase 3 - DailySales):", finalData);
+            return finalData;
         });
 
         console.log("STEP 6 - Controller Received:", result);
         console.log("STEP 6.1 - Data:", result?.data);
         console.log("STEP 7 - Sending Response:", result?.data);
         
-        res.json({ success: true, data: result.data });
+        return res.json({ 
+            success: true, 
+            data: result.data ?? [] // Phase 7 Fix (Analytics)
+        });
     } catch (error) {
         next(error);
     }
@@ -141,14 +146,16 @@ exports.getItemWiseSales = async (req, res, next) => {
                 productSales[pid].orders++;
             });
 
-            return Object.values(productSales).sort((a, b) => b.totalRevenue - a.totalRevenue);
+            const finalData = Object.values(productSales).sort((a, b) => b.totalRevenue - a.totalRevenue);
+            console.log("DB DATA (Phase 3 - ItemWiseSales):", finalData?.length);
+            return finalData;
         });
 
         console.log("STEP 6 - Controller Received:", result);
         console.log("STEP 6.1 - Data:", result?.data);
         console.log("STEP 7 - Sending Response:", result?.data);
         
-        res.json({ success: true, data: result.data });
+        return res.json({ success: true, data: result.data ?? [] });
     } catch (error) {
         next(error);
     }
@@ -175,18 +182,20 @@ exports.getSystemStats = async (req, res, next) => {
                 }
             });
 
-            return {
+            const finalData = {
                 totalBusinesses,
                 totalUsers,
                 recentLogs
             };
+            console.log("DB DATA (Phase 3 - SystemStats):", finalData);
+            return finalData;
         });
 
         console.log("STEP 6 - Controller Received:", result);
         console.log("STEP 6.1 - Data:", result?.data);
         console.log("STEP 7 - Sending Response:", result?.data);
         
-        res.json({ success: true, data: result.data });
+        return res.json({ success: true, data: result.data ?? {} });
     } catch (error) {
         next(error);
     }

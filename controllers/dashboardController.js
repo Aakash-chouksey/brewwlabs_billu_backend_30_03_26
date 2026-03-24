@@ -126,6 +126,7 @@ exports.getDashboardStats = async (req, res, next) => {
                 ? topProducts[0].product?.name || 'N/A' 
                 : 'N/A';
 
+            console.log("DB DATA (Phase 3 - Dashboard):", bestSeller); // Phase 3 log
             return {
                 // Phase 3 & 4: Safe Response Structure
                 revenue: Number(todaySales) || 0,
@@ -163,7 +164,7 @@ exports.getDashboardStats = async (req, res, next) => {
         
         return res.json({ 
             success: true, 
-            data: result.data 
+            data: result.data ?? {} // Phase 7 Fix
         });
     } catch (error) {
         next(error);

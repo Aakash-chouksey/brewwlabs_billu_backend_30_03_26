@@ -27,7 +27,10 @@ exports.getCategories = async (req, res, next) => {
             );
         });
 
-        res.json({ success: true, data: result || [] });
+        console.log('[CATEGORY CONTROLLER] getCategories result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
     } catch (error) {
         next(error);
     }
@@ -75,7 +78,10 @@ exports.addCategory = async (req, res, next) => {
         const cacheKey = cache.generateKey(req, 'categories');
         await cache.del(cacheKey);
 
-        res.status(201).json({ success: true, data: result, message: "Category created" });
+        console.log('[CATEGORY CONTROLLER] addCategory result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Category created" });
     } catch (error) {
         next(error);
     }
@@ -123,7 +129,10 @@ exports.updateCategory = async (req, res, next) => {
         const cacheKey = cache.generateKey(req, 'categories');
         await cache.del(cacheKey);
 
-        res.json({ success: true, data: result, message: "Category updated" });
+        console.log('[CATEGORY CONTROLLER] updateCategory result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Category updated" });
     } catch (error) {
         next(error);
     }
