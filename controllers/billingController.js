@@ -38,7 +38,10 @@ exports.getConfig = async (req, res, next) => {
             return config;
         });
 
-        res.json({ success: true, data: result });
+        console.log('[BILLING CONTROLLER] getConfig result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -73,7 +76,10 @@ exports.updateConfig = async (req, res, next) => {
             return config;
         });
 
-        res.json({ success: true, data: result, message: "Billing configuration updated" });
+        console.log('[BILLING CONTROLLER] updateConfig result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Billing configuration updated" });
     } catch (error) {
         next(error);
     }
@@ -111,7 +117,10 @@ exports.patchConfig = async (req, res, next) => {
             return config;
         });
 
-        res.json({ success: true, data: result, message: "Billing configuration patched" });
+        console.log('[BILLING CONTROLLER] patchConfig result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Billing configuration patched" });
     } catch (error) {
         next(error);
     }

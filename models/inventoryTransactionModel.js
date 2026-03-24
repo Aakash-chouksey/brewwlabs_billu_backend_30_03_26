@@ -7,10 +7,20 @@ module.exports = (sequelize) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
         },
-        inventoryItemId: {
+        inventoryId: {
             type: DataTypes.UUID,
             allowNull: false,
+            field: 'inventory_id'
+        },
+        inventoryItemId: {
+            type: DataTypes.UUID,
+            allowNull: true,
             field: 'inventory_item_id'
+        },
+        productId: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            field: 'product_id'
         },
         businessId: {
             type: DataTypes.UUID,
@@ -22,22 +32,23 @@ module.exports = (sequelize) => {
             allowNull: false,
             field: 'outlet_id'
         },
+        type: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: 'type'
+        },
         transactionType: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
             field: 'transaction_type'
         },
         quantity: {
             type: DataTypes.DECIMAL(10, 3),
             allowNull: false
         },
-        reference: {
-            type: DataTypes.STRING,
-            comment: 'Reference to order ID, purchase ID, etc.'
-        },
-        reason: {
-            type: DataTypes.TEXT,
-            field: 'reason'
+        unitCost: {
+            type: DataTypes.DECIMAL(10, 2),
+            field: 'unit_cost'
         },
         costPerUnit: {
             type: DataTypes.DECIMAL(10, 2),
@@ -47,36 +58,38 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(10, 2),
             field: 'total_cost'
         },
-        supplier: {
-            type: DataTypes.STRING
-        },
-        fromOutletId: {
-            type: DataTypes.UUID,
-            field: 'from_outlet_id'
-        },
-        toOutletId: {
-            type: DataTypes.UUID,
-            field: 'to_outlet_id'
+        previousQuantity: {
+            type: DataTypes.DECIMAL(10, 3),
+            field: 'previous_quantity'
         },
         previousStock: {
             type: DataTypes.DECIMAL(10, 3),
             field: 'previous_stock'
         },
+        newQuantity: {
+            type: DataTypes.DECIMAL(10, 3),
+            field: 'new_quantity'
+        },
         newStock: {
             type: DataTypes.DECIMAL(10, 3),
             field: 'new_stock'
+        },
+        performedBy: {
+            type: DataTypes.UUID,
+            field: 'performed_by'
         },
         createdBy: {
             type: DataTypes.UUID,
             field: 'created_by'
         },
-        createdAt: {
-            type: DataTypes.DATE,
-            field: 'created_at'
+        reference: {
+            type: DataTypes.STRING
         },
-        updatedAt: {
-            type: DataTypes.DATE,
-            field: 'updated_at'
+        reason: {
+            type: DataTypes.TEXT
+        },
+        notes: {
+            type: DataTypes.TEXT
         }
     }, {
         tableName: 'inventory_transactions',
@@ -87,15 +100,16 @@ module.exports = (sequelize) => {
         indexes: [
             { fields: ['business_id'] },
             { fields: ['business_id', 'outlet_id'] },
-            { fields: ['inventory_item_id'] },
-            { fields: ['business_id', 'outlet_id', 'transaction_type'] },
-            { fields: ['business_id', 'outlet_id', 'created_at'] },
-            { fields: ['reference'] }
+            { fields: ['inventory_id'] },
+            { fields: ['product_id'] },
+            { fields: ['type'] },
+            { fields: ['created_at'] }
         ]
     });
 
     InventoryTransaction.associate = (models) => {
-        InventoryTransaction.belongsTo(models.InventoryItem, { foreignKey: 'inventoryItemId', as: 'inventoryItem' });
+        InventoryTransaction.belongsTo(models.Inventory, { foreignKey: 'inventoryId', as: 'inventory' });
+        InventoryTransaction.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
     };
 
     return InventoryTransaction;

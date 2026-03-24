@@ -11,10 +11,12 @@ const { safeQuery } = require("../utils/safeQuery");
  */
 exports.getDashboardStats = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - getDashboardStats");
         enforceOutletScope(req);
         const { businessId } = req;
+        console.log("STEP 2 - Calling Executor (executeRead)");
 
-        const stats = await req.executeRead(async ({ models, sequelize }) => {
+        const result = await req.executeRead(async ({ models, sequelize }) => {
             const { Order, Product, Customer, OrderItem, Table } = models;
             
             // Build strict where clause with MANDATORY outlet filtering
@@ -155,7 +157,14 @@ exports.getDashboardStats = async (req, res, next) => {
             };
         });
 
-        res.json({ success: true, data: stats });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        return res.json({ 
+            success: true, 
+            data: result.data 
+        });
     } catch (error) {
         next(error);
     }

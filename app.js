@@ -268,41 +268,6 @@ app.use((req, res, next) => {
 });
 
 // ========================================
-// RESPONSE VALIDATION MIDDLEWARE (Phase 8)
-// Ensures all API responses are valid and safe
-// ========================================
-app.use((req, res, next) => {
-  const originalJson = res.json.bind(res);
-
-  res.json = function(data) {
-    // Safety: Ensure data is a valid object
-    if (!data || typeof data !== 'object') {
-      console.error('🚨 INVALID RESPONSE DETECTED at', req.originalUrl);
-      return originalJson({
-        success: false,
-        message: 'Invalid server response',
-        data: {}
-      });
-    }
-
-    // Safety: Ensure required fields exist
-    if (data.success === undefined) {
-      data.success = true;
-    }
-    if (!data.message) {
-      data.message = 'OK';
-    }
-    if (!data.data) {
-      data.data = {};
-    }
-
-    return originalJson(data);
-  };
-
-  next();
-});
-
-// ========================================
 // GLOBAL ERROR HANDLER (Fail-Safe - NEVER CRASH)
 // ========================================
 app.use((err, req, res, next) => {

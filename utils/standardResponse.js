@@ -63,14 +63,18 @@ const responseValidationMiddleware = (req, res, next) => {
       });
     }
 
-    // Ensure required fields exist
-    const standardizedData = {
-      success: typeof data.success === 'boolean' ? data.success : false,
-      message: typeof data.message === 'string' ? data.message : '',
-      data: typeof data.data === 'object' && data.data !== null ? data.data : {}
-    };
+    // Ensure required fields exist while preserving ALL original fields
+    if (data.success === undefined) {
+      data.success = true;
+    }
+    if (!data.message) {
+      data.message = 'OK';
+    }
+    if (!data.data) {
+      data.data = {};
+    }
 
-    return originalJson.call(this, standardizedData);
+    return originalJson.call(this, data);
   };
 
   next();

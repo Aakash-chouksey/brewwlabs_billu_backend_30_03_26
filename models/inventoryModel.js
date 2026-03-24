@@ -17,15 +17,38 @@ module.exports = (sequelize) => {
             allowNull: false,
             field: 'outlet_id'
         },
+        productId: {
+            type: DataTypes.UUID,
+            allowNull: true, // Optional for non-product inventory
+            field: 'product_id'
+        },
         itemName: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
             field: 'item_name'
         },
-        stockQuantity: {
-            type: DataTypes.FLOAT,
+        quantity: {
+            type: DataTypes.DECIMAL(10, 3),
             defaultValue: 0,
-            field: 'stock_quantity'
+            field: 'quantity'
+        },
+        unitCost: {
+            type: DataTypes.DECIMAL(10, 2),
+            defaultValue: 0,
+            field: 'unit_cost'
+        },
+        location: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        reorderLevel: {
+            type: DataTypes.DECIMAL(10, 3),
+            defaultValue: 10,
+            field: 'reorder_level'
+        },
+        lastRestockedAt: {
+            type: DataTypes.DATE,
+            field: 'last_restocked_at'
         }
     }, {
         tableName: 'inventory',
@@ -36,6 +59,7 @@ module.exports = (sequelize) => {
         indexes: [
             { fields: ['business_id'] },
             { fields: ['business_id', 'outlet_id'] },
+            { fields: ['business_id', 'outlet_id', 'product_id'] },
             { 
                 name: 'inventory_outlet_item_name_unique',
                 fields: ['outlet_id', 'item_name'],
@@ -47,6 +71,7 @@ module.exports = (sequelize) => {
     Inventory.associate = function(models) {
         Inventory.belongsTo(models.Business, { foreignKey: 'business_id', as: 'business' });
         Inventory.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
+        Inventory.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
     };
 
     return Inventory;

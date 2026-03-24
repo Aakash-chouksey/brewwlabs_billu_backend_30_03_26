@@ -34,7 +34,10 @@ exports.createAccount = async (req, res, next) => {
             }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: result, message: "Account created" });
+        console.log('[ACCOUNTING CONTROLLER] createAccount result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Account created" });
     } catch (error) {
         next(error);
     }
@@ -57,7 +60,10 @@ exports.getAccounts = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[ACCOUNTING CONTROLLER] getAccounts result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -118,7 +124,10 @@ exports.addTransaction = async (req, res, next) => {
             return { transaction: tx, account };
         });
 
-        res.status(201).json({ success: true, data: result, message: "Transaction recorded" });
+        console.log('[ACCOUNTING CONTROLLER] addTransaction result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Transaction recorded" });
     } catch (error) {
         next(error);
     }
@@ -151,7 +160,10 @@ exports.getTransactions = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[ACCOUNTING CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }

@@ -1,8 +1,5 @@
-/**
- * TABLE CONTROLLER - Neon-Safe Transaction Pattern
- */
-
 const createHttpError = require("http-errors");
+const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
 const { safeQuery } = require("../utils/safeQuery");
 
 /**
@@ -10,14 +7,15 @@ const { safeQuery } = require("../utils/safeQuery");
  */
 exports.getTables = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
         const { areaId, status } = req.query;
 
-        const tables = await req.readWithTenant(async (context) => {
+        const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
             const { Table, Area } = models;
             
-            const whereClause = { businessId };
+            const { whereClause } = buildStrictWhereClause(req);
             if (areaId) whereClause.areaId = areaId;
             if (status) whereClause.status = status;
 
@@ -25,13 +23,16 @@ exports.getTables = async (req, res, next) => {
                 () => Table.findAll({
                     where: whereClause,
                     include: [{ model: Area, attributes: ['id', 'name'] }],
-                    order: [['number', 'ASC']]
+                    order: [['name', 'ASC']]
                 }),
                 []
             );
         });
 
-        res.json({ success: true, data: tables || [] });
+        console.log('[TABLE CONTROLLER] getTables result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
     } catch (error) {
         next(error);
     }
@@ -42,14 +43,15 @@ exports.getTables = async (req, res, next) => {
  */
 exports.addTable = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
         const { number, name, areaId, capacity, status } = req.body;
 
-        if (!number) {
-            throw createHttpError(400, "Table number is required");
+        if (!name) {
+            throw createHttpError(400, "Table name is required");
         }
 
-        const table = await req.executeWithTenant(async (context) => {
+        const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
             const { Table, Area } = models;
             
@@ -57,8 +59,8 @@ exports.addTable = async (req, res, next) => {
             if (areaId) {
                 const area = await safeQuery(
                     () => Area.findOne({
-                        where: { id: areaId, businessId },
-                        transaction: context.transaction
+                        where: { id: areaId, businessId, outletId },
+                        transaction
                     }),
                     null
                 );
@@ -67,15 +69,19 @@ exports.addTable = async (req, res, next) => {
 
             return await Table.create({
                 businessId,
-                number,
+                outletId,
+                number: number || name,
                 name,
                 areaId,
                 capacity: capacity || 4,
                 status: status || 'AVAILABLE'
-            }, { transaction: context.transaction });
+            }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: table, message: "Table created" });
+        console.log('[TABLE CONTROLLER] addTable result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Table created" });
     } catch (error) {
         next(error);
     }
@@ -86,28 +92,34 @@ exports.addTable = async (req, res, next) => {
  */
 exports.updateTable = async (req, res, next) => {
     try {
+        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
         const updateData = req.body;
 
-        const table = await req.executeWithTenant(async (context) => {
+        const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
             const { Table } = models;
             
+            const { whereClause } = buildStrictWhereClause(req, { id });
+
             const table = await safeQuery(
                 () => Table.findOne({
-                    where: { id, businessId },
-                    transaction: context.transaction
+                    where: whereClause,
+                    transaction
                 }),
                 null
             );
             if (!table) throw createHttpError(404, "Table not found");
 
-            await table.update(updateData, { transaction: context.transaction });
+            await table.update(updateData, { transaction });
             return table;
         });
 
-        res.json({ success: true, data: table, message: "Table updated" });
+        console.log('[TABLE CONTROLLER] updateTable result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Table updated" });
     } catch (error) {
         next(error);
     }
@@ -118,6 +130,7 @@ exports.updateTable = async (req, res, next) => {
  */
 exports.deleteTable = async (req, res, next) => {
     try {
+        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
 
@@ -125,11 +138,13 @@ exports.deleteTable = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Table, Order } = models;
             
+            const { whereClause } = buildStrictWhereClause(req, { id });
+
             // Check if table has active orders
             const activeOrders = await safeQuery(
                 () => Order.count({
-                    where: { tableId: id, status: { notIn: ['COMPLETED', 'CANCELLED'] } },
-                    transaction: context.transaction
+                    where: { tableId: id, status: { [Op.notIn]: ['COMPLETED', 'CANCELLED'] } },
+                    transaction
                 }),
                 0
             );
@@ -139,14 +154,14 @@ exports.deleteTable = async (req, res, next) => {
 
             const table = await safeQuery(
                 () => Table.findOne({
-                    where: { id, businessId },
-                    transaction: context.transaction
+                    where: whereClause,
+                    transaction
                 }),
                 null
             );
             if (!table) throw createHttpError(404, "Table not found");
 
-            await table.destroy({ transaction: context.transaction });
+            await table.destroy({ transaction });
         });
 
         res.json({ success: true, message: "Table deleted" });

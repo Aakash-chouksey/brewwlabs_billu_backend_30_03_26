@@ -1,27 +1,197 @@
 const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
 const inventoryService = require('../services/tenant/inventory.service');
 const createHttpError = require("http-errors");
-const { Op } = require("sequelize");
+const inventoryService = require("../services/tenant/inventory.service");
+const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
+const { safeQuery } = require("../utils/safeQuery");
 
 // ==================== INVENTORY ITEMS ====================
 
 /**
- * Get all inventory items with optional filtering
- * REFACTORED: Data-First Service Hook
+ * Get all inventory items
  */
 exports.getItems = async (req, res, next) => {
-    enforceOutletScope(req);
     try {
+        enforceOutletScope(req);
         const { businessId, outletId } = req;
-        const queryParams = req.query;
 
-        const data = await inventoryService.getItems({
-            businessId,
-            outletId,
-            queryParams
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models } = context;
+            const { Inventory, Product } = models;
+            
+            const { whereClause } = buildStrictWhereClause(req);
+            
+            return await safeQuery(
+                () => Inventory.findAll({
+                    where: whereClause,
+                    include: [{ model: Product, as: 'product' }],
+                    order: [['createdAt', 'DESC']]
+                }),
+                []
+            );
         });
 
-        return res.json({ success: true, data });
+        console.log('[INVENTORY CONTROLLER] getItems result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Adjust stock level
+ */
+exports.adjustStock = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
+        const { productId, adjustment, unitCost, reason, location } = req.body;
+
+        if (!productId || adjustment === undefined) {
+            throw createHttpError(400, "Product ID and adjustment are required");
+        }
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Inventory, InventoryTransaction, Product } = models;
+            
+            const product = await safeQuery(
+                () => Product.findOne({
+                    where: { id: productId, businessId },
+                    transaction
+                }),
+                null
+            );
+            if (!product) throw createHttpError(404, "Product not found");
+
+            // Use findOrCreate with proper defaults including outletId
+            let [inventory, created] = await Inventory.findOrCreate({
+                where: { businessId, outletId, productId },
+                defaults: { 
+                    businessId,
+                    outletId,
+                    productId,
+                    quantity: 0, 
+                    unitCost: unitCost || 0, 
+                    location 
+                },
+                transaction
+            });
+
+            const prevQty = parseFloat(inventory.quantity || 0);
+            const newQty = prevQty + parseFloat(adjustment);
+
+            await inventory.update({
+                quantity: newQty,
+                unitCost: unitCost || inventory.unitCost,
+                location: location || inventory.location,
+                lastRestockedAt: adjustment > 0 ? new Date() : inventory.lastRestockedAt
+            }, { transaction });
+
+            // Create transaction log
+            await InventoryTransaction.create({
+                businessId,
+                outletId,
+                inventoryId: inventory.id,
+                productId,
+                type: adjustment >= 0 ? 'STOCK_IN' : 'STOCK_OUT',
+                quantity: Math.abs(adjustment),
+                unitCost: unitCost || inventory.unitCost,
+                totalCost: Math.abs(adjustment) * (unitCost || inventory.unitCost),
+                previousQuantity: prevQty,
+                newQuantity: newQty,
+                performedBy: req.auth?.id,
+                reason,
+                reference: 'MANUAL_ADJUSTMENT'
+            }, { transaction });
+
+            return inventory;
+        });
+
+        console.log('[INVENTORY CONTROLLER] adjustStock result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Stock adjusted" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get item transactions
+ */
+exports.getItemTransactions = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { id } = req.params;
+        const { businessId, outletId } = req;
+
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models } = context;
+            const { InventoryTransaction } = models;
+            
+            const { whereClause } = buildStrictWhereClause(req, { inventoryId: id });
+
+            return await safeQuery(
+                () => InventoryTransaction.findAll({
+                    where: whereClause,
+                    order: [['createdAt', 'DESC']],
+                    limit: 50
+                }),
+                []
+            );
+        });
+
+        console.log('[INVENTORY CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Sync all products to inventory
+ */
+exports.syncAllProducts = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Product, Inventory } = models;
+            
+            const products = await Product.findAll({
+                where: { businessId, outletId },
+                transaction
+            });
+
+            console.log(`[INVENTORY] Syncing ${products.length} products for outlet ${outletId}`);
+
+            const syncResults = [];
+            for (const product of products) {
+                const [inventory, created] = await Inventory.findOrCreate({
+                    where: { businessId, outletId, productId: product.id },
+                    defaults: {
+                        businessId,
+                        outletId,
+                        productId: product.id,
+                        quantity: product.currentStock || 0,
+                        unitCost: 0
+                    },
+                    transaction
+                });
+                syncResults.push({ id: product.id, created });
+            }
+
+            return { syncedCount: products.length, syncResults };
+        });
+
+        res.json({ success: true, data: result, message: "Inventory sync complete" });
     } catch (error) {
         next(error);
     }
@@ -88,10 +258,13 @@ exports.addItem = async (req, res, next) => {
             return { inventory, transaction: invTransaction, isNew: created };
         });
 
+        console.log('[INVENTORY CONTROLLER] addItem result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
         res.status(201).json({ 
             success: true, 
-            data: result,
-            message: result.isNew ? "Inventory created" : "Inventory updated"
+            data: responseData,
+            message: responseData.isNew ? "Inventory created" : "Inventory updated"
         });
     } catch (error) {
         next(error);
@@ -122,7 +295,10 @@ exports.updateItem = async (req, res, next) => {
             return inventory;
         });
 
-        res.json({ success: true, data: result, message: "Inventory updated" });
+        console.log('[INVENTORY CONTROLLER] updateItem result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Inventory updated" });
     } catch (error) {
         next(error);
     }
@@ -227,7 +403,10 @@ exports.addSelfConsume = async (req, res, next) => {
             return { inventory, transaction: invTransaction };
         });
 
-        res.json({ success: true, data: result, message: "Self consumption recorded" });
+        console.log('[INVENTORY CONTROLLER] addSelfConsume result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Self consumption recorded" });
     } catch (error) {
         next(error);
     }
@@ -283,7 +462,10 @@ exports.addWastage = async (req, res, next) => {
             return { inventory, transaction: invTransaction };
         });
 
-        res.json({ success: true, data: result, message: "Wastage recorded" });
+        console.log('[INVENTORY CONTROLLER] addWastage result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Wastage recorded" });
     } catch (error) {
         next(error);
     }
@@ -316,7 +498,10 @@ exports.getWastage = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[INVENTORY CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -374,7 +559,10 @@ exports.adjustStock = async (req, res, next) => {
             return { inventory, transaction: invTransaction, adjustment };
         });
 
-        res.json({ success: true, data: result, message: "Stock adjusted" });
+        console.log('[INVENTORY CONTROLLER] adjustStock result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Stock adjusted" });
     } catch (error) {
         next(error);
     }
@@ -408,7 +596,10 @@ exports.getTransactions = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[INVENTORY CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -440,7 +631,10 @@ exports.updateTransaction = async (req, res, next) => {
             return tx;
         });
 
-        res.json({ success: true, data: result, message: "Transaction updated" });
+        console.log('[INVENTORY CONTROLLER] updateTransaction result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Transaction updated" });
     } catch (error) {
         next(error);
     }
@@ -500,7 +694,10 @@ exports.getLowStock = async (req, res, next) => {
             );
         });
 
-        res.json({ success: true, data: result });
+        console.log('[INVENTORY CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }

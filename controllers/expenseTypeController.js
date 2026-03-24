@@ -1,27 +1,33 @@
-/**
- * EXPENSE TYPE CONTROLLER - Neon-Safe Transaction Pattern
- */
-
 const createHttpError = require("http-errors");
+const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
+const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get all expense types
  */
 exports.getExpenseTypes = async (req, res, next) => {
     try {
-        const { businessId } = req;
-
+        enforceOutletScope(req);
+        
         const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
             const { ExpenseType } = models;
             
-            return await ExpenseType.findAll({
-                where: { businessId },
-                order: [['name', 'ASC']]
-            });
+            const { whereClause } = buildStrictWhereClause(req);
+            
+            return await safeQuery(
+                () => ExpenseType.findAll({
+                    where: whereClause,
+                    order: [['name', 'ASC']]
+                }),
+                []
+            );
         });
 
-        res.json({ success: true, data: result });
+        console.log('[EXPENSE TYPE CONTROLLER] getExpenseTypes result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
     } catch (error) {
         next(error);
     }
@@ -32,7 +38,8 @@ exports.getExpenseTypes = async (req, res, next) => {
  */
 exports.createExpenseType = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
         const { name, description, color, isActive } = req.body;
 
         if (!name) {
@@ -45,6 +52,7 @@ exports.createExpenseType = async (req, res, next) => {
             
             return await ExpenseType.create({
                 businessId,
+                outletId,
                 name,
                 description,
                 color: color || '#000000',
@@ -52,7 +60,10 @@ exports.createExpenseType = async (req, res, next) => {
             }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: result, message: "Expense type created" });
+        console.log('[EXPENSE TYPE CONTROLLER] createExpenseType result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Expense type created" });
     } catch (error) {
         next(error);
     }
@@ -63,6 +74,7 @@ exports.createExpenseType = async (req, res, next) => {
  */
 exports.updateExpenseType = async (req, res, next) => {
     try {
+        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
         const updateData = req.body;
@@ -71,17 +83,25 @@ exports.updateExpenseType = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { ExpenseType } = models;
             
-            const expenseType = await ExpenseType.findOne({
-                where: { id, businessId },
-                transaction
-            });
+            const { whereClause } = buildStrictWhereClause(req, { id });
+
+            const expenseType = await safeQuery(
+                () => ExpenseType.findOne({
+                    where: whereClause,
+                    transaction
+                }),
+                null
+            );
             if (!expenseType) throw createHttpError(404, "Expense type not found");
 
             await expenseType.update(updateData, { transaction });
             return expenseType;
         });
 
-        res.json({ success: true, data: result, message: "Expense type updated" });
+        console.log('[EXPENSE TYPE CONTROLLER] updateExpenseType result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Expense type updated" });
     } catch (error) {
         next(error);
     }
@@ -92,6 +112,7 @@ exports.updateExpenseType = async (req, res, next) => {
  */
 exports.deleteExpenseType = async (req, res, next) => {
     try {
+        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
 
@@ -99,19 +120,27 @@ exports.deleteExpenseType = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { ExpenseType, Expense } = models;
             
+            const { whereClause } = buildStrictWhereClause(req, { id });
+
             // Check if type has expenses
-            const expenses = await Expense.count({
-                where: { expenseTypeId: id },
-                transaction
-            });
+            const expenses = await safeQuery(
+                () => Expense.count({
+                    where: { expenseTypeId: id },
+                    transaction
+                }),
+                0
+            );
             if (expenses > 0) {
                 throw createHttpError(400, `Cannot delete expense type with ${expenses} expenses`);
             }
 
-            const expenseType = await ExpenseType.findOne({
-                where: { id, businessId },
-                transaction
-            });
+            const expenseType = await safeQuery(
+                () => ExpenseType.findOne({
+                    where: whereClause,
+                    transaction
+                }),
+                null
+            );
             if (!expenseType) throw createHttpError(404, "Expense type not found");
 
             await expenseType.destroy({ transaction });

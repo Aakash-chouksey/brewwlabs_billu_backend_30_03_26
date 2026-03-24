@@ -75,7 +75,10 @@ exports.getUsers = async (req, res, next) => {
             );
         });
 
-        res.json({ success: true, data: users || [] });
+        console.log('[USER CONTROLLER] getUsers result:', JSON.stringify(users, null, 2).substring(0, 500));
+        
+        const responseData = users.data || users;
+        res.json({ success: true, data: responseData || [] });
     } catch (error) {
         next(error);
     }
@@ -123,7 +126,10 @@ exports.createUser = async (req, res, next) => {
             }, { transaction });
         });
 
-        const { password: _, ...userWithoutPassword } = result.toJSON();
+        console.log('[USER CONTROLLER] createUser result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        const { password: _, ...userWithoutPassword } = responseData.toJSON();
         res.status(201).json({ success: true, data: userWithoutPassword, message: "User created" });
     } catch (error) {
         next(error);
@@ -161,7 +167,10 @@ exports.updateUser = async (req, res, next) => {
             return user;
         });
 
-        const { password: _, ...userWithoutPassword } = result.toJSON();
+        console.log('[USER CONTROLLER] updateUser result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        const { password: _, ...userWithoutPassword } = responseData.toJSON();
         res.json({ success: true, data: userWithoutPassword, message: "User updated" });
     } catch (error) {
         next(error);

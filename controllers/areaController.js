@@ -1,8 +1,5 @@
-/**
- * AREA CONTROLLER - Neon-Safe Transaction Pattern
- */
-
 const createHttpError = require("http-errors");
+const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
 const { safeQuery } = require("../utils/safeQuery");
 
 /**
@@ -10,22 +7,28 @@ const { safeQuery } = require("../utils/safeQuery");
  */
 exports.getAreas = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
 
-        const areas = await req.readWithTenant(async (context) => {
+        const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
             const { Area } = models;
             
+            const { whereClause } = buildStrictWhereClause(req);
+            
             return await safeQuery(
                 () => Area.findAll({
-                    where: { businessId },
+                    where: whereClause,
                     order: [['name', 'ASC']]
                 }),
                 []
             );
         });
 
-        res.json({ success: true, data: areas || [] });
+        console.log('[AREA CONTROLLER] getAreas result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
     } catch (error) {
         next(error);
     }
@@ -36,27 +39,31 @@ exports.getAreas = async (req, res, next) => {
  */
 exports.addArea = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
         const { name, description, capacity } = req.body;
 
         if (!name) {
             throw createHttpError(400, "Area name is required");
         }
 
-        const area = await req.executeWithTenant(async (context) => {
-            // Get models from context (NOT from req.models - removed by middleware)
+        const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
             const { Area } = models;
             
             return await Area.create({
                 businessId,
+                outletId,
                 name,
                 description,
-                capacity: capacity || null
-            }, { transaction: context.transaction });
+                capacity: capacity || 20
+            }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: area, message: "Area created" });
+        console.log('[AREA CONTROLLER] addArea result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Area created" });
     } catch (error) {
         next(error);
     }
@@ -67,29 +74,34 @@ exports.addArea = async (req, res, next) => {
  */
 exports.updateArea = async (req, res, next) => {
     try {
+        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
         const updateData = req.body;
 
-        const area = await req.executeWithTenant(async (context) => {
-            // Get models from context (NOT from req.models - removed by middleware)
+        const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
             const { Area } = models;
             
+            const { whereClause } = buildStrictWhereClause(req, { id });
+
             const area = await safeQuery(
                 () => Area.findOne({
-                    where: { id, businessId },
-                    transaction: context.transaction
+                    where: whereClause,
+                    transaction
                 }),
                 null
             );
             if (!area) throw createHttpError(404, "Area not found");
 
-            await area.update(updateData, { transaction: context.transaction });
+            await area.update(updateData, { transaction });
             return area;
         });
 
-        res.json({ success: true, data: area, message: "Area updated" });
+        console.log('[AREA CONTROLLER] updateArea result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Area updated" });
     } catch (error) {
         next(error);
     }
@@ -100,6 +112,7 @@ exports.updateArea = async (req, res, next) => {
  */
 exports.deleteArea = async (req, res, next) => {
     try {
+        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
 
@@ -107,11 +120,13 @@ exports.deleteArea = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Area, Table } = models;
             
+            const { whereClause } = buildStrictWhereClause(req, { id });
+
             // Check if area has tables
             const tables = await safeQuery(
                 () => Table.count({
                     where: { areaId: id },
-                    transaction: context.transaction
+                    transaction
                 }),
                 0
             );
@@ -121,14 +136,14 @@ exports.deleteArea = async (req, res, next) => {
 
             const area = await safeQuery(
                 () => Area.findOne({
-                    where: { id, businessId },
-                    transaction: context.transaction
+                    where: whereClause,
+                    transaction
                 }),
                 null
             );
             if (!area) throw createHttpError(404, "Area not found");
 
-            await area.destroy({ transaction: context.transaction });
+            await area.destroy({ transaction });
         });
 
         res.json({ success: true, message: "Area deleted" });

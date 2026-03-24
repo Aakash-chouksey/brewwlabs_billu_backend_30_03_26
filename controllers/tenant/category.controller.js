@@ -1,104 +1,176 @@
-const categoryService = require('../../services/tenant/category.service');
-const cache = require('../../utils/cache');
+/**
+ * CATEGORY CONTROLLER - Neon-Safe Transaction Pattern
+ */
+
+const createHttpError = require("http-errors");
+const { Op } = require("sequelize");
+const { safeQuery } = require("../../utils/safeQuery");
+const cache = require("../../utils/cache");
 
 /**
- * Category Controller - Neon-Safe Version
- * Standardized for transaction-scoped service access
+ * Get all categories
  */
-const categoryController = {
-    /**
-     * Create a new category
-     */
-    addCategory: async (req, res, next) => {
-        try {
-            const { name, description, color, image, isEnabled } = req.body;
-            
-            const category = await categoryService.addCategory(req, {
-                name,
-                description,
-                color,
-                image,
-                isEnabled
-            });
-            
-            res.status(201).json({ success: true, data: category });
-            
-            // Invalidate relevant caches
-            const keys = [
-                cache.generateKey(req, 'categories'),
-                `${cache.generateKey(req, 'products')}:all`,
-                cache.generateKey(req, 'product-types')
-            ];
-            await Promise.all(keys.map(key => cache.del(key)));
-        } catch (error) {
-            next(error);
-        }
-    },
+exports.getCategories = async (req, res, next) => {
+    try {
+        const { businessId, outletId } = req;
 
-    /**
-     * Get all categories
-     */
-    getCategories: async (req, res, next) => {
-        try {
-            const cacheKey = cache.generateKey(req, 'categories');
-            const cached = await cache.get(cacheKey);
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models } = context;
+            const { Category } = models;
             
-            if (cached) {
-                return res.status(200).json({ success: true, data: cached, _cached: true });
-            }
+            return await safeQuery(
+                () => Category.findAll({
+                    where: { businessId, outletId },
+                    order: [['sortOrder', 'ASC'], ['name', 'ASC']]
+                }),
+                []
+            );
+        });
 
-            const categories = await categoryService.getCategories(req);
-            await cache.set(cacheKey, categories, 600); // 10 mins
-
-            res.status(200).json({ success: true, data: categories });
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    /**
-     * Update a category
-     */
-    updateCategory: async (req, res, next) => {
-        try {
-            const { id } = req.params;
-            const category = await categoryService.updateCategory(req, id, req.body);
-            
-            res.status(200).json({ success: true, data: category });
-            
-            // Invalidate relevant caches
-            const keys = [
-                cache.generateKey(req, 'categories'),
-                `${cache.generateKey(req, 'products')}:all`,
-                cache.generateKey(req, 'product-types')
-            ];
-            await Promise.all(keys.map(key => cache.del(key)));
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    /**
-     * Delete a category
-     */
-    deleteCategory: async (req, res, next) => {
-        try {
-            const { id } = req.params;
-            await categoryService.deleteCategory(req, id);
-            
-            res.status(200).json({ success: true, message: "Category deleted successfully" });
-            
-            // Invalidate relevant caches
-            const keys = [
-                cache.generateKey(req, 'categories'),
-                `${cache.generateKey(req, 'products')}:all`,
-                cache.generateKey(req, 'product-types')
-            ];
-            await Promise.all(keys.map(key => cache.del(key)));
-        } catch (error) {
-            next(error);
-        }
+        res.json({ success: true, data: result || [] });
+    } catch (error) {
+        next(error);
     }
 };
 
-module.exports = categoryController;
+/**
+ * Add new category
+ */
+exports.addCategory = async (req, res, next) => {
+    try {
+        const { businessId, outletId } = req;
+        const { name, description, color, image, isEnabled, sortOrder } = req.body;
+
+        if (!name) {
+            throw createHttpError(400, "Category name is required");
+        }
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Category } = models;
+            
+            // Check for duplicate name in same outlet
+            const existing = await safeQuery(
+                () => Category.findOne({
+                    where: { businessId, outletId, name: { [Op.iLike]: name } },
+                    transaction
+                }),
+                null
+            );
+            if (existing) throw createHttpError(400, "Category with this name already exists in this outlet");
+
+            return await Category.create({
+                businessId,
+                outletId,
+                name,
+                description,
+                color: color || '#3B82F6',
+                image,
+                isEnabled: isEnabled !== undefined ? isEnabled : true,
+                sortOrder: sortOrder || 0
+            }, { transaction });
+        });
+
+        // Invalidate cache
+        const cacheKey = cache.generateKey(req, 'categories');
+        await cache.del(cacheKey);
+
+        res.status(201).json({ success: true, data: result, message: "Category created" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Update category
+ */
+exports.updateCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { businessId, outletId } = req;
+        const updateData = req.body;
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Category } = models;
+            
+            const category = await safeQuery(
+                () => Category.findOne({
+                    where: { id, businessId, outletId },
+                    transaction
+                }),
+                null
+            );
+            if (!category) throw createHttpError(404, "Category not found");
+
+            // Check name uniqueness if changing
+            if (updateData.name && updateData.name.toLowerCase() !== category.name.toLowerCase()) {
+                const existing = await safeQuery(
+                    () => Category.findOne({
+                        where: { businessId, outletId, name: { [Op.iLike]: updateData.name }, id: { [Op.ne]: id } },
+                        transaction
+                    }),
+                    null
+                );
+                if (existing) throw createHttpError(400, "Another category already has this name");
+            }
+
+            await category.update(updateData, { transaction });
+            return category;
+        });
+
+        // Invalidate cache
+        const cacheKey = cache.generateKey(req, 'categories');
+        await cache.del(cacheKey);
+
+        res.json({ success: true, data: result, message: "Category updated" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Delete category
+ */
+exports.deleteCategory = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { businessId, outletId } = req;
+
+        await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Category, Product } = models;
+            
+            // Check for dependencies
+            const productsCount = await safeQuery(
+                () => Product.count({
+                    where: { categoryId: id, businessId },
+                    transaction
+                }),
+                0
+            );
+            if (productsCount > 0) {
+                throw createHttpError(400, `Cannot delete category with ${productsCount} associated products`);
+            }
+
+            const category = await safeQuery(
+                () => Category.findOne({
+                    where: { id, businessId, outletId },
+                    transaction
+                }),
+                null
+            );
+            if (!category) throw createHttpError(404, "Category not found");
+
+            await category.destroy({ transaction });
+        });
+
+        // Invalidate cache
+        const cacheKey = cache.generateKey(req, 'categories');
+        await cache.del(cacheKey);
+
+        res.json({ success: true, message: "Category deleted" });
+    } catch (error) {
+        next(error);
+    }
+};

@@ -47,8 +47,13 @@ const onboardingController = {
                 adminPassword
             }, executors);
 
-            const accessToken = authService.generateAccessToken(result.admin);
-            const refreshToken = authService.generateRefreshToken(result.admin);
+            console.log('[CONTROLLER DEBUG] onboarding result:', JSON.stringify(result, null, 2).substring(0, 500));
+
+            // Extract data from executor response structure
+            const data = result.data || result;
+            
+            const accessToken = authService.generateAccessToken(data.admin);
+            const refreshToken = authService.generateRefreshToken(data.admin);
 
             const cookieOptions = {
                 httpOnly: true,
@@ -69,9 +74,9 @@ const onboardingController = {
 
             console.log('🔍 [ONBOARDING] Response data before sending:', {
                 success: true,
-                hasBusiness: !!result.business,
-                hasOutlet: !!result.outlet,
-                hasUser: !!result.admin,
+                hasBusiness: !!data.business,
+                hasOutlet: !!data.outlet,
+                hasUser: !!data.admin,
                 hasAccessToken: !!accessToken,
                 hasRefreshToken: !!refreshToken
             });
@@ -79,9 +84,9 @@ const onboardingController = {
             const responseData = {
                 success: true,
                 message: 'Business onboarded successfully.',
-                business: result.business ? result.business.get({ plain: true }) : null,
-                outlet: result.outlet ? result.outlet.get({ plain: true }) : null,
-                user: result.admin ? result.admin.get({ plain: true }) : null,
+                business: data.business ? data.business.get({ plain: true }) : null,
+                outlet: data.outlet ? data.outlet.get({ plain: true }) : null,
+                user: data.admin ? data.admin.get({ plain: true }) : null,
                 accessToken,
                 refreshToken
             };

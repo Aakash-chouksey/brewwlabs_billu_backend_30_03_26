@@ -23,7 +23,10 @@ exports.getRecipes = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: recipes });
+        console.log('[RECIPE CONTROLLER] getRecipes result:', JSON.stringify(recipes, null, 2).substring(0, 500));
+        
+        const responseData = recipes.data || recipes;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -61,7 +64,10 @@ exports.getRecipe = async (req, res, next) => {
             return recipe;
         });
 
-        res.json({ success: true, data: recipe });
+        console.log('[RECIPE CONTROLLER] getRecipe result:', JSON.stringify(recipe, null, 2).substring(0, 500));
+        
+        const responseData = recipe.data || recipe;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -116,7 +122,10 @@ exports.createRecipe = async (req, res, next) => {
             return { recipe, ingredients: ingredientRecords };
         });
 
-        res.status(201).json({ success: true, data: result, message: "Recipe created" });
+        console.log('[RECIPE CONTROLLER] createRecipe result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Recipe created" });
     } catch (error) {
         next(error);
     }
@@ -179,7 +188,10 @@ exports.updateRecipe = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result, message: "Recipe updated" });
+        console.log('[RECIPE CONTROLLER] updateRecipe result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Recipe updated" });
     } catch (error) {
         next(error);
     }
@@ -273,7 +285,10 @@ exports.checkAvailability = async (req, res, next) => {
             };
         });
 
-        res.json({ success: true, data: result });
+        console.log('[RECIPE CONTROLLER] checkAvailability result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -344,7 +359,10 @@ exports.getCostAnalysis = async (req, res, next) => {
             };
         });
 
-        res.json({ success: true, data: result });
+        console.log('[RECIPE CONTROLLER] getCostAnalysis result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }

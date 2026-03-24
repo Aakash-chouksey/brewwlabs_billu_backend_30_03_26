@@ -11,13 +11,15 @@ const { safeQuery } = require("../utils/safeQuery");
  */
 exports.getProducts = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        const { businessId, outletId } = req;
         const { category, search, isActive } = req.query;
 
-        const result = await req.executeRead(async ({ models }) => {
+        console.log("STEP 2 - Calling Executor (readWithTenant)");
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models } = context;
             const { Product, Category, ProductType } = models;
             
-            const whereClause = { businessId };
+            const whereClause = { businessId, outletId };
             if (isActive !== undefined) whereClause.isActive = isActive === 'true';
 
             const include = [
@@ -26,7 +28,7 @@ exports.getProducts = async (req, res, next) => {
             ];
 
             if (category) {
-                include[0].where = { id: category };
+                include[0].where = { id: category, businessId, outletId };
                 include[0].required = true;
             }
 
@@ -38,7 +40,7 @@ exports.getProducts = async (req, res, next) => {
                 ];
             }
 
-            return await safeQuery(
+            const products = await safeQuery(
                 () => Product.findAll({
                     where: whereClause,
                     include,
@@ -46,9 +48,14 @@ exports.getProducts = async (req, res, next) => {
                 }),
                 []
             );
+            console.log("STEP 4 - DB RESULT (Products):", Array.isArray(products) ? products.length : 'not an array');
+            return products;
         });
 
-        res.json({ success: true, data: result });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        res.json({ success: true, data: result?.data || [] });
     } catch (error) {
         next(error);
     }
@@ -59,11 +66,13 @@ exports.getProducts = async (req, res, next) => {
  */
 exports.addProduct = async (req, res, next) => {
     try {
-        const { businessId } = req;
+        console.log("STEP 1 - Controller Start - addProduct");
+        const { businessId, outletId } = req;
         const { name, description, price, cost, categoryId, sku, barcode, image, isActive, taxRate } = req.body;
+        console.log("STEP 2 - Calling Executor (executeWithTenant)");
 
-        if (!name || !price) {
-            throw createHttpError(400, "Product name and price are required");
+        if (!name || !price || !categoryId) {
+            throw createHttpError(400, "Product name, price, and category are required");
         }
 
         const result = await req.executeWithTenant(async (context) => {
@@ -74,7 +83,7 @@ exports.addProduct = async (req, res, next) => {
             if (sku) {
                 const existing = await safeQuery(
                     () => Product.findOne({
-                        where: { businessId, sku },
+                        where: { businessId, outletId, sku },
                         transaction
                     }),
                     null
@@ -86,16 +95,17 @@ exports.addProduct = async (req, res, next) => {
             if (categoryId) {
                 const category = await safeQuery(
                     () => Category.findOne({
-                        where: { id: categoryId, businessId },
+                        where: { id: categoryId, businessId, outletId },
                         transaction
                     }),
                     null
                 );
-                if (!category) throw createHttpError(404, "Category not found");
+                if (!category) throw createHttpError(404, "Category not found for this outlet");
             }
 
             return await Product.create({
                 businessId,
+                outletId,
                 name,
                 description,
                 price,
@@ -107,9 +117,14 @@ exports.addProduct = async (req, res, next) => {
                 isActive: isActive !== undefined ? isActive : true,
                 taxRate: taxRate || 0
             }, { transaction });
+            console.log("STEP 4 - DB RESULT (Product Created):", result?.id);
+            return result;
         });
 
-        res.status(201).json({ success: true, data: result, message: "Product created" });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        res.status(201).json({ success: true, data: result.data, message: "Product created" });
     } catch (error) {
         next(error);
     }
@@ -120,9 +135,11 @@ exports.addProduct = async (req, res, next) => {
  */
 exports.updateProduct = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - updateProduct");
         const { id } = req.params;
-        const { businessId } = req;
+        const { businessId, outletId } = req;
         const updateData = req.body;
+        console.log("STEP 2 - Calling Executor (executeWithTenant)");
 
         const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
@@ -130,7 +147,7 @@ exports.updateProduct = async (req, res, next) => {
             
             const product = await safeQuery(
                 () => Product.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId, outletId },
                     transaction
                 }),
                 null
@@ -141,7 +158,7 @@ exports.updateProduct = async (req, res, next) => {
             if (updateData.sku && updateData.sku !== product.sku) {
                 const existing = await safeQuery(
                     () => Product.findOne({
-                        where: { businessId, sku: updateData.sku, id: { [Op.ne]: id } },
+                        where: { businessId, outletId, sku: updateData.sku, id: { [Op.ne]: id } },
                         transaction
                     }),
                     null
@@ -150,10 +167,14 @@ exports.updateProduct = async (req, res, next) => {
             }
 
             await product.update(updateData, { transaction });
+            console.log("STEP 4 - DB RESULT (Product Updated):", product.id);
             return product;
         });
 
-        res.json({ success: true, data: result, message: "Product updated" });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        res.json({ success: true, data: result.data, message: "Product updated" });
     } catch (error) {
         next(error);
     }
@@ -164,39 +185,29 @@ exports.updateProduct = async (req, res, next) => {
  */
 exports.deleteProduct = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - deleteProduct");
         const { id } = req.params;
-        const { businessId } = req;
+        const { businessId, outletId } = req;
+        console.log("STEP 2 - Calling Executor (executeWithTenant)");
 
         await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
             const { Product, OrderItem, InventoryItem } = models;
             
-            // Phase 2: Safe dependency checks
             const orderItemsCount = await safeQuery(
                 () => OrderItem.count({
-                    where: { productId: id },
+                    where: { productId: id, businessId },
                     transaction
                 }),
                 0
             );
             if (orderItemsCount > 0) {
-                throw createHttpError(400, `Cannot delete product with ${orderItemsCount} order items`);
-            }
-
-            const inventoryCount = await safeQuery(
-                () => InventoryItem.count({
-                    where: { productId: id },
-                    transaction
-                }),
-                0
-            );
-            if (inventoryCount > 0) {
-                throw createHttpError(400, `Cannot delete product with inventory records`);
+                throw createHttpError(400, `Cannot delete product with existing order items`);
             }
 
             const product = await safeQuery(
                 () => Product.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId, outletId },
                     transaction
                 }),
                 null

@@ -144,11 +144,8 @@ class ModelRegistry {
                 models.Business.hasMany(models.User, { foreignKey: 'business_id', as: 'users', constraints: false });
             }
 
-            // User-Outlet association (FIXED ALIASES)
-            if (models.User && models.Outlet) {
-                models.User.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'assignedOutlet' });
-                models.Outlet.hasMany(models.User, { foreignKey: 'outlet_id', as: 'staff' });
-            }
+            // User-Outlet association is defined in outletModel.js associate function
+            // DO NOT define here to prevent duplicate alias conflict
 
             // Product & Category
             if (models.Product) {

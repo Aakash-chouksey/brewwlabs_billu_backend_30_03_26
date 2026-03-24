@@ -49,7 +49,10 @@ exports.getSalesTrends = async (req, res, next) => {
             return Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date));
         });
 
-        res.json({ success: true, data: result });
+        console.log('[ANALYTICS CONTROLLER] getSalesTrends result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -118,7 +121,11 @@ exports.getTopProducts = async (req, res, next) => {
                 .slice(0, parseInt(limit));
         });
 
-        res.json({ success: true, data: result });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        return res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);
     }
@@ -167,7 +174,11 @@ exports.getPeakHours = async (req, res, next) => {
             return Object.values(hourlyData);
         });
 
-        res.json({ success: true, data: result });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        return res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);
     }
@@ -254,7 +265,11 @@ exports.getSummary = async (req, res, next) => {
             };
         });
 
-        res.json({ success: true, data: result });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        return res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);
     }
@@ -303,7 +318,11 @@ exports.getAvgTicketsPerAgent = async (req, res, next) => {
             }));
         });
 
-        res.json({ success: true, data: result });
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        return res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);
     }

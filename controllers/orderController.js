@@ -12,9 +12,11 @@ const { safeQuery } = require("../utils/safeQuery");
  */
 exports.getOrders = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - getOrders");
         enforceOutletScope(req);
         const { businessId } = req;
         const { status, startDate, endDate, limit = 50, offset = 0 } = req.query;
+        console.log("STEP 2 - Calling Executor (readWithTenant)");
 
         const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
@@ -49,11 +51,14 @@ exports.getOrders = async (req, res, next) => {
             );
         });
 
+        console.log('[ORDER CONTROLLER] getOrders result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
         res.json({ 
             success: true, 
-            data: result?.rows || [], 
+            data: responseData?.rows || [], 
             pagination: {
-                total: result?.count || 0,
+                total: responseData?.count || 0,
                 limit: parseInt(limit),
                 offset: parseInt(offset)
             }
@@ -97,8 +102,14 @@ exports.getOrderById = async (req, res, next) => {
             );
         });
 
-        if (!result) throw createHttpError(404, "Order not found");
-        res.json({ success: true, data: result });
+        console.log('[ORDER CONTROLLER] getOrderById result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        if (!result.data) throw createHttpError(404, "Order not found");
+        res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);
     }
@@ -109,9 +120,11 @@ exports.getOrderById = async (req, res, next) => {
  */
 exports.addOrder = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - addOrder");
         enforceOutletScope(req);
         const { businessId, outletId } = req;
         const { customerId, tableId, items, type, notes, discount, tax } = req.body;
+        console.log("STEP 2 - Calling Executor (executeWithTenant)");
 
         // Early validation
         if (!businessId || !outletId) {
@@ -209,7 +222,13 @@ exports.addOrder = async (req, res, next) => {
             );
         });
 
-        res.status(201).json({ success: true, data: result, message: "Order created" });
+        console.log('[ORDER CONTROLLER] addOrder result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        res.status(201).json({ success: true, data: result.data, message: "Order created" });
     } catch (error) {
         next(error);
     }
@@ -220,10 +239,12 @@ exports.addOrder = async (req, res, next) => {
  */
 exports.updateOrder = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - updateOrder");
         enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
         const { status, items, discount, tax, notes } = req.body;
+        console.log("STEP 2 - Calling Executor (executeWithTenant)");
 
         const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
@@ -310,7 +331,13 @@ exports.updateOrder = async (req, res, next) => {
             );
         });
 
-        res.json({ success: true, data: result, message: "Order updated" });
+        console.log('[ORDER CONTROLLER] updateOrder result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        res.json({ success: true, data: result.data, message: "Order updated" });
     } catch (error) {
         next(error);
     }
@@ -321,9 +348,11 @@ exports.updateOrder = async (req, res, next) => {
  */
 exports.getArchivedOrders = async (req, res, next) => {
     try {
+        console.log("STEP 1 - Controller Start - getArchivedOrders");
         enforceOutletScope(req);
         const { businessId } = req;
         const { startDate, endDate, limit = 50, offset = 0 } = req.query;
+        console.log("STEP 2 - Calling Executor (readWithTenant)");
 
         const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
@@ -357,11 +386,16 @@ exports.getArchivedOrders = async (req, res, next) => {
             );
         });
 
+        console.log("STEP 6 - Controller Received:", result);
+        console.log("STEP 6.1 - Data:", result?.data);
+        console.log("STEP 7 - Sending Response:", result?.data);
+        
+        const responseData = result.data || result;
         res.json({ 
             success: true, 
-            data: result?.rows || [], 
+            data: responseData?.rows || [], 
             pagination: {
-                total: result?.count || 0,
+                total: responseData?.count || 0,
                 limit: parseInt(limit),
                 offset: parseInt(offset)
             }

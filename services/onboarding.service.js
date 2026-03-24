@@ -99,7 +99,7 @@ const onboardingService = {
                     id: uuidv4(),
                     businessId: businessId,
                     schemaName: schemaName,
-                    status: 'pending_schema_init' // Background job will update to 'active' after schema init
+                    status: 'onboarding' // Background job will update to 'active' after schema init
                 }, { transaction });
                 logStep('TenantRegistry created');
 
@@ -126,7 +126,7 @@ const onboardingService = {
                 businessId,
                 outletId,
                 schemaName,
-                status: 'pending_schema_init',
+                status: 'onboarding',
                 message: 'Business created. Schema initialization is running in background.',
                 duration: `${duration}ms`
             };
