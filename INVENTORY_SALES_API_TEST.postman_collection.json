@@ -1,0 +1,678 @@
+{
+	"info": {
+		"_postman_id": "inventory-sales-api-test",
+		"name": "Inventory & Sales API Test Suite",
+		"description": "Comprehensive test suite for inventory dashboard, wastage, recipes, and sales APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Inventory Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/dashboard/summary",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "dashboard", "summary"]
+						},
+						"description": "Test inventory dashboard summary API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/dashboard/data?period=7d",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "dashboard", "data"],
+							"query": [
+								{
+									"key": "period",
+									"value": "7d",
+									"description": "Time period for dashboard data"
+								}
+							]
+						},
+						"description": "Test complete dashboard data API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/dashboard/recent-transactions?limit=5",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "dashboard", "recent-transactions"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5",
+									"description": "Number of transactions to return"
+								}
+							]
+						},
+						"description": "Test recent transactions API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Low Stock Alerts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/low-stock",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "low-stock"]
+						},
+						"description": "Test low stock alerts API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory Items",
+			"item": [
+				{
+					"name": "Get All Items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/items",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "items"]
+						},
+						"description": "Test get all inventory items API"
+					},
+					"response": []
+				},
+				{
+					"name": "Add New Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Item\",\n  \"category\": \"Test Category\",\n  \"unit\": \"kg\",\n  \"currentStock\": 100,\n  \"minimumStock\": 10,\n  \"costPerUnit\": 5.50,\n  \"supplierId\": \"test-supplier-id\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/items",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "items"]
+						},
+						"description": "Test add new inventory item API"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Test Item\",\n  \"category\": \"Updated Category\",\n  \"currentStock\": 150,\n  \"minimumStock\": 15,\n  \"costPerUnit\": 6.00\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/items/{{itemId}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "items", "{{itemId}}"]
+						},
+						"description": "Test update inventory item API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory Transactions",
+			"item": [
+				{
+					"name": "Get Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/transactions?limit=10",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "transactions"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of transactions to return"
+								}
+							]
+						},
+						"description": "Test get inventory transactions API"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Purchase",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"inventoryItemId\": \"test-item-id\",\n  \"quantity\": 50,\n  \"costPerUnit\": 4.50,\n  \"supplierId\": \"test-supplier-id\",\n  \"referenceNumber\": \"PO-001\",\n  \"reason\": \"Stock replenishment\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/transactions/purchase",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "transactions", "purchase"]
+						},
+						"description": "Test add purchase transaction API"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Wastage",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"inventoryItemId\": \"test-item-id\",\n  \"quantity\": 5,\n  \"reason\": \"Expired items\",\n  \"referenceNumber\": \"WASTE-001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/transactions/wastage",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "transactions", "wastage"]
+						},
+						"description": "Test add wastage transaction API"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Self Consume",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"inventoryItemId\": \"test-item-id\",\n  \"quantity\": 10,\n  \"reason\": \"Internal consumption\",\n  \"referenceNumber\": \"SELF-001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/transactions/self-consume",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "transactions", "self-consume"]
+						},
+						"description": "Test add self consume transaction API"
+					},
+					"response": []
+				},
+				{
+					"name": "Adjust Stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"inventoryItemId\": \"test-item-id\",\n  \"quantity\": 25,\n  \"reason\": \"Stock adjustment after audit\",\n  \"referenceNumber\": \"ADJ-001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory/transactions/adjustment",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory", "transactions", "adjustment"]
+						},
+						"description": "Test stock adjustment transaction API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Recipes",
+			"item": [
+				{
+					"name": "Get All Recipes",
+				},
+				{
+					"name": "Create Recipe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": \"test-product-id\",\n  \"name\": \"Test Recipe\",\n  \"instructions\": \"Mix ingredients and cook for 10 minutes\",\n  \"prepTime\": 15,\n  \"recipeItems\": [\n    {\n      \"inventoryItemId\": \"ingredient-1-id\",\n      \"quantityRequired\": 2,\n      \"unit\": \"kg\",\n      \"isOptional\": false,\n      \"notes\": \"Main ingredient\"\n    },\n    {\n      \"inventoryItemId\": \"ingredient-2-id\",\n      \"quantityRequired\": 0.5,\n      \"unit\": \"kg\",\n      \"isOptional\": true,\n      \"notes\": \"Optional garnish\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/recipes",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "recipes"]
+						},
+						"description": "Test create recipe API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recipe by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/recipes/{{recipeId}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "recipes", "{{recipeId}}"]
+						},
+						"description": "Test get single recipe API"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Recipe Availability",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/recipes/{{recipeId}}/availability?quantity=2",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "recipes", "{{recipeId}}", "availability"],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "2",
+									"description": "Quantity to check availability for"
+								}
+							]
+						},
+						"description": "Test recipe availability check API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recipe Cost Analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/recipes/{{recipeId}}/cost-analysis",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "recipes", "{{recipeId}}", "cost-analysis"]
+						},
+						"description": "Test recipe cost analysis API"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Recipe",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Test Recipe\",\n  \"instructions\": \"Updated instructions\",\n  \"prepTime\": 20,\n  \"recipeItems\": [\n    {\n      \"inventoryItemId\": \"ingredient-1-id\",\n      \"quantityRequired\": 3,\n      \"unit\": \"kg\",\n      \"isOptional\": false,\n      \"notes\": \"Updated main ingredient\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/recipes/{{recipeId}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "recipes", "{{recipeId}}"]
+						},
+						"description": "Test update recipe API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sales Dashboard",
+			"item": [
+				{
+					"name": "Get Sales Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/sales/dashboard",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "sales", "dashboard"]
+						},
+						"description": "Test sales dashboard API - should return today's and weekly stats"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Daily Sales",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/sales/daily?date=2026-03-20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "sales", "daily"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-03-20",
+									"description": "Date for daily sales report"
+								}
+							]
+						},
+						"description": "Test daily sales API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sales Payments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/sales/payments?startDate=2026-03-15&endDate=2026-03-20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "sales", "payments"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-03-15",
+									"description": "Start date for payment report"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-03-20",
+									"description": "End date for payment report"
+								}
+							]
+						},
+						"description": "Test sales payments breakdown API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sales Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/sales/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "sales", "categories"]
+						},
+						"description": "Test sales by category API"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sales Items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/sales/items?limit=10",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "sales", "items"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of top items to return"
+								}
+							]
+						},
+						"description": "Test top selling items API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory Categories",
+			"item": [
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory-categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory-categories"]
+						},
+						"description": "Test get inventory categories API"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Category\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/inventory-categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "inventory-categories"]
+						},
+						"description": "Test add inventory category API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Suppliers",
+			"item": [
+				{
+					"name": "Get Suppliers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/suppliers",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "suppliers"]
+						},
+						"description": "Test get suppliers API"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Supplier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Supplier\",\n  \"contactPerson\": \"John Doe\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"test@supplier.com\",\n  \"address\": \"123 Test Street, Test City\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/tenant/suppliers",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "tenant", "suppliers"]
+						},
+						"description": "Test add supplier API"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "itemId",
+			"value": "your-item-id-here",
+			"type": "string"
+		},
+		{
+			"key": "recipeId",
+			"value": "your-recipe-id-here",
+			"type": "string"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-authentication script",
+					"// Make sure you have a valid JWT token in your environment",
+					"if (!pm.environment.get('auth_token')) {",
+					"    console.log('Please set auth_token in environment variables');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Response validation script",
+					"pm.test(\"Status code is 200\", function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"pm.test(\"Response has success field\", function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"pm.test(\"Success is true\", function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData.success).to.be.true;",
+					"});",
+					"",
+					"pm.test(\"Response has data field\", function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('data');",
+					"});",
+					"",
+					"// Log response for debugging",
+					"console.log('Response:', pm.response.json());"
+				]
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	}
+}

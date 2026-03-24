@@ -1,0 +1,172 @@
+☁️  Cloud database detected - enabling SSL
+🔧 NODE_ENV: development
+🔧 RENDER_SERVICE: undefined
+🔧 ENVIRONMENT DETECTION: DEVELOPMENT
+⚙️  System Config: Env=development | Port=8000 | DB=PostgreSQL (Cloud)
+🔗 DB URI: postgresql://***:***@ep-muddy-cherry-an9o34db-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+🔐 Applying Neon-safe middleware chains...
+🔌 Connecting to unified schema-per-tenant database...
+🔍 Loading route: routes/tenant/tenant.routes.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/tenant/tenant.routes.js
+⚠️  Route not found: routes/tenant/tenant.routes.js - Cannot find module '../utils/safeQuery'
+Require stack:
+- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/tenant/profileController.js
+- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/tenant/tenant.routes.js
+- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/neonSafeMiddlewareChain.js
+- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js
+   Full path attempted: /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/tenant/tenant.routes.js
+🔍 Loading route: routes/inventoryRoutes.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/inventoryRoutes.js
+✅ Route loaded: routes/inventoryRoutes.js
+🔍 Loading route: routes/accountingRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/accountingRoute.js
+✅ Route loaded: routes/accountingRoute.js
+🔍 Loading route: src/auth/auth.routes.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/auth/auth.routes.js
+✅ Route loaded: src/auth/auth.routes.js
+🔍 Loading route: routes/userRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/userRoute.js
+✅ Route loaded: routes/userRoute.js
+🔍 Loading route: routes/superAdminRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/superAdminRoute.js
+✅ Route loaded: routes/superAdminRoute.js
+🔍 Loading route: routes/uploadRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/uploadRoute.js
+✅ Route loaded: routes/uploadRoute.js
+🔍 Loading route: routes/onboardingRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/onboardingRoute.js
+✅ Route loaded: routes/onboardingRoute.js
+✅ Neon-safe middleware chains applied successfully
+📋 Registered API Routes:
+   - GET  /health
+   - GET  /health/detailed
+   - /api/admin/*    (Admin routes with auth)
+   - /api/tenant/*   (Tenant routes with auth)
+   - /api/inventory/* (Inventory routes with auth)
+   - /api/tenant/accounting/* (Accounting routes with auth)
+   - /api/auth/*     (Public auth routes)
+   - /api/user/*     (Public user routes - includes /test, /onboarding/business)
+   - /api/super-admin/* (Public super-admin routes)
+   - /api/upload/*   (Public upload routes)
+   - /api/onboarding/* (Public onboarding routes - includes /business)
+🔌 Initializing Neon-safe database connections...
+🔌 Attempting unified database connection to ep-muddy-cherry-an9o34db-pooler.c-6.us-east-1.aws.neon.tech...
+⏭️  Periodic cleanup tasks disabled (performance optimization)
+⏰ Background jobs scheduled
+(node:74748) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✅ Unified database connection established
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
+✅ Unified database connection established
+Executing (default): SELECT 1+1 AS result
+✅ Unified database connection established
+Executing (default): SELECT 1+1 AS result
+✅ Neon transaction executor is healthy
+✅ Unified PostgreSQL Connection Authenticated.
+[TX:27ea0336] START TRANSACTION;...
+Executing (27ea0336-99c8-477f-8f6f-6dffce3c2ce2): START TRANSACTION;
+[TX:27ea0336] SELECT 1 FROM pg_namespace WHERE nspname = 'public'...
+Executing (27ea0336-99c8-477f-8f6f-6dffce3c2ce2): SELECT 1 FROM pg_namespace WHERE nspname = 'public'
+[TX:27ea0336] COMMIT;...
+Executing (27ea0336-99c8-477f-8f6f-6dffce3c2ce2): COMMIT;
+✅ Public schema verified.
+Executing (default): SELECT 1+1 AS result
+✅ Control Plane validation successful (via Unified Instance)
+📦 Pre-loading models...
+❌ Failed to setup associations: AssociationError [SequelizeAssociationError]: You have used the alias assignedOutlet in two separate associations. Aliased associations must have unique aliases.
+    at new Association (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/associations/base.js:13:13)
+    at new BelongsTo (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/associations/belongs-to.js:25:5)
+    at User.<anonymous> (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/associations/mixin.js:70:25)
+    at ModelRegistry.setupAssociations (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/modelFactory.js:149:29)
+    at ModelRegistry.createModels (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/modelFactory.js:88:27)
+    at ModelFactory.createModels (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/modelFactory.js:404:36)
+    at initializeNeonSafeDatabases (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js:432:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async initializeNeonSafeApp (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js:448:5)
+    at async startNeonSafeServer (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js:463:5)
+⚠️ Some associations were already defined or had conflicts: You have used the alias assignedOutlet in two separate associations. Aliased associations must have unique aliases.
+✅ Models pre-loaded successfully
+✅ All Neon-safe database connections established
+✅ Neon-safe application initialized successfully
+🚀 Neon-Safe Server running on port 8000
+📋 Environment: development
+🏗️ Architecture: Neon-Safe Schema-per-Tenant
+🔗 Health Check: http://localhost:8000/health
+📊 Detailed Health: http://localhost:8000/health/detailed
+🔐 Transaction Safety: ENFORCED
+⚡ Neon Optimized: YES
+📈 Initial metrics population...
+⏱️ [ONBOARDING] Starting: 0ms (Total: 0ms)
+⏱️ [ONBOARDING] Executor setup: 1ms (Total: 1ms)
+[TX START] Tenant: public | ID: tx_1774379975860_2l8m5
+🔌 Connecting to unified schema-per-tenant database...
+✅ Unified database connection established
+[TX:e9cfc68b] START TRANSACTION;...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): START TRANSACTION;
+[TX:e9cfc68b] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+[TX:e9cfc68b] SET LOCAL search_path TO "tenant_public"...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): SET LOCAL search_path TO "tenant_public"
+⏱️ [ONBOARDING] Transaction started: 4450ms (Total: 4451ms)
+⏱️ [ONBOARDING] Models extracted: 0ms (Total: 4451ms)
+[TX:e9cfc68b] SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "...
+[TX:e9cfc68b] SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_i...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "status", "subscription_plan", "owner_id" AS "ownerId", "business_id" AS "businessId", "type", "is_active" AS "isActive", "settings", "created_at", "updated_at" FROM "public"."businesses" AS "Business" WHERE "Business"."email" = 'testcafenew@test.com';
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_ids" AS "outletIds", "name", "email", "phone", "password_hash" AS "password", "role", "is_verified" AS "isVerified", "is_active" AS "isActive", "last_login" AS "lastLogin", "panel_type" AS "panelType", "status", "salary", "location", "experience", "rating", "total_orders" AS "totalOrders", "performance", "token_version" AS "tokenVersion", "created_at", "updated_at", "business_id", "outlet_id" FROM "public"."users" AS "User" WHERE "User"."email" = 'adminnew789@test.com' LIMIT 1;
+⏱️ [ONBOARDING] Duplicate check completed: 632ms (Total: 5083ms)
+Business 7b8c8c23-c2a2-4b38-b58c-558d7db9ac8c properly linked to owner 1fc646ba-a556-4164-941f-a520af006f85
+[TX:e9cfc68b] INSERT INTO "public"."businesses" ("id","name","address","phone","email","status...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): INSERT INTO "public"."businesses" ("id","name","address","phone","email","status","subscription_plan","owner_id","type","is_active","settings","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING "id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","business_id","type","is_active","settings","created_at","updated_at";
+⏱️ [ONBOARDING] Business created: 318ms (Total: 5401ms)
+[TX:e9cfc68b] CREATE SCHEMA IF NOT EXISTS "tenant_7b8c8c23-c2a2-4b38-b58c-558d7db9ac8c"...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): CREATE SCHEMA IF NOT EXISTS "tenant_7b8c8c23-c2a2-4b38-b58c-558d7db9ac8c"
+⏱️ [ONBOARDING] Schema created: 311ms (Total: 5712ms)
+⏱️ [ONBOARDING] Password hashed: 47ms (Total: 5759ms)
+[TX:e9cfc68b] INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name"...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name","email","password_hash","role","is_verified","is_active","panel_type","status","rating","total_orders","performance","token_version","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING "id","business_id","outlet_id","outlet_ids","name","email","phone","password_hash","role","is_verified","is_active","last_login","panel_type","status","salary","location","experience","rating","total_orders","performance","token_version","created_at","updated_at","business_id","outlet_id";
+⏱️ [ONBOARDING] User created: 362ms (Total: 6121ms)
+[TX:e9cfc68b] INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status","created_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id","business_id","schema_name","status","created_at","business_id";
+[TX:e9cfc68b] ROLLBACK;...
+Executing (e9cfc68b-bc50-4cfe-87e1-9cfb4d74cf80): ROLLBACK;
+[TX END] Failed: invalid input value for enum public.enum_tenant_registry_status: "pending_schema_init"
+🚨 ONBOARDING FAILED: {
+  error: 'invalid input value for enum public.enum_tenant_registry_status: "pending_schema_init"',
+  stack: 'Error\n' +
+    '    at Query.run (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)\n' +
+    '    at /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/sequelize.js:315:28\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+    '    at async PostgresQueryInterface.insert (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/dialects/abstract/query-interface.js:308:21)\n' +
+    '    at async clone.save (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/model.js:2490:35)\n' +
+    '    at async TenantRegistry.create (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/model.js:1362:12)\n' +
+    '    at async /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/onboarding.service.js:98:17\n' +
+    '    at async NeonTransactionSafeExecutor.executeWithTenant (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/neonTransactionSafeExecutor.js:190:32)\n' +
+    '    at async Object.onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/onboarding.service.js:47:28)\n' +
+    '    at async onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:41:28)',
+  businessEmail: 'testcafenew@test.com',
+  adminEmail: 'adminnew789@test.com',
+  errors: null,
+  timestamp: '2026-03-24T19:19:42.600Z'
+}
+❌ GLOBAL ERROR: {
+  message: 'invalid input value for enum public.enum_tenant_registry_status: "pending_schema_init"',
+  stack: 'Error\n' +
+    '    at Query.run (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/dialects/postgres/query.js:50:25)\n' +
+    '    at /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/sequelize.js:315:28\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+    '    at async PostgresQueryInterface.insert (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/dialects/abstract/query-interface.js:308:21)\n' +
+    '    at async clone.save (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/model.js:2490:35)\n' +
+    '    at async TenantRegistry.create (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/model.js:1362:12)\n' +
+    '    at async /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/onboarding.service.js:98:17\n' +
+    '    at async NeonTransactionSafeExecutor.executeWithTenant (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/neonTransactionSafeExecutor.js:190:32)\n' +
+    '    at async Object.onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/onboarding.service.js:47:28)\n' +
+    '    at async onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:41:28)',
+  path: '/api/onboarding/business',
+  method: 'POST',
+  timestamp: '2026-03-24T19:19:42.601Z'
+}
+Executing (default): SET search_path TO public
+Executing (default): SET search_path TO public
+🔧 [PHASE 3] Search path reset to public after POST /api/onboarding/business
+✅ POST /api/onboarding/business → 200 (7367ms | DB: 0ms)
+⚠️ SLOW REQUEST: POST /api/onboarding/business → 200 (7367ms | DB: 0ms)

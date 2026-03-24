@@ -1,0 +1,38 @@
+{
+  "watch": [
+    "src/",
+    "models/",
+    "middlewares/",
+    "services/",
+    "routes/",
+    "config/",
+    "control_plane_models/",
+    ".env"
+  ],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules/",
+    "tests/",
+    "coverage/",
+    "*.log",
+    "uploads/",
+    "scripts/"
+  ],
+  "exec": "node --max-old-space-size=4096 app.js",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000,
+  "verbose": true,
+  "inspect": "0.0.0.0:9229",
+  "restartable": "rs",
+  "colours": true,
+  "legacyWatch": false,
+  "events": {
+    "start": "echo '🚀 Backend server starting with nodemon...'",
+    "restart": "echo '🔄 Backend server restarting...'",
+    "crash": "echo '💥 Backend server crashed! Restarting...'"
+  },
+  "stdout": true,
+  "stderr": true
+}

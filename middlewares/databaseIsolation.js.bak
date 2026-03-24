@@ -1,0 +1,116 @@
+const createHttpError = require("http-errors");
+
+// Database isolation middleware
+// Ensures admin routes only use Control Plane DB
+// Ensures tenant routes use the shared DB with proper scoping
+const databaseIsolationMiddleware = async (req, res, next) => {
+    try {
+        const requestPath = req.originalUrl || req.path;
+
+        const isAdminRoute =
+            requestPath.startsWith('/api/admin') ||
+            requestPath.startsWith('/api/super-admin');
+
+        const isTenantRoute =
+            requestPath.startsWith('/api/tenant');
+
+        if (isAdminRoute) {
+            // Admin routes: Only use Control Plane DB
+            req.dbContext = {
+                type: 'CONTROL_PLANE',
+                connection: null,
+                businessId: null
+            };
+            
+            Object.freeze(req.dbContext);
+            
+            delete req.brandId;
+            delete req.businessId;
+            
+            console.log('🔒 Database Isolation: Admin route using Control Plane DB only');
+        } else if (isTenantRoute) {
+            // Tenant routes: Must have brandId
+            if (!req.brandId) {
+                console.error('❌ SECURITY ALERT: Tenant route without brand identifier');
+                return next(createHttpError(400, "Brand identifier required for tenant routes"));
+            }
+
+            req.dbContext = {
+                type: 'TENANT',
+                connection: null, // Shared connection used via models
+                businessId: req.brandId
+            };
+
+            Object.freeze(req.dbContext);
+
+            console.log(`🔒 Database Isolation: Tenant route using brand: ${req.brandId}`);
+        } else {
+            // Public or mixed routes
+            req.dbContext = {
+                type: 'LEGACY',
+                connection: null,
+                businessId: req.brandId || null
+            };
+            
+            Object.freeze(req.dbContext);
+        }
+
+        next();
+    } catch (error) {
+        console.error('🔥 Database isolation middleware error:', error);
+        return next(createHttpError(500, "Database isolation setup failed"));
+    }
+};
+
+// Admin database validation middleware
+const adminDatabaseGuard = async (req, res, next) => {
+    try {
+        const fullPath = req.baseUrl ? req.baseUrl + req.path : req.originalUrl || req.path;
+        
+        if (!fullPath.startsWith('/api/admin') && !fullPath.startsWith('/api/super-admin')) {
+            return next(createHttpError(403, "Admin database guard can only be used on admin routes"));
+        }
+
+        if (req.brandId || req.businessId) {
+            console.error('🚨 SECURITY ALERT: Admin route attempting to access tenant context');
+            return next(createHttpError(403, "Admin routes cannot access tenant data"));
+        }
+
+        next();
+    } catch (error) {
+        console.error('🔥 Admin database guard error:', error);
+        return next(createHttpError(500, "Admin database validation failed"));
+    }
+};
+
+// Tenant database validation middleware
+// Now simplified as we use a shared database
+const tenantDatabaseGuard = async (req, res, next) => {
+    try {
+        const fullPath = req.originalUrl || req.path;
+        if (!fullPath.startsWith('/api/tenant')) {
+            return next(createHttpError(403, "Tenant database guard can only be used on tenant routes"));
+        }
+
+        if (!req.brandId) {
+            return next(createHttpError(400, "Brand ID required for tenant access"));
+        }
+
+        next();
+    } catch (error) {
+        console.error('🔥 Tenant database guard error:', error);
+        return next(createHttpError(500, "Tenant database validation failed"));
+    }
+};
+
+module.exports = {
+    databaseIsolationMiddleware,
+    adminDatabaseGuard,
+    tenantDatabaseGuard
+};
+
+module.exports = {
+    databaseIsolationMiddleware,
+    adminDatabaseGuard,
+    tenantDatabaseGuard
+};

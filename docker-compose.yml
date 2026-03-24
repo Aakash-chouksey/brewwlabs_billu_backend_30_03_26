@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Multi-tenant Backend
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@pgbouncer:6432/control_plane
+      - REDIS_URL=redis://redis:6379
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - redis
+      - pgbouncer
+    networks:
+      - pos-network
+
+  # Redis for Caching and Rate Limiting
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    networks:
+      - pos-network
+
+  # PgBouncer for Connection Pooling
+  # This is critical for managing many tenant connections
+  pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/postgres
+      - MAX_CLIENT_CONN=1000
+      - DEFAULT_POOL_SIZE=20
+      - POOL_MODE=transaction
+    depends_on:
+      - db
+    networks:
+      - pos-network
+
+  # Main Database (Control Plane + Template for Tenants)
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pos-network
+
+networks:
+  pos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

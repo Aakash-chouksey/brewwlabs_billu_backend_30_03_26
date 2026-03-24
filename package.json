@@ -1,0 +1,89 @@
+{
+  "name": "pos-backend",
+  "version": "1.0.0",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "nodemon --inspect=0.0.0.0:9229 --exec 'npm run start'",
+    "start": "node app.js",
+    "start:parallel": "node scripts/start-parallel.js",
+    "start:prod": "node render-deploy.js",
+    "render-start": "node render-deploy.js",
+    "dev:parallel": "nodemon --inspect=0.0.0.0:9229 --exec 'node --max-old-space-size=4096 app.js'",
+    "dev:watch": "nodemon --watch src --watch models --watch middlewares --watch services --watch routes --ext js,json --exec 'npm run start'",
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:regression": "jest tests/regression --forceExit",
+    "test:unit": "jest tests/unit --forceExit",
+    "test:integration": "jest tests/integration --forceExit",
+    "test:security": "jest tests/security --forceExit",
+    "migrate:control-plane": "node scripts/initialize_control_plane.js",
+    "migrate:tenant": "node scripts/migrateTenant.js",
+    "seed:control-plane": "node scripts/seedControlPlane.js",
+    "lint": "eslint src/ tests/",
+    "lint:fix": "eslint src/ tests/ --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Backend test configuration",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.991.0",
+    "axios": "^1.13.6",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
+    "cls-hooked": "^4.2.2",
+    "compression": "^1.8.1",
+    "continuation-local-storage": "^3.2.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "csv-parser": "^3.2.0",
+    "dayjs": "^1.11.19",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.2.1",
+    "firebase-admin": "^13.7.0",
+    "helmet": "^8.1.0",
+    "http-errors": "^2.0.0",
+    "ioredis": "^5.10.0",
+    "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.18.0",
+    "pg-hstore": "^2.3.4",
+    "rate-limit-redis": "^4.3.1",
+    "razorpay": "^2.9.5",
+    "redis": "^5.11.0",
+    "sequelize": "^6.32.1",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^6.3.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "**/*.{js,jsx}",
+      "!**/node_modules/**",
+      "!**/coverage/**",
+      "!**/tests/**"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "setupFilesAfterEnv": [
+      "./tests/setup.js"
+    ]
+  }
+}

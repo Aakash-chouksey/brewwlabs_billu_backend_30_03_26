@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Onboarding Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        input.error, select.error, textarea.error {
+            border-color: #dc3545;
+        }
+        .error-text {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        fieldset {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        legend {
+            font-weight: bold;
+            font-size: 18px;
+            padding: 0 10px;
+            color: #333;
+        }
+        .required {
+            color: #dc3545;
+        }
+        small {
+            color: #6c757d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>🏢 Business Registration</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Register your business and create an admin account
+        </p>
+        
+        <div id="message"></div>
+        
+        <form id="onboardingForm">
+            <!-- Business Information -->
+            <fieldset>
+                <legend>Business Information</legend>
+                
+                <div class="form-group">
+                    <label for="businessName">
+                        Business Name <span class="required">*</span>
+                    </label>
+                    <input type="text" id="businessName" name="businessName" required>
+                    <span class="error-text" id="businessNameError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessEmail">
+                        Business Email <span class="required">*</span>
+                    </label>
+                    <input type="email" id="businessEmail" name="businessEmail" required>
+                    <span class="error-text" id="businessEmailError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessPhone">Business Phone</label>
+                    <input type="tel" id="businessPhone" name="businessPhone" placeholder="+1234567890">
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessAddress">Business Address</label>
+                    <textarea id="businessAddress" name="businessAddress" rows="3" placeholder="123 Main Street, City, Country"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subscriptionPlan">Subscription Plan</label>
+                    <select id="subscriptionPlan" name="subscriptionPlan">
+                        <option value="basic">Basic ($29.99/month)</option>
+                        <option value="pro">Pro ($99.99/month)</option>
+                        <option value="enterprise">Enterprise ($299.99/month)</option>
+                    </select>
+                </div>
+            </fieldset>
+            
+            <!-- Admin Information -->
+            <fieldset>
+                <legend>Admin Account Information</legend>
+                
+                <div class="form-group">
+                    <label for="adminName">
+                        Admin Name <span class="required">*</span>
+                    </label>
+                    <input type="text" id="adminName" name="adminName" required>
+                    <span class="error-text" id="adminNameError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminEmail">
+                        Admin Email <span class="required">*</span>
+                    </label>
+                    <input type="email" id="adminEmail" name="adminEmail" required>
+                    <span class="error-text" id="adminEmailError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPhone">Admin Phone</label>
+                    <input type="tel" id="adminPhone" name="adminPhone" placeholder="+1234567890">
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">
+                        Admin Password <span class="required">*</span>
+                    </label>
+                    <input type="password" id="adminPassword" name="adminPassword" required>
+                    <span class="error-text" id="adminPasswordError"></span>
+                    <small>Password must be at least 6 characters long</small>
+                </div>
+            </fieldset>
+            
+            <button type="submit" id="submitBtn">Register Business</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('onboardingForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+
+        // Clear errors on input
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('input', () => {
+                field.classList.remove('error');
+                const errorSpan = document.getElementById(field.name + 'Error');
+                if (errorSpan) {
+                    errorSpan.textContent = '';
+                }
+            });
+        });
+
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+            const errors = {};
+
+            // Business validation
+            const businessName = document.getElementById('businessName');
+            if (!businessName.value.trim()) {
+                errors.businessName = 'Business name is required';
+                businessName.classList.add('error');
+                isValid = false;
+            }
+
+            const businessEmail = document.getElementById('businessEmail');
+            if (!businessEmail.value.trim()) {
+                errors.businessEmail = 'Business email is required';
+                businessEmail.classList.add('error');
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail.value)) {
+                errors.businessEmail = 'Invalid email format';
+                businessEmail.classList.add('error');
+                isValid = false;
+            }
+
+            // Admin validation
+            const adminName = document.getElementById('adminName');
+            if (!adminName.value.trim()) {
+                errors.adminName = 'Admin name is required';
+                adminName.classList.add('error');
+                isValid = false;
+            }
+
+            const adminEmail = document.getElementById('adminEmail');
+            if (!adminEmail.value.trim()) {
+                errors.adminEmail = 'Admin email is required';
+                adminEmail.classList.add('error');
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail.value)) {
+                errors.adminEmail = 'Invalid email format';
+                adminEmail.classList.add('error');
+                isValid = false;
+            }
+
+            const adminPassword = document.getElementById('adminPassword');
+            if (!adminPassword.value.trim()) {
+                errors.adminPassword = 'Password is required';
+                adminPassword.classList.add('error');
+                isValid = false;
+            } else if (adminPassword.value.length < 6) {
+                errors.adminPassword = 'Password must be at least 6 characters long';
+                adminPassword.classList.add('error');
+                isValid = false;
+            }
+
+            // Display errors
+            Object.keys(errors).forEach(field => {
+                const errorSpan = document.getElementById(field + 'Error');
+                if (errorSpan) {
+                    errorSpan.textContent = errors[field];
+                }
+            });
+
+            return isValid;
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            messageDiv.innerHTML = '';
+
+            const formData = {
+                businessName: document.getElementById('businessName').value,
+                businessEmail: document.getElementById('businessEmail').value,
+                businessPhone: document.getElementById('businessPhone').value,
+                businessAddress: document.getElementById('businessAddress').value,
+                adminName: document.getElementById('adminName').value,
+                adminEmail: document.getElementById('adminEmail').value,
+                adminPhone: document.getElementById('adminPhone').value,
+                adminPassword: document.getElementById('adminPassword').value,
+                subscriptionPlan: document.getElementById('subscriptionPlan').value
+            };
+
+            try {
+                const response = await fetch('/api/user/onboard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    messageDiv.innerHTML = `
+                        <div class="success-message">
+                            <h3>🎉 Business Registration Submitted!</h3>
+                            <p>Your business registration has been submitted successfully.</p>
+                            <p>Your account is currently pending approval from our administrators.</p>
+                            <p><strong>Business ID:</strong> ${result.data.business.id}</p>
+                            <p><strong>Status:</strong> ${result.data.business.status}</p>
+                            <p><strong>Next Steps:</strong> ${result.data.nextSteps}</p>
+                        </div>
+                    `;
+                    form.reset();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                
+                let errorMessage = error.message;
+                
+                // Handle specific backend errors
+                if (errorMessage.includes('Missing required fields')) {
+                    const missingFields = errorMessage.split(': ')[1];
+                    const fieldErrors = {};
+                    missingFields.split(', ').forEach(field => {
+                        fieldErrors[field] = `${field} is required`;
+                        const input = document.getElementById(field);
+                        if (input) {
+                            input.classList.add('error');
+                            const errorSpan = document.getElementById(field + 'Error');
+                            if (errorSpan) {
+                                errorSpan.textContent = fieldErrors[field];
+                            }
+                        }
+                    });
+                    errorMessage = 'Please fill in all required fields';
+                } else if (errorMessage.includes('Invalid business email format')) {
+                    document.getElementById('businessEmail').classList.add('error');
+                    document.getElementById('businessEmailError').textContent = 'Invalid email format';
+                    errorMessage = 'Invalid business email format';
+                } else if (errorMessage.includes('Invalid admin email format')) {
+                    document.getElementById('adminEmail').classList.add('error');
+                    document.getElementById('adminEmailError').textContent = 'Invalid email format';
+                    errorMessage = 'Invalid admin email format';
+                } else if (errorMessage.includes('password must be at least 6 characters')) {
+                    document.getElementById('adminPassword').classList.add('error');
+                    document.getElementById('adminPasswordError').textContent = 'Password must be at least 6 characters long';
+                    errorMessage = 'Password must be at least 6 characters long';
+                } else if (errorMessage.includes('already exists')) {
+                    if (errorMessage.includes('business email')) {
+                        document.getElementById('businessEmail').classList.add('error');
+                        document.getElementById('businessEmailError').textContent = 'Business with this email already exists';
+                    } else {
+                        document.getElementById('adminEmail').classList.add('error');
+                        document.getElementById('adminEmailError').textContent = 'Admin with this email already exists';
+                    }
+                    errorMessage = 'Email already exists';
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="error-message">
+                        <strong>Error:</strong> ${errorMessage}
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register Business';
+            }
+        });
+    </script>
+</body>
+</html>

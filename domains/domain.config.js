@@ -1,0 +1,65 @@
+/**
+ * DOMAIN CONFIGURATION
+ * 
+ * Centralized domain constants and configuration
+ */
+
+// Tenant Types
+const TENANT_TYPES = {
+  CONTROL_PLANE: 'control_plane',
+  TENANT: 'tenant',
+  SUPER_ADMIN: 'super_admin'
+};
+
+// User Roles
+const USER_ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  BUSINESS_ADMIN: 'BusinessAdmin',
+  STAFF: 'STAFF',
+  MANAGER: 'MANAGER',
+  CASHIER: 'CASHIER',
+  WAITER: 'WAITER'
+};
+
+// Panel Types
+const PANEL_TYPES = {
+  ADMIN: 'ADMIN',
+  TENANT: 'TENANT'
+};
+
+// Business Status
+const BUSINESS_STATUS = {
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  INACTIVE: 'INACTIVE'
+};
+
+// Order Status
+const ORDER_STATUS = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  PREPARING: 'PREPARING',
+  READY: 'READY',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
+// Inventory Transaction Types
+const INVENTORY_TRANSACTION_TYPES = {
+  PURCHASE: 'PURCHASE',
+  SALE: 'SALE',
+  SELF_CONSUME: 'SELF_CONSUME',
+  WASTAGE: 'WASTAGE',
+  ADJUSTMENT_IN: 'ADJUSTMENT_IN',
+  ADJUSTMENT_OUT: 'ADJUSTMENT_OUT'
+};
+
+module.exports = {
+  TENANT_TYPES,
+  USER_ROLES,
+  PANEL_TYPES,
+  BUSINESS_STATUS,
+  ORDER_STATUS,
+  INVENTORY_TRANSACTION_TYPES
+};

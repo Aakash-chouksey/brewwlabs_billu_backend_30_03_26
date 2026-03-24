@@ -1,0 +1,96 @@
+const { Sequelize } = require('sequelize');
+
+// Control Plane DB connection. Use a separate DATABASE URL to isolate control plane.
+const connectionString = process.env.CONTROL_PLANE_DATABASE_URL || process.env.CONTROL_DATABASE_URL || process.env.DATABASE_URL;
+
+let controlPlaneSequelize = null;
+
+if (!connectionString) {
+  console.error('❌ CRITICAL CONFIGURATION FAILURE: No control plane database connection string found.');
+  console.error('Multi-tenant isolation requires CONTROL_PLANE_DATABASE_URL to be set.');
+  console.error('Set environment variable for Neon PostgreSQL: CONTROL_PLANE_DATABASE_URL=postgresql://username:password@ep-xxx.us-east-2.aws.neon.tech/control_plane?sslmode=require');
+  process.exit(1);
+}
+
+// Check if this is a local database (temporarily allow local for development)
+const isLocalDatabase = connectionString.includes('localhost') || connectionString.includes('127.0.0.1') || connectionString.includes('host.docker.internal');
+
+if (!isLocalDatabase && !connectionString.includes('neon.tech') && !connectionString.includes('ep-') && process.env.NODE_ENV === 'production') {
+  console.error('❌ INVALID CONTROL PLANE DATABASE: Only Neon databases are allowed in production!');
+  console.error('Current database appears to be local or non-Neon. Please use Neon PostgreSQL.');
+  console.error('Set CONTROL_PLANE_DATABASE_URL for Neon PostgreSQL');
+  process.exit(1);
+}
+
+console.log('🔧 Initializing Control Plane Database connection (Neon)...');
+
+// Ensure proper SSL configuration for Neon
+let processedConnectionString = connectionString;
+if (!processedConnectionString.includes('sslmode=')) {
+  processedConnectionString += processedConnectionString.includes('?') ? '&sslmode=require' : '?sslmode=require';
+}
+
+// Remove any channel_binding parameter that can cause issues
+processedConnectionString = processedConnectionString.replace(/([&?])channel_binding=require(&?)/, (match, prefix, suffix) => {
+  return prefix === '?' && suffix ? '?' : prefix === '&' && suffix ? '&' : '';
+});
+
+controlPlaneSequelize = new Sequelize(processedConnectionString, {
+  define: {
+    underscored: true // Automatically map camelCase to snake_case
+  },
+  logging: process.env.SQL_LOGGING === 'true' ? console.log : false,
+  dialectOptions: {
+    // SSL only for remote databases, not local
+    ...(isLocalDatabase ? {} : {
+      ssl: {
+        require: true,
+        rejectUnauthorized: process.env.CONTROL_PLANE_DB_SSL_REJECT_UNAUTHORIZED === 'false' ? false : true
+      }
+    }),
+    // Local database connection settings
+    connectTimeout: 10000,
+    keepAlive: true,
+    application_name: 'brewwlabs-pos-control-plane'
+  },
+        rejectUnauthorized: process.env.CONTROL_PLANE_DB_SSL_REJECT_UNAUTHORIZED === 'false' ? false : true,
+        sslmode: 'require'
+      },
+      // Neon-optimized connection settings
+      connectTimeout: 15000,
+      keepAlive: true,
+      application_name: 'brewwlabs-pos-control-plane-neon'
+    },
+    pool: {
+      max: 8, // Optimized for Neon's connection limits
+      min: 2,
+      acquire: 45000, // Longer acquire time for cloud DB
+      idle: 10000,
+      evict: 10000,
+      // Issue a ROLLBACK on every new connection to clear any leftover transaction state
+      afterCreate: (connection, done) => {
+        connection.query('ROLLBACK', (err) => {
+          done(err, connection);
+        });
+      }
+    },
+    retry: {
+      max: 3, // Enable retries for cloud reliability
+      timeout: 8000
+    }
+  });
+  // Test the connection immediately
+  controlPlaneSequelize.authenticate()
+    .then(() => {
+      console.log('✅ Control Plane Database connection established successfully (Neon)');
+    })
+    .catch(error => {
+      console.error('❌ CRITICAL: Control Plane Database connection failed:', error.message);
+      console.error('Multi-tenant system cannot function without control plane access');
+      console.error('Neon troubleshooting:');
+      console.error('1. Verify CONTROL_PLANE_DATABASE_URL is from Neon console');
+      console.error('2. Check if Neon project is active');
+      console.error('3. Ensure SSL mode is set to require');
+      process.exit(1);
+    });
+module.exports = { controlPlaneSequelize };
