@@ -6,46 +6,15 @@
 🔗 DB URI: postgresql://***:***@ep-muddy-cherry-an9o34db-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 🔐 Applying Neon-safe middleware chains...
 🔌 Connecting to unified schema-per-tenant database...
-🔍 Loading route: routes/tenant/tenant.routes.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/tenant/tenant.routes.js
-⚠️  Route not found: routes/tenant/tenant.routes.js - Cannot find module '../utils/safeQuery'
-Require stack:
-- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/tenant/profileController.js
-- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/tenant/tenant.routes.js
-- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/neonSafeMiddlewareChain.js
-- /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js
-   Full path attempted: /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/tenant/tenant.routes.js
-🔍 Loading route: routes/inventoryRoutes.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/inventoryRoutes.js
-✅ Route loaded: routes/inventoryRoutes.js
-🔍 Loading route: routes/accountingRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/accountingRoute.js
-✅ Route loaded: routes/accountingRoute.js
-🔍 Loading route: src/auth/auth.routes.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/auth/auth.routes.js
-✅ Route loaded: src/auth/auth.routes.js
-🔍 Loading route: routes/userRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/userRoute.js
-✅ Route loaded: routes/userRoute.js
-🔍 Loading route: routes/superAdminRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/superAdminRoute.js
-✅ Route loaded: routes/superAdminRoute.js
-🔍 Loading route: routes/uploadRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/uploadRoute.js
-✅ Route loaded: routes/uploadRoute.js
-🔍 Loading route: routes/onboardingRoute.js -> /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/routes/onboardingRoute.js
-✅ Route loaded: routes/onboardingRoute.js
+⚠️  Route not found: routes/adminRoute.js - Route.get() requires a callback function but got a [object Undefined]
+ℹ️  Redis: DISABLED - Using in-memory mock (Data-First Architecture)
+⚠️  Route not found: routes/accountingRoute.js - authorize is not a function
 ✅ Neon-safe middleware chains applied successfully
-📋 Registered API Routes:
-   - GET  /health
-   - GET  /health/detailed
-   - /api/admin/*    (Admin routes with auth)
-   - /api/tenant/*   (Tenant routes with auth)
-   - /api/inventory/* (Inventory routes with auth)
-   - /api/tenant/accounting/* (Accounting routes with auth)
-   - /api/auth/*     (Public auth routes)
-   - /api/user/*     (Public user routes - includes /test, /onboarding/business)
-   - /api/super-admin/* (Public super-admin routes)
-   - /api/upload/*   (Public upload routes)
-   - /api/onboarding/* (Public onboarding routes - includes /business)
 🔌 Initializing Neon-safe database connections...
 🔌 Attempting unified database connection to ep-muddy-cherry-an9o34db-pooler.c-6.us-east-1.aws.neon.tech...
 ⏭️  Periodic cleanup tasks disabled (performance optimization)
 ⏰ Background jobs scheduled
-(node:17483) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:9327) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
@@ -61,31 +30,77 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 Executing (default): SELECT 1+1 AS result
 ✅ Unified database connection established
 Executing (default): SELECT 1+1 AS result
-✅ Unified PostgreSQL Connection Authenticated.
-[TX:b72c63d1] START TRANSACTION;...
-Executing (b72c63d1-ec58-468c-99f8-4075f2dd30f8): START TRANSACTION;
 ✅ Neon transaction executor is healthy
-[TX:b72c63d1] SELECT 1 FROM pg_namespace WHERE nspname = 'public'...
-Executing (b72c63d1-ec58-468c-99f8-4075f2dd30f8): SELECT 1 FROM pg_namespace WHERE nspname = 'public'
-[TX:b72c63d1] COMMIT;...
-Executing (b72c63d1-ec58-468c-99f8-4075f2dd30f8): COMMIT;
+✅ Unified PostgreSQL Connection Authenticated.
+[TX:91bdf649] START TRANSACTION;...
+Executing (91bdf649-d7a5-413c-9ee0-e10358e57f38): START TRANSACTION;
+[TX:91bdf649] SELECT 1 FROM pg_namespace WHERE nspname = 'public'...
+Executing (91bdf649-d7a5-413c-9ee0-e10358e57f38): SELECT 1 FROM pg_namespace WHERE nspname = 'public'
+[TX:91bdf649] COMMIT;...
+Executing (91bdf649-d7a5-413c-9ee0-e10358e57f38): COMMIT;
 ✅ Public schema verified.
 Executing (default): SELECT 1+1 AS result
 ✅ Control Plane validation successful (via Unified Instance)
-📦 Pre-loading models...
-❌ Failed to setup associations: AssociationError [SequelizeAssociationError]: You have used the alias category in two separate associations. Aliased associations must have unique aliases.
-    at new Association (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/associations/base.js:13:13)
-    at new BelongsTo (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/associations/belongs-to.js:25:5)
-    at Product.<anonymous> (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/node_modules/sequelize/lib/associations/mixin.js:70:25)
-    at ModelRegistry.setupAssociations (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/modelFactory.js:153:36)
-    at ModelRegistry.createModels (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/modelFactory.js:88:27)
-    at ModelFactory.createModels (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/src/architecture/modelFactory.js:401:36)
-    at initializeNeonSafeDatabases (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js:397:24)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async initializeNeonSafeApp (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js:413:5)
-    at async startNeonSafeServer (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/app.js:428:5)
-⚠️ Some associations were already defined or had conflicts: You have used the alias category in two separate associations. Aliased associations must have unique aliases.
-✅ Models pre-loaded successfully
+🏗️ Initializing control plane models...
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'tenant_registry'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_tenant_registry_status' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'tenant_registry' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'tenant_registry' AND tc.table_catalog = 'neondb' AND tc.table_schema = 'public'
+Executing (default): ALTER TABLE "public"."tenant_registry" DROP CONSTRAINT "tenant_registry_business_id_fkey"
+Executing (default): ALTER TABLE "public"."tenant_registry"  ADD FOREIGN KEY ("business_id") REFERENCES "public"."businesses" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
+Executing (default): ALTER TABLE "public"."tenant_registry" ALTER COLUMN "schema_name" SET NOT NULL;ALTER TABLE "public"."tenant_registry" ALTER COLUMN "schema_name" DROP DEFAULT;ALTER TABLE "public"."tenant_registry"  ADD UNIQUE ("schema_name");ALTER TABLE "public"."tenant_registry" ALTER COLUMN "schema_name" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "public"."tenant_registry" ALTER COLUMN "status" DROP NOT NULL;ALTER TABLE "public"."tenant_registry" ALTER COLUMN "status" SET DEFAULT 'pending_schema_init';DO 'BEGIN CREATE TYPE "public"."enum_tenant_registry_status" AS ENUM(''active'', ''suspended'', ''onboarding'', ''deleted'', ''pending_approval'', ''pending'', ''pending_schema_init'', ''init_failed''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "public"."tenant_registry" ALTER COLUMN "status" TYPE "public"."enum_tenant_registry_status" USING ("status"::"public"."enum_tenant_registry_status");
+Executing (default): ALTER TABLE "public"."tenant_registry" ALTER COLUMN "created_at" DROP NOT NULL;ALTER TABLE "public"."tenant_registry" ALTER COLUMN "created_at" DROP DEFAULT;ALTER TABLE "public"."tenant_registry" ALTER COLUMN "created_at" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a, pg_namespace s WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'tenant_registry' AND s.oid = t.relnamespace AND s.nspname = 'public' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+✅ tenant_registry table ready
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'businesses'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'businesses' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'businesses' AND tc.table_catalog = 'neondb' AND tc.table_schema = 'public'
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "name" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "name" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "name" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "email" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "email" DROP DEFAULT;ALTER TABLE "public"."businesses"  ADD UNIQUE ("email");ALTER TABLE "public"."businesses" ALTER COLUMN "email" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "phone" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "phone" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "phone" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "gst_number" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "gst_number" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "gst_number" TYPE VARCHAR(255); COMMENT ON COLUMN "public"."businesses"."gst_number" IS 'GST Number for tax compliance';
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "address" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "address" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "address" TYPE TEXT;
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "type" SET DEFAULT 'SOLO';ALTER TABLE "public"."businesses" ALTER COLUMN "type" TYPE VARCHAR(255)  ; COMMENT ON COLUMN "public"."businesses"."type" IS 'SOLO = single cafe, FRANCHISE = multiple outlets';
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "owner_id" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "owner_id" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "owner_id" TYPE UUID; COMMENT ON COLUMN "public"."businesses"."owner_id" IS 'Primary owner of the business';
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "is_active" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "is_active" SET DEFAULT true;ALTER TABLE "public"."businesses" ALTER COLUMN "is_active" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "status" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "status" SET DEFAULT 'active';ALTER TABLE "public"."businesses" ALTER COLUMN "status" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "subscription_plan" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "subscription_plan" SET DEFAULT 'free';ALTER TABLE "public"."businesses" ALTER COLUMN "subscription_plan" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "business_id" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "business_id" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "business_id" TYPE UUID; COMMENT ON COLUMN "public"."businesses"."business_id" IS 'Self-reference for business hierarchy';
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "settings" DROP NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "settings" SET DEFAULT '{}';ALTER TABLE "public"."businesses" ALTER COLUMN "settings" TYPE JSON;
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "created_at" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "created_at" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "created_at" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "public"."businesses" ALTER COLUMN "updated_at" SET NOT NULL;ALTER TABLE "public"."businesses" ALTER COLUMN "updated_at" DROP DEFAULT;ALTER TABLE "public"."businesses" ALTER COLUMN "updated_at" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a, pg_namespace s WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'businesses' AND s.oid = t.relnamespace AND s.nspname = 'public' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+✅ businesses table ready
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'users' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'users' AND tc.table_catalog = 'neondb' AND tc.table_schema = 'public'
+Executing (default): ALTER TABLE "public"."users" DROP CONSTRAINT "users_business_id_fkey"
+Executing (default): ALTER TABLE "public"."users"  ADD FOREIGN KEY ("business_id") REFERENCES "public"."businesses" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "outlet_id" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "outlet_id" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "outlet_id" TYPE UUID;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "outlet_ids" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "outlet_ids" SET DEFAULT '[]';ALTER TABLE "public"."users" ALTER COLUMN "outlet_ids" TYPE JSONB;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "name" SET NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "name" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "name" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "email" SET NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "email" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "email" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "phone" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "phone" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "phone" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "password_hash" SET NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "password_hash" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "password_hash" TYPE TEXT;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "role" SET NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "role" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "role" TYPE VARCHAR(50);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "is_verified" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "is_verified" SET DEFAULT false;ALTER TABLE "public"."users" ALTER COLUMN "is_verified" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "is_active" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "is_active" SET DEFAULT true;ALTER TABLE "public"."users" ALTER COLUMN "is_active" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "last_login" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "last_login" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "last_login" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "panel_type" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "panel_type" SET DEFAULT 'TENANT';ALTER TABLE "public"."users" ALTER COLUMN "panel_type" TYPE VARCHAR(20);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "status" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "status" SET DEFAULT 'active';ALTER TABLE "public"."users" ALTER COLUMN "status" TYPE VARCHAR(20);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "salary" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "salary" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "salary" TYPE DECIMAL(10,2);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "location" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "location" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "location" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "experience" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "experience" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "experience" TYPE INTEGER;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "rating" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "rating" SET DEFAULT 0;ALTER TABLE "public"."users" ALTER COLUMN "rating" TYPE DECIMAL(3,2);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "total_orders" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "total_orders" SET DEFAULT 0;ALTER TABLE "public"."users" ALTER COLUMN "total_orders" TYPE INTEGER;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "performance" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "performance" SET DEFAULT 0;ALTER TABLE "public"."users" ALTER COLUMN "performance" TYPE DECIMAL(5,2);
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "token_version" DROP NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "token_version" SET DEFAULT 0;ALTER TABLE "public"."users" ALTER COLUMN "token_version" TYPE INTEGER;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "created_at" SET NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "created_at" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "created_at" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "public"."users" ALTER COLUMN "updated_at" SET NOT NULL;ALTER TABLE "public"."users" ALTER COLUMN "updated_at" DROP DEFAULT;ALTER TABLE "public"."users" ALTER COLUMN "updated_at" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a, pg_namespace s WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'users' AND s.oid = t.relnamespace AND s.nspname = 'public' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+✅ users table ready
+✅ Control plane models initialized
 ✅ All Neon-safe database connections established
 ✅ Neon-safe application initialized successfully
 🚀 Neon-Safe Server running on port 8000
@@ -96,280 +111,174 @@ Executing (default): SELECT 1+1 AS result
 🔐 Transaction Safety: ENFORCED
 ⚡ Neon Optimized: YES
 📈 Initial metrics population...
-⏱️ [ONBOARDING] Starting: 1ms (Total: 1ms)
-⏱️ [ONBOARDING] Executor setup: 3ms (Total: 4ms)
-[TX START] Tenant: public | ID: tx_1774384848800_wq7gq
-⏱️ [TENANT MODELS] Cache miss for tenant_public, loading models...
-⏱️ [TENANT MODELS] getCachedModels took 1ms
-⏱️ [TENANT MODELS] Got 40 models from sequelize
-⏱️ [TENANT MODELS] Schema binding took 12ms
-✅ [TENANT MODELS] Cached 40 models for tenant_public
-⏱️ [TX] getTenantModels took 15ms
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
 🔌 Connecting to unified schema-per-tenant database...
 ✅ Unified database connection established
-[TX:332d32df] START TRANSACTION;...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): START TRANSACTION;
-[TX:332d32df] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-⏱️ [TX] Transaction creation took 4597ms
-[TX:332d32df] SET LOCAL search_path TO "tenant_public"...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): SET LOCAL search_path TO "tenant_public"
-⏱️ [TX] SET search_path took 384ms
-⏱️ [ONBOARDING] Transaction started: 5005ms (Total: 5009ms)
-⏱️ [ONBOARDING] Models extracted: 0ms (Total: 5009ms)
-[TX:332d32df] SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "...
-[TX:332d32df] SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_i...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "status", "subscription_plan", "owner_id" AS "ownerId", "business_id" AS "businessId", "type", "is_active" AS "isActive", "settings", "created_at", "updated_at" FROM "public"."businesses" AS "Business" WHERE "Business"."email" = 'testcafe2025@test.com';
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_ids" AS "outletIds", "name", "email", "phone", "password_hash" AS "password", "role", "is_verified" AS "isVerified", "is_active" AS "isActive", "last_login" AS "lastLogin", "panel_type" AS "panelType", "status", "salary", "location", "experience", "rating", "total_orders" AS "totalOrders", "performance", "token_version" AS "tokenVersion", "created_at", "updated_at", "business_id", "outlet_id" FROM "public"."users" AS "User" WHERE "User"."email" = 'admin2025@test.com' LIMIT 1;
-⏱️ [ONBOARDING] Duplicate check completed: 837ms (Total: 5846ms)
-Business 99f3c73a-552c-4060-8626-2a7422e9e4a5 properly linked to owner febf716c-cb44-40a7-aef6-2548a1312453
-[TX:332d32df] INSERT INTO "public"."businesses" ("id","name","address","phone","email","status...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): INSERT INTO "public"."businesses" ("id","name","address","phone","email","status","subscription_plan","owner_id","type","is_active","settings","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING "id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","business_id","type","is_active","settings","created_at","updated_at";
-⏱️ [ONBOARDING] Business created: 314ms (Total: 6160ms)
-[TX:332d32df] CREATE SCHEMA IF NOT EXISTS "tenant_99f3c73a-552c-4060-8626-2a7422e9e4a5"...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): CREATE SCHEMA IF NOT EXISTS "tenant_99f3c73a-552c-4060-8626-2a7422e9e4a5"
-⏱️ [ONBOARDING] Schema created: 447ms (Total: 6607ms)
-⏱️ [ONBOARDING] Password hashed: 755ms (Total: 7362ms)
-[TX:332d32df] INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name"...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name","email","password_hash","role","is_verified","is_active","panel_type","status","rating","total_orders","performance","token_version","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING "id","business_id","outlet_id","outlet_ids","name","email","phone","password_hash","role","is_verified","is_active","last_login","panel_type","status","salary","location","experience","rating","total_orders","performance","token_version","created_at","updated_at","business_id","outlet_id";
-⏱️ [ONBOARDING] User created: 303ms (Total: 7665ms)
-[TX:332d32df] INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status","created_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id","business_id","schema_name","status","created_at","business_id";
-⏱️ [ONBOARDING] TenantRegistry created: 276ms (Total: 7941ms)
-⏱️ [TX] User operation took 2936ms
-[EXECUTOR DEBUG] executeWithTenant result: {
-  "business": {
-    "subscription_plan": "free",
-    "isActive": true,
-    "settings": {},
-    "id": "99f3c73a-552c-4060-8626-2a7422e9e4a5",
-    "name": "TestCafe",
-    "email": "testcafe2025@test.com",
-    "phone": "123",
-    "address": "Addr",
-    "gstNumber": null,
-    "type": "SOLO",
-    "status": "active",
-    "ownerId": "febf716c-cb44-40a7-aef6-2548a1312453",
-    "updated_at": "2026-03-24T20:40:54.643Z",
-    "created_at": "2026-03-24T20:40:54.643Z",
-    "businessId": null
-  },
-  "admin":
-[TX:332d32df] COMMIT;...
-Executing (332d32df-fb3e-422f-9a85-85c0a63f036d): COMMIT;
-[TX END] Success | Total Duration: 8185ms
-✅ Onboarding completed in 8191ms for testcafe2025@test.com
-📊 ONBOARDING BREAKDOWN: {"businessEmail":"testcafe2025@test.com","totalTime":8191,"businessId":"99f3c73a-552c-4060-8626-2a7422e9e4a5","schemaName":"tenant_99f3c73a-552c-4060-8626-2a7422e9e4a5"}
-[CONTROLLER DEBUG] onboarding result: {
+Executing (default): SET search_path TO "public"
+✅ Unified database connection established
+Executing (default): SET search_path TO "public"
+Executing (default): SET search_path TO "public"
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
+Executing (default): SET search_path TO "public"
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
+🔌 Connecting to unified schema-per-tenant database...
+Executing (default): SELECT "status" FROM "tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "id", "email", "role", "token_version", "business_id", "outlet_id", "panel_type", "is_active" FROM "users" AS "User" WHERE "User"."id" = 'bee4cf38-107f-4cac-b5ad-184948efa4b2';
+Executing (default): SELECT "id", "name", "status", "is_active" AS "isActive", "type" FROM "businesses" AS "Business" WHERE "Business"."id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "status" FROM "tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "id", "email", "role", "token_version", "business_id", "outlet_id", "panel_type", "is_active" FROM "users" AS "User" WHERE "User"."id" = 'bee4cf38-107f-4cac-b5ad-184948efa4b2';
+🔐 AUDIT: {"userId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","email":"admin@cafe.com","action":"TOKEN_VERIFIED","entity":"AUTH","entityId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","oldValue":null,"newValue":null,"severity":"LOW","ipAddress":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0","path":"/categories","metadata":{"error":null,"role":"BusinessAdmin","timestamp":"2026-03-26T18:22:20.704Z"}}
+🌐 [NEON-SAFE] Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Role: BusinessAdmin | 0ms
+🛡️ [PHASE 10] Unsafe 'req.models' getter removed. Enforcing transaction-scoped access.
+Executing (default): SELECT "id", "name", "status", "is_active" AS "isActive", "type" FROM "businesses" AS "Business" WHERE "Business"."id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "status" FROM "tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "id", "email", "role", "token_version", "business_id", "outlet_id", "panel_type", "is_active" FROM "users" AS "User" WHERE "User"."id" = 'bee4cf38-107f-4cac-b5ad-184948efa4b2';
+🔐 AUDIT: {"userId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","email":"admin@cafe.com","action":"TOKEN_VERIFIED","entity":"AUTH","entityId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","oldValue":null,"newValue":null,"severity":"LOW","ipAddress":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0","path":"/products","metadata":{"error":null,"role":"BusinessAdmin","timestamp":"2026-03-26T18:22:21.193Z"}}
+🌐 [NEON-SAFE] Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Role: BusinessAdmin | 1ms
+🛡️ [PHASE 10] Unsafe 'req.models' getter removed. Enforcing transaction-scoped access.
+Executing (default): SELECT "id", "name", "status", "is_active" AS "isActive", "type" FROM "businesses" AS "Business" WHERE "Business"."id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "status" FROM "tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "id", "email", "role", "token_version", "business_id", "outlet_id", "panel_type", "is_active" FROM "users" AS "User" WHERE "User"."id" = 'bee4cf38-107f-4cac-b5ad-184948efa4b2';
+🔐 AUDIT: {"userId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","email":"admin@cafe.com","action":"TOKEN_VERIFIED","entity":"AUTH","entityId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","oldValue":null,"newValue":null,"severity":"LOW","ipAddress":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0","path":"/categories","metadata":{"error":null,"role":"BusinessAdmin","timestamp":"2026-03-26T18:22:21.542Z"}}
+🌐 [NEON-SAFE] Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Role: BusinessAdmin | 0ms
+🛡️ [PHASE 10] Unsafe 'req.models' getter removed. Enforcing transaction-scoped access.
+Executing (default): SELECT "id", "name", "status", "is_active" AS "isActive", "type" FROM "businesses" AS "Business" WHERE "Business"."id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "status" FROM "public"."tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+Executing (default): SELECT "status" FROM "public"."tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+🔐 AUDIT: {"userId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","email":"admin@cafe.com","action":"TOKEN_VERIFIED","entity":"AUTH","entityId":"bee4cf38-107f-4cac-b5ad-184948efa4b2","oldValue":null,"newValue":null,"severity":"LOW","ipAddress":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0","path":"/products","metadata":{"error":null,"role":"BusinessAdmin","timestamp":"2026-03-26T18:22:22.094Z"}}
+🌐 [NEON-SAFE] Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Role: BusinessAdmin | 0ms
+🛡️ [PHASE 10] Unsafe 'req.models' getter removed. Enforcing transaction-scoped access.
+Executing (default): SELECT "status" FROM "public"."tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+[Executor] 🛡️  Hard Validation: Checking health of tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c...
+Executing (default): SELECT "status" FROM "public"."tenant_registry" AS "TenantRegistry" WHERE "TenantRegistry"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c';
+STEP 2 - Calling Executor (readWithTenant)
+[Executor] 🛡️  Hard Validation: Checking health of tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c...
+Executing (default): SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c'
+[Executor] 🛡️  Hard Validation: Checking health of tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c...
+Executing (default): SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c'
+STEP 2 - Calling Executor (readWithTenant)
+[Executor] 🛡️  Hard Validation: Checking health of tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c...
+Executing (default): SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c'
+✅ Unified database connection established
+Executing (default): SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c'
+✅ Unified database connection established
+Executing (default): SELECT table_name FROM information_schema.tables 
+                WHERE table_schema = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND table_name IN ('outlets', 'users', 'products')
+Executing (default): SELECT table_name FROM information_schema.tables 
+                WHERE table_schema = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND table_name IN ('outlets', 'users', 'products')
+Executing (default): SELECT table_name FROM information_schema.tables 
+                WHERE table_schema = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND table_name IN ('outlets', 'users', 'products')
+✅ Unified database connection established
+Executing (default): SELECT table_name FROM information_schema.tables 
+                WHERE table_schema = 'tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND table_name IN ('outlets', 'users', 'products')
+[Executor] ⚡ EXECUTE | Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Schema: tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Mode: TRANSACTIONAL
+[TX:4876b2c7] START TRANSACTION;...
+Executing (4876b2c7-2464-4f2f-bcfd-fde0a29abed4): START TRANSACTION;
+✅ Unified database connection established
+✅ Unified database connection established
+✅ Unified database connection established
+✅ Unified database connection established
+[Executor] ⚡ EXECUTE | Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Schema: tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Mode: TRANSACTIONAL
+[TX:b74b0b39] START TRANSACTION;...
+Executing (b74b0b39-cff0-4e4d-be71-42a9dbea8336): START TRANSACTION;
+[Executor] ⚡ EXECUTE | Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Schema: tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Mode: TRANSACTIONAL
+[TX:6204b1d5] START TRANSACTION;...
+Executing (6204b1d5-887b-4c7e-980e-e951ca56736d): START TRANSACTION;
+✅ Unified database connection established
+[Executor] ⚡ EXECUTE | Tenant: fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Schema: tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c | Mode: TRANSACTIONAL
+[TX:880631a9] START TRANSACTION;...
+Executing (880631a9-d81b-4e86-909f-e96642ca2e8b): START TRANSACTION;
+[TX:4876b2c7] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (4876b2c7-2464-4f2f-bcfd-fde0a29abed4): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+[TX:b74b0b39] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (b74b0b39-cff0-4e4d-be71-42a9dbea8336): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+[TX:6204b1d5] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (6204b1d5-887b-4c7e-980e-e951ca56736d): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+[TX:880631a9] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
+Executing (880631a9-d81b-4e86-909f-e96642ca2e8b): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+[TX:4876b2c7] SHOW search_path...
+[TX:b74b0b39] SHOW search_path...
+[TX:6204b1d5] SHOW search_path...
+[TX:880631a9] SHOW search_path...
+Executing (default): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "name", "description", "color", "image", "is_enabled" AS "isEnabled", "sort_order" AS "sortOrder", "created_at", "updated_at", "outlet_id" FROM "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."categories" AS "Category" WHERE "Category"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND "Category"."outlet_id" = 'ad1c6448-f0b3-4384-8daa-244e5911ef64' ORDER BY "sortOrder" ASC, "Category"."name" ASC;
+Executing (default): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "name", "description", "color", "image", "is_enabled" AS "isEnabled", "sort_order" AS "sortOrder", "created_at", "updated_at", "outlet_id" FROM "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."categories" AS "Category" WHERE "Category"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND "Category"."outlet_id" = 'ad1c6448-f0b3-4384-8daa-244e5911ef64' ORDER BY "sortOrder" ASC, "Category"."name" ASC;
+Executing (default): SELECT "Product"."id", "Product"."business_id" AS "businessId", "Product"."outlet_id" AS "outletId", "Product"."category_id" AS "categoryId", "Product"."product_type_id" AS "productTypeId", "Product"."name", "Product"."price", "Product"."is_active" AS "isActive", "Product"."description", "Product"."image", "Product"."current_stock" AS "currentStock", "Product"."created_at", "Product"."updated_at", "Product"."category_id", "Product"."outlet_id", "Product"."product_type_id", "category"."id" AS "category.id", "category"."business_id" AS "category.businessId", "category"."outlet_id" AS "category.outletId", "category"."name" AS "category.name", "category"."description" AS "category.description", "category"."color" AS "category.color", "category"."image" AS "category.image", "category"."is_enabled" AS "category.isEnabled", "category"."sort_order" AS "category.sortOrder", "category"."created_at" AS "category.created_at", "category"."updated_at" AS "category.updated_at", "category"."outlet_id" AS "category.outlet_id", "productType"."id" AS "productType.id", "productType"."business_id" AS "productType.businessId", "productType"."outlet_id" AS "productType.outletId", "productType"."name" AS "productType.name", "productType"."description" AS "productType.description", "productType"."icon" AS "productType.icon", "productType"."color" AS "productType.color", "productType"."created_at" AS "productType.createdAt", "productType"."updated_at" AS "productType.updatedAt" FROM "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."products" AS "Product" LEFT OUTER JOIN "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."categories" AS "category" ON "Product"."category_id" = "category"."id" LEFT OUTER JOIN "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."product_types" AS "productType" ON "Product"."product_type_id" = "productType"."id" WHERE "Product"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND "Product"."outlet_id" = 'ad1c6448-f0b3-4384-8daa-244e5911ef64' ORDER BY "Product"."name" ASC;
+Executing (default): SELECT "Product"."id", "Product"."business_id" AS "businessId", "Product"."outlet_id" AS "outletId", "Product"."category_id" AS "categoryId", "Product"."product_type_id" AS "productTypeId", "Product"."name", "Product"."price", "Product"."is_active" AS "isActive", "Product"."description", "Product"."image", "Product"."current_stock" AS "currentStock", "Product"."created_at", "Product"."updated_at", "Product"."category_id", "Product"."outlet_id", "Product"."product_type_id", "category"."id" AS "category.id", "category"."business_id" AS "category.businessId", "category"."outlet_id" AS "category.outletId", "category"."name" AS "category.name", "category"."description" AS "category.description", "category"."color" AS "category.color", "category"."image" AS "category.image", "category"."is_enabled" AS "category.isEnabled", "category"."sort_order" AS "category.sortOrder", "category"."created_at" AS "category.created_at", "category"."updated_at" AS "category.updated_at", "category"."outlet_id" AS "category.outlet_id", "productType"."id" AS "productType.id", "productType"."business_id" AS "productType.businessId", "productType"."outlet_id" AS "productType.outletId", "productType"."name" AS "productType.name", "productType"."description" AS "productType.description", "productType"."icon" AS "productType.icon", "productType"."color" AS "productType.color", "productType"."created_at" AS "productType.createdAt", "productType"."updated_at" AS "productType.updatedAt" FROM "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."products" AS "Product" LEFT OUTER JOIN "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."categories" AS "category" ON "Product"."category_id" = "category"."id" LEFT OUTER JOIN "tenant_fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c"."product_types" AS "productType" ON "Product"."product_type_id" = "productType"."id" WHERE "Product"."business_id" = 'fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c' AND "Product"."outlet_id" = 'ad1c6448-f0b3-4384-8daa-244e5911ef64' ORDER BY "Product"."name" ASC;
+[TX:4876b2c7] COMMIT;...
+Executing (4876b2c7-2464-4f2f-bcfd-fde0a29abed4): COMMIT;
+[TX:b74b0b39] COMMIT;...
+Executing (b74b0b39-cff0-4e4d-be71-42a9dbea8336): COMMIT;
+STEP 4 - DB RESULT (Products): 0
+DB DATA (Phase 3): []
+[TX:6204b1d5] COMMIT;...
+Executing (6204b1d5-887b-4c7e-980e-e951ca56736d): COMMIT;
+STEP 4 - DB RESULT (Products): 0
+DB DATA (Phase 3): []
+[TX:880631a9] COMMIT;...
+Executing (880631a9-d81b-4e86-909f-e96642ca2e8b): COMMIT;
+[CATEGORY CONTROLLER] getCategories result: {
   "success": true,
-  "businessId": "99f3c73a-552c-4060-8626-2a7422e9e4a5",
-  "outletId": "5fe80b61-d879-49c8-bd79-ec41ac402ce7",
-  "schemaName": "tenant_99f3c73a-552c-4060-8626-2a7422e9e4a5",
-  "status": "onboarding",
-  "message": "Business created. Schema initialization is running in background.",
-  "duration": "8191ms"
-}
-❌ GLOBAL ERROR: {
-  message: "Cannot read properties of undefined (reading 'id')",
-  stack: "TypeError: Cannot read properties of undefined (reading 'id')\n" +
-    '    at AuthService.generateAccessToken (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/auth.service.js:287:22)\n' +
-    '    at onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:55:45)\n' +
-    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)',
-  path: '/api/onboarding/business',
-  method: 'POST',
-  timestamp: '2026-03-24T20:40:56.991Z'
-}
-Executing (default): SET search_path TO public
-Executing (default): SET search_path TO public
-🔧 [PHASE 3] Search path reset to public after POST /api/onboarding/business
-✅ POST /api/onboarding/business → 200 (8860ms | DB: 0ms)
-⚠️ SLOW REQUEST: POST /api/onboarding/business → 200 (8860ms | DB: 0ms)
-📈 Triggering background metrics update...
-❌ Metrics update failed: Command failed: node /Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/scripts/update_system_metrics.js
-node:internal/modules/cjs/loader:1386
-  throw err;
-  ^
-
-Error: Cannot find module '/Users/admin/Downloads/billu'
-    at Module._resolveFilename (node:internal/modules/cjs/loader:1383:15)
-    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
-    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
-    at Module._load (node:internal/modules/cjs/loader:1192:37)
-    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
-    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
-    at node:internal/main/run_main_module:36:49 {
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
-}
-
-Node.js v22.22.0
-
-⏱️ [ONBOARDING] Starting: 0ms (Total: 0ms)
-⏱️ [ONBOARDING] Executor setup: 1ms (Total: 1ms)
-[TX START] Tenant: public | ID: tx_1774385240178_ehcb8
-✅ [TENANT MODELS] Cache hit for tenant_public
-⏱️ [TX] getTenantModels took 0ms
+  "data": [
+    {
+      "id": "d89d194f-3b68-4cf4-9651-8abd9cac58b0",
+      "businessId": "fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c",
+      "outletId": "ad1c6448-f0b3-4384-8daa-244e5911ef64",
+      "name": "Default Category",
+      "description": null,
+      "color": "#3B82F6",
+      "image": null,
+      "isEnabled": true,
+      "sortOrder": 0,
+      "created_at": "2026-03-26T00:02:26.427Z",
+      "updated_at": "2026-03-26T00:02:26.427Z",
+      "outlet_id": "ad1c6448-f0b3-4384-8
+✅ GET /api/tenant/categories → 200 (8697ms | DB: 0ms)
+⚠️ SLOW REQUEST: GET /api/tenant/categories → 200 (8697ms | DB: 0ms)
+[CATEGORY CONTROLLER] getCategories result: {
+  "success": true,
+  "data": [
+    {
+      "id": "d89d194f-3b68-4cf4-9651-8abd9cac58b0",
+      "businessId": "fbb62ed0-7a38-4310-b0fd-82c8a5c50c9c",
+      "outletId": "ad1c6448-f0b3-4384-8daa-244e5911ef64",
+      "name": "Default Category",
+      "description": null,
+      "color": "#3B82F6",
+      "image": null,
+      "isEnabled": true,
+      "sortOrder": 0,
+      "created_at": "2026-03-26T00:02:26.427Z",
+      "updated_at": "2026-03-26T00:02:26.427Z",
+      "outlet_id": "ad1c6448-f0b3-4384-8
+✅ GET /api/tenant/categories → 200 (5527ms | DB: 0ms)
+⚠️ SLOW REQUEST: GET /api/tenant/categories → 200 (5527ms | DB: 0ms)
+STEP 6 - Controller Received: { success: true, data: [], message: 'Success' }
+STEP 6.1 - Data: []
+STEP 7 - Sending Response: []
+ℹ️ No products found for this query
+✅ GET /api/tenant/products → 200 (8908ms | DB: 0ms)
+⚠️ SLOW REQUEST: GET /api/tenant/products → 200 (8908ms | DB: 0ms)
+STEP 6 - Controller Received: { success: true, data: [], message: 'Success' }
+STEP 6.1 - Data: []
+STEP 7 - Sending Response: []
+ℹ️ No products found for this query
+✅ GET /api/tenant/products → 200 (5807ms | DB: 0ms)
+⚠️ SLOW REQUEST: GET /api/tenant/products → 200 (5807ms | DB: 0ms)
+🚨 [PHASE 8] Response missing required Fields (success or data): {"status":"OK","timestamp":"2026-03-26T18:23:27.231Z","uptime":118.325707334,"environment":"developm
+✅ GET /health → 200 (2ms | DB: 0ms)
 🔌 Connecting to unified schema-per-tenant database...
 ✅ Unified database connection established
-[TX:0c2a9d08] START TRANSACTION;...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): START TRANSACTION;
-[TX:0c2a9d08] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-⏱️ [TX] Transaction creation took 5303ms
-[TX:0c2a9d08] SET LOCAL search_path TO "tenant_public"...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SET LOCAL search_path TO "tenant_public"
-⏱️ [TX] SET search_path took 391ms
-⏱️ [ONBOARDING] Transaction started: 5695ms (Total: 5696ms)
-⏱️ [ONBOARDING] Models extracted: 0ms (Total: 5696ms)
-[TX:0c2a9d08] SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "...
-[TX:0c2a9d08] SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_i...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "status", "subscription_plan", "owner_id" AS "ownerId", "business_id" AS "businessId", "type", "is_active" AS "isActive", "settings", "created_at", "updated_at" FROM "public"."businesses" AS "Business" WHERE "Business"."email" = 'Aakash123456@gmail.com';
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_ids" AS "outletIds", "name", "email", "phone", "password_hash" AS "password", "role", "is_verified" AS "isVerified", "is_active" AS "isActive", "last_login" AS "lastLogin", "panel_type" AS "panelType", "status", "salary", "location", "experience", "rating", "total_orders" AS "totalOrders", "performance", "token_version" AS "tokenVersion", "created_at", "updated_at", "business_id", "outlet_id" FROM "public"."users" AS "User" WHERE "User"."email" = 'billuboies123456@test.com' LIMIT 1;
-⏱️ [ONBOARDING] Duplicate check completed: 605ms (Total: 6301ms)
-Business 1260f2e3-078f-4c5c-bd79-d50c46422b5a properly linked to owner f2aa0354-5ede-4d0a-a817-9ec8fa94ab6e
-[TX:0c2a9d08] INSERT INTO "public"."businesses" ("id","name","address","phone","gst_number","e...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): INSERT INTO "public"."businesses" ("id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","type","is_active","settings","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING "id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","business_id","type","is_active","settings","created_at","updated_at";
-⏱️ [ONBOARDING] Business created: 310ms (Total: 6611ms)
-[TX:0c2a9d08] CREATE SCHEMA IF NOT EXISTS "tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a"...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): CREATE SCHEMA IF NOT EXISTS "tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a"
-⏱️ [ONBOARDING] Schema created: 269ms (Total: 6880ms)
-⏱️ [ONBOARDING] Password hashed: 31ms (Total: 6911ms)
-[TX:0c2a9d08] INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name"...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name","email","password_hash","role","is_verified","is_active","panel_type","status","rating","total_orders","performance","token_version","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING "id","business_id","outlet_id","outlet_ids","name","email","phone","password_hash","role","is_verified","is_active","last_login","panel_type","status","salary","location","experience","rating","total_orders","performance","token_version","created_at","updated_at","business_id","outlet_id";
-⏱️ [ONBOARDING] User created: 612ms (Total: 7523ms)
-[TX:0c2a9d08] INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status","created_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id","business_id","schema_name","status","created_at","business_id";
-⏱️ [ONBOARDING] TenantRegistry created: 280ms (Total: 7803ms)
-⏱️ [TX] User operation took 2109ms
-[EXECUTOR DEBUG] executeWithTenant result: {
-  "business": {
-    "subscription_plan": "free",
-    "isActive": true,
-    "settings": {},
-    "id": "1260f2e3-078f-4c5c-bd79-d50c46422b5a",
-    "name": "Billu Boies Cafe",
-    "email": "Aakash123456@gmail.com",
-    "phone": "+91-9876543210",
-    "address": "123 Test Street, Bangalore",
-    "gstNumber": "29ABCDE12384F1Z5",
-    "type": "SOLO",
-    "status": "active",
-    "ownerId": "f2aa0354-5ede-4d0a-a817-9ec8fa94ab6e",
-    "updated_at": "2026-03-24T20:47:26.478Z",
-    "created_at": "2026-03-2
-[TX:0c2a9d08] COMMIT;...
-Executing (0c2a9d08-2ee8-4d25-9d09-c03716f253d9): COMMIT;
-[TX END] Success | Total Duration: 8086ms
-✅ Onboarding completed in 8087ms for Aakash123456@gmail.com
-📊 ONBOARDING BREAKDOWN: {"businessEmail":"Aakash123456@gmail.com","totalTime":8087,"businessId":"1260f2e3-078f-4c5c-bd79-d50c46422b5a","schemaName":"tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a"}
-[CONTROLLER DEBUG] onboarding result: {
-  "success": true,
-  "businessId": "1260f2e3-078f-4c5c-bd79-d50c46422b5a",
-  "outletId": "ce3737e6-0ceb-473a-9738-e9e4de316420",
-  "schemaName": "tenant_1260f2e3-078f-4c5c-bd79-d50c46422b5a",
-  "status": "onboarding",
-  "message": "Business created. Schema initialization is running in background.",
-  "duration": "8087ms"
-}
-❌ GLOBAL ERROR: {
-  message: "Cannot read properties of undefined (reading 'id')",
-  stack: "TypeError: Cannot read properties of undefined (reading 'id')\n" +
-    '    at AuthService.generateAccessToken (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/auth.service.js:287:22)\n' +
-    '    at onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:55:45)\n' +
-    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)',
-  path: '/api/onboarding/business',
-  method: 'POST',
-  timestamp: '2026-03-24T20:47:28.266Z'
-}
-Executing (default): SET search_path TO public
-Executing (default): SET search_path TO public
-🔧 [PHASE 3] Search path reset to public after POST /api/onboarding/business
-✅ POST /api/onboarding/business → 200 (8667ms | DB: 0ms)
-⚠️ SLOW REQUEST: POST /api/onboarding/business → 200 (8667ms | DB: 0ms)
-⏱️ [ONBOARDING] Starting: 0ms (Total: 0ms)
-⏱️ [ONBOARDING] Executor setup: 0ms (Total: 0ms)
-[TX START] Tenant: public | ID: tx_1774385402664_3ku9k
-✅ [TENANT MODELS] Cache hit for tenant_public
-⏱️ [TX] getTenantModels took 0ms
-🔌 Connecting to unified schema-per-tenant database...
-✅ Unified database connection established
-[TX:0cbc585c] START TRANSACTION;...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): START TRANSACTION;
-[TX:0cbc585c] SET TRANSACTION ISOLATION LEVEL READ COMMITTED;...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-⏱️ [TX] Transaction creation took 4400ms
-[TX:0cbc585c] SET LOCAL search_path TO "tenant_public"...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SET LOCAL search_path TO "tenant_public"
-⏱️ [TX] SET search_path took 305ms
-⏱️ [ONBOARDING] Transaction started: 4707ms (Total: 4707ms)
-⏱️ [ONBOARDING] Models extracted: 0ms (Total: 4707ms)
-[TX:0cbc585c] SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "...
-[TX:0cbc585c] SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_i...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SELECT "id", "name", "address", "phone", "gst_number" AS "gstNumber", "email", "status", "subscription_plan", "owner_id" AS "ownerId", "business_id" AS "businessId", "type", "is_active" AS "isActive", "settings", "created_at", "updated_at" FROM "public"."businesses" AS "Business" WHERE "Business"."email" = 'freshcafe888@test.com';
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): SELECT "id", "business_id" AS "businessId", "outlet_id" AS "outletId", "outlet_ids" AS "outletIds", "name", "email", "phone", "password_hash" AS "password", "role", "is_verified" AS "isVerified", "is_active" AS "isActive", "last_login" AS "lastLogin", "panel_type" AS "panelType", "status", "salary", "location", "experience", "rating", "total_orders" AS "totalOrders", "performance", "token_version" AS "tokenVersion", "created_at", "updated_at", "business_id", "outlet_id" FROM "public"."users" AS "User" WHERE "User"."email" = 'adminfresh888@test.com' LIMIT 1;
-⏱️ [ONBOARDING] Duplicate check completed: 599ms (Total: 5306ms)
-Business 302d2af5-83e8-4f15-8b03-5b31d0765ccd properly linked to owner 1fddd299-a7a7-4b50-90da-773445a45410
-[TX:0cbc585c] INSERT INTO "public"."businesses" ("id","name","address","phone","email","status...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): INSERT INTO "public"."businesses" ("id","name","address","phone","email","status","subscription_plan","owner_id","type","is_active","settings","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING "id","name","address","phone","gst_number","email","status","subscription_plan","owner_id","business_id","type","is_active","settings","created_at","updated_at";
-⏱️ [ONBOARDING] Business created: 392ms (Total: 5698ms)
-[TX:0cbc585c] CREATE SCHEMA IF NOT EXISTS "tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd"...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): CREATE SCHEMA IF NOT EXISTS "tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd"
-⏱️ [ONBOARDING] Schema created: 286ms (Total: 5984ms)
-⏱️ [ONBOARDING] Password hashed: 31ms (Total: 6015ms)
-[TX:0cbc585c] INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name"...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): INSERT INTO "public"."users" ("id","business_id","outlet_id","outlet_ids","name","email","password_hash","role","is_verified","is_active","panel_type","status","rating","total_orders","performance","token_version","created_at","updated_at") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING "id","business_id","outlet_id","outlet_ids","name","email","phone","password_hash","role","is_verified","is_active","last_login","panel_type","status","salary","location","experience","rating","total_orders","performance","token_version","created_at","updated_at","business_id","outlet_id";
-⏱️ [ONBOARDING] User created: 369ms (Total: 6384ms)
-[TX:0cbc585c] INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): INSERT INTO "public"."tenant_registry" ("id","business_id","schema_name","status","created_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id","business_id","schema_name","status","created_at","business_id";
-⏱️ [ONBOARDING] TenantRegistry created: 304ms (Total: 6688ms)
-⏱️ [TX] User operation took 1981ms
-[EXECUTOR DEBUG] executeWithTenant result: {
-  "business": {
-    "subscription_plan": "free",
-    "isActive": true,
-    "settings": {},
-    "id": "302d2af5-83e8-4f15-8b03-5b31d0765ccd",
-    "name": "FreshCafe",
-    "email": "freshcafe888@test.com",
-    "phone": "123",
-    "address": "Addr",
-    "gstNumber": null,
-    "type": "SOLO",
-    "status": "active",
-    "ownerId": "1fddd299-a7a7-4b50-90da-773445a45410",
-    "updated_at": "2026-03-24T20:50:07.972Z",
-    "created_at": "2026-03-24T20:50:07.972Z",
-    "businessId": null
-  },
-  "admin"
-[TX:0cbc585c] COMMIT;...
-Executing (0cbc585c-ac6f-48a4-bea6-ab9a4d6b253f): COMMIT;
-[TX END] Success | Total Duration: 6985ms
-✅ Onboarding completed in 6985ms for freshcafe888@test.com
-📊 ONBOARDING BREAKDOWN: {"businessEmail":"freshcafe888@test.com","totalTime":6985,"businessId":"302d2af5-83e8-4f15-8b03-5b31d0765ccd","schemaName":"tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd"}
-[CONTROLLER DEBUG] onboarding result: {
-  "success": true,
-  "businessId": "302d2af5-83e8-4f15-8b03-5b31d0765ccd",
-  "outletId": "bc201405-a51e-4f48-b5d5-8c5c385aa198",
-  "schemaName": "tenant_302d2af5-83e8-4f15-8b03-5b31d0765ccd",
-  "status": "onboarding",
-  "message": "Business created. Schema initialization is running in background.",
-  "duration": "6985ms"
-}
-❌ GLOBAL ERROR: {
-  message: "Cannot read properties of undefined (reading 'id')",
-  stack: "TypeError: Cannot read properties of undefined (reading 'id')\n" +
-    '    at AuthService.generateAccessToken (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/services/auth.service.js:287:22)\n' +
-    '    at onboardBusiness (/Users/admin/Downloads/billu by brewwlabs/pos-backend-multitenant-issues-resolved-updatd-code-21-march-2026/controllers/onboardingController.js:55:45)\n' +
-    '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)',
-  path: '/api/onboarding/business',
-  method: 'POST',
-  timestamp: '2026-03-24T20:50:09.650Z'
-}
-Executing (default): SET search_path TO public
-Executing (default): SET search_path TO public
-🔧 [PHASE 3] Search path reset to public after POST /api/onboarding/business
-✅ POST /api/onboarding/business → 200 (7598ms | DB: 0ms)
-⚠️ SLOW REQUEST: POST /api/onboarding/business → 200 (7598ms | DB: 0ms)
+Executing (default): SET search_path TO "public"
+[SchemaEnforcement] 🔒 Public schema enforced for POST /business
+Executing (default): SET search_path TO "public"
+[ONBOARDING] SCHEMA_LOCK | +428ms search_path forced to: public
+[ONBOARDING] INIT | +428ms businessId=4abc570b-08c7-4981-bfdf-ad6cc7d07819, schema=tenant_4abc570b-08c7-4981-bfdf-ad6cc7d07819
+Executing (default): SET search_path TO "public"
+[Executor] ⚡ EXECUTE | Tenant: control_plane | Schema: public | Mode: TRANSACTIONAL
+[TX:62198dbb] START TRANSACTION;...
+Executing (62198dbb-bd8d-4bbb-ab07-0ba68327c326): START TRANSACTION;

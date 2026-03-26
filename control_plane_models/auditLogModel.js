@@ -13,91 +13,91 @@ const AuditLog = controlPlaneSequelize && controlPlaneSequelize.define ?
       primaryKey: true
     },
     userId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: true,
       field: 'user_id',
       comment: 'User who performed the action'
     },
     brandId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: true,
       field: 'brand_id',
       comment: 'Brand/tenant context for the action'
     },
     userEmail: {
-      type: DataTypes.STRING(255),
+            type: DataTypes.STRING(255),
       allowNull: true,
       field: 'user_email',
       comment: 'User email for identification'
     },
     userRole: {
-      type: DataTypes.STRING(50),
+            type: DataTypes.STRING(50),
       allowNull: true,
       field: 'user_role',
       comment: 'User role at time of action'
     },
     actionType: {
-      type: DataTypes.STRING(100),
+            type: DataTypes.STRING(100),
       allowNull: false,
       field: 'action_type',
       comment: 'Type of action performed'
     },
     entityType: {
-      type: DataTypes.STRING(100),
+            type: DataTypes.STRING(100),
       allowNull: true,
       field: 'entity_type',
       comment: 'Entity type that was acted upon (user, order, product, etc.)'
     },
     entityId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: true,
       field: 'entity_id',
       comment: 'ID of the entity that was acted upon'
     },
     actionDescription: {
-      type: DataTypes.TEXT,
+            type: DataTypes.TEXT,
       allowNull: true,
       field: 'action_description',
       comment: 'Description of the action performed'
     },
     ipAddress: {
-      type: DataTypes.STRING,
+            type: DataTypes.STRING,
       allowNull: true,
       field: 'ip_address',
       comment: 'IP address from which the action was performed'
     },
     userAgent: {
-      type: DataTypes.TEXT,
+            type: DataTypes.TEXT,
       allowNull: true,
       field: 'user_agent',
       comment: 'Browser/client identifier'
     },
     requestMethod: {
-      type: DataTypes.STRING(10),
+            type: DataTypes.STRING(10),
       allowNull: true,
       field: 'request_method',
       comment: 'HTTP method used'
     },
     requestPath: {
-      type: DataTypes.STRING(500),
+            type: DataTypes.STRING(500),
       allowNull: true,
       field: 'request_path',
       comment: 'Request path'
     },
     tenantId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: true,
       field: 'tenant_id',
       comment: 'Tenant context for the action'
     },
     brandId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: true,
       field: 'brand_id',
       comment: 'Brand context for the action'
     },
     severityLevel: {
-      type: DataTypes.STRING,
+            type: DataTypes.STRING,
       defaultValue: 'LOW',
       field: 'severity_level',
       comment: 'Security severity level'
@@ -114,25 +114,26 @@ const AuditLog = controlPlaneSequelize && controlPlaneSequelize.define ?
       comment: 'Additional metadata in JSON format'
     },
     oldValues: {
-      type: DataTypes.JSONB,
+            type: DataTypes.JSONB,
       allowNull: true,
       field: 'old_values',
       comment: 'Previous entity values before update'
     },
     newValues: {
-      type: DataTypes.JSONB,
+            type: DataTypes.JSONB,
       allowNull: true,
       field: 'new_values',
       comment: 'New entity values after update'
     },
     createdAt: {
-      type: DataTypes.DATE,
+            type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       field: 'created_at',
       comment: 'When the action occurred'
     }
   }, {
     tableName: 'audit_logs',
+        underscored: true,
     timestamps: true,
     updatedAt: false,
     indexes: [

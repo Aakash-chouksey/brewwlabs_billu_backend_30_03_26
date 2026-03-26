@@ -1,6 +1,5 @@
 const createHttpError = require("http-errors");
 const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get all expense types
@@ -15,13 +14,10 @@ exports.getExpenseTypes = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req);
             
-            return await safeQuery(
-                () => ExpenseType.findAll({
-                    where: whereClause,
-                    order: [['name', 'ASC']]
-                }),
-                []
-            );
+            return await ExpenseType.findAll({
+                where: whereClause,
+                order: [['name', 'ASC']]
+            });
         });
 
         console.log('[EXPENSE TYPE CONTROLLER] getExpenseTypes result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -85,13 +81,7 @@ exports.updateExpenseType = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req, { id });
 
-            const expenseType = await safeQuery(
-                () => ExpenseType.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const expenseType = await ExpenseType.findOne({ where: whereClause, transaction });
             if (!expenseType) throw createHttpError(404, "Expense type not found");
 
             await expenseType.update(updateData, { transaction });
@@ -123,24 +113,15 @@ exports.deleteExpenseType = async (req, res, next) => {
             const { whereClause } = buildStrictWhereClause(req, { id });
 
             // Check if type has expenses
-            const expenses = await safeQuery(
-                () => Expense.count({
-                    where: { expenseTypeId: id },
-                    transaction
-                }),
-                0
-            );
+            const expenses = await Expense.count({
+                where: { expenseTypeId: id },
+                transaction
+            });
             if (expenses > 0) {
                 throw createHttpError(400, `Cannot delete expense type with ${expenses} expenses`);
             }
 
-            const expenseType = await safeQuery(
-                () => ExpenseType.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const expenseType = await ExpenseType.findOne({ where: whereClause, transaction });
             if (!expenseType) throw createHttpError(404, "Expense type not found");
 
             await expenseType.destroy({ transaction });

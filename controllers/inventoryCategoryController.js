@@ -1,6 +1,5 @@
 const createHttpError = require("http-errors");
 const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get all inventory categories
@@ -15,13 +14,10 @@ exports.getCategories = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req);
             
-            return await safeQuery(
-                () => InventoryCategory.findAll({
-                    where: whereClause,
-                    order: [['name', 'ASC']]
-                }),
-                []
-            );
+            return await InventoryCategory.findAll({
+                where: whereClause,
+                order: [['name', 'ASC']]
+            });
         });
 
         console.log('[INV CATEGORY CONTROLLER] getCategories result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -84,13 +80,10 @@ exports.updateCategory = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req, { id });
 
-            const category = await safeQuery(
-                () => InventoryCategory.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const category = await InventoryCategory.findOne({
+                where: whereClause,
+                transaction
+            });
             if (!category) throw createHttpError(404, "Category not found");
 
             await category.update(updateData, { transaction });
@@ -122,25 +115,16 @@ exports.deleteCategory = async (req, res, next) => {
             const { whereClause } = buildStrictWhereClause(req, { id });
 
             // Check if category has inventory items (use InventoryItem as it's the more reliable model)
-            const items = await safeQuery(
-                () => InventoryItem.count({
-                    where: { inventoryCategoryId: id },
-                    transaction
-                }),
-                0
-            );
+            const items = await InventoryItem.count({
+                where: { inventoryCategoryId: id },
+                transaction
+            });
             
             if (items > 0) {
                 throw createHttpError(400, `Cannot delete category with ${items} inventory items`);
             }
 
-            const category = await safeQuery(
-                () => InventoryCategory.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const category = await InventoryCategory.findOne({ where: whereClause, transaction });
             if (!category) throw createHttpError(404, "Category not found");
 
             await category.destroy({ transaction });
@@ -166,13 +150,7 @@ exports.toggleStatus = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req, { id });
 
-            const category = await safeQuery(
-                () => InventoryCategory.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const category = await InventoryCategory.findOne({ where: whereClause, transaction });
             if (!category) throw createHttpError(404, "Category not found");
 
             const newStatus = !category.isActive;

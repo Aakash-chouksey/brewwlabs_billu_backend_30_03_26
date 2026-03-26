@@ -12,39 +12,42 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false
         },
         inventoryItemId: {
+            field: 'inventory_item_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: 'inventory_items',
-                key: 'id'
-            }
+            allowNull: false
         },
         quantity: {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         salePrice: {
+            field: 'sale_price',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         totalAmount: {
+            field: 'total_amount',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         saleDate: {
+            field: 'sale_date',
             type: DataTypes.DATE,
             allowNull: false,
             defaultValue: DataTypes.NOW
         },
         customerName: {
+            field: 'customer_name',
             type: DataTypes.STRING,
             allowNull: true
         },
         customerPhone: {
+            field: 'customer_phone',
             type: DataTypes.STRING,
             allowNull: true
         },
@@ -53,12 +56,15 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         recordedBy: {
+            field: 'recorded_by',
             type: DataTypes.UUID,
             allowNull: true,
             // Cross-schema FKs are tricky during sync, removing constraint for now
         }
     }, {
-        tableName: 'InventorySales',
+        tableName: 'inventory_sales',
+        underscored: true,
+        freezeTableName: true,
         timestamps: true
     });
 

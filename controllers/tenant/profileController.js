@@ -4,7 +4,6 @@
  */
 
 const createHttpError = require('http-errors');
-const { safeQuery } = require('../utils/safeQuery');
 
 const profileController = {
     /**
@@ -21,27 +20,19 @@ const profileController = {
                 const { transactionModels: models } = context;
                 const { User, Business } = models;
                 
-                const user = await safeQuery(
-                    () => User.findOne({
-                        where: { id: auth.id },
-                        attributes: ['id', 'name', 'email', 'phone', 'role', 'businessId', 'outletId', 'panelType', 'isActive', 'createdAt', 'lastLogin']
-                    }),
-                    null
-                );
+                const user = await User.findOne({
+                    where: { id: auth.id }
+                });
 
                 if (!user) {
                     throw createHttpError(404, 'User not found');
                 }
 
-                const business = await safeQuery(
-                    () => Business.findOne({
-                        where: { id: user.businessId },
-                        attributes: ['id', 'name', 'email', 'phone', 'address', 'gstNumber', 'logo', 'status']
-                    }),
-                    null
-                );
+                const business = await Business.findOne({
+                    where: { id: user.businessId }
+                });
 
-                return { user: user ?? {}, business: business ?? null }; // Phase 7 Fix
+                return { user, business };
             });
 
             res.json({
@@ -69,13 +60,10 @@ const profileController = {
                 const { transaction, transactionModels: models } = context;
                 const { User } = models;
                 
-                const user = await safeQuery(
-                    () => User.findOne({
-                        where: { id: auth.id },
-                        transaction
-                    }),
-                    null
-                );
+                const user = await User.findOne({
+                    where: { id: auth.id },
+                    transaction
+                });
 
                 if (!user) {
                     throw createHttpError(404, 'User not found');

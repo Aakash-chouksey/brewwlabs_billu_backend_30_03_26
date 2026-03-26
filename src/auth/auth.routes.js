@@ -15,35 +15,57 @@ const { validate } = require('../../middlewares/authValidation');
 const { AuthErrorHandler, globalAuthErrorHandler } = require('../../middlewares/authErrorHandler');
 
 // Debug endpoint for testing reports (development only)
+// Debug endpoint for testing reports (development only)
 if (process.env.NODE_ENV !== 'production') {
     router.get('/debug/reports', (req, res) => {
-        console.log('🔧 DEBUG: Public reports endpoint called');
-        const reportController = require('../../controllers/reportController');
-        
-        // Mock request object for testing
-        const mockReq = {
-            query: req.query,
-            businessId: req.query.businessId || 'test-business-id',
-            outletId: req.query.outletId || 'test-outlet-id',
-            models: {
-                sequelize: {
-                    query: async () => [],
-                    QueryTypes: { SELECT: 'SELECT' }
+        try {
+            console.log('🔧 DEBUG: Public reports endpoint called');
+            const reportController = require('../../controllers/reportController');
+            
+            // Mock request object for testing
+            const mockReq = {
+                query: req.query,
+                businessId: req.query.businessId || 'test-business-id',
+                outletId: req.query.outletId || 'test-outlet-id',
+                models: {
+                    sequelize: {
+                        query: async () => [],
+                        QueryTypes: { SELECT: 'SELECT' }
+                    }
                 }
-            }
-        };
-        
-        // Call the reports controller with mock request
-        reportController.getReportsOverview(mockReq, res, (err) => {
-            if (err) {
-                console.error('Debug reports error:', err);
-                res.status(500).json({
+            };
+            
+            // Call the reports controller with mock request if it exists
+            const handler = reportController.getReportsOverview || reportController.getDailySales;
+            if (typeof handler !== 'function') {
+                return res.status(500).json({
                     success: false,
-                    message: 'Debug reports error',
-                    error: err.message
+                    message: 'No report handler found'
                 });
             }
-        });
+
+            handler(mockReq, res, (err) => {
+                if (err) {
+                    console.error('Debug reports error:', err);
+                    if (!res.headersSent) {
+                        res.status(500).json({
+                            success: false,
+                            message: 'Debug reports error',
+                            error: err.message
+                        });
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('🔥 Debug reports crash prevented:', error.message);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Debug reports internal error',
+                    error: error.message
+                });
+            }
+        }
     });
 }
 

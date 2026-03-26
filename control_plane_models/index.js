@@ -1,69 +1,41 @@
 const { DataTypes } = require('sequelize');
 const { controlPlaneSequelize } = require('../config/control_plane_db');
+const { ModelFactory } = require('../src/architecture/modelFactory');
 
 // Check if we have a real database connection
 const isRealConnection = controlPlaneSequelize && controlPlaneSequelize.define && typeof controlPlaneSequelize.define === 'function';
 
-// Lazily initialize models and export them.
-let Business, TenantConnection, Subscription, SuperAdminUser, ClusterMetadata, TenantMigrationLog, Plan, AuditLog, TenantRegistry, SystemMetrics;
+// Models will be populated after ModelFactory initialization
+let models = {};
 
 if (isRealConnection) {
-  // Real database connection - create real models
-  Business = require('./businessModel')(controlPlaneSequelize, DataTypes);
-  TenantConnection = require('./tenantConnectionModel')(controlPlaneSequelize, DataTypes);
-  Subscription = require('./subscriptionModel')(controlPlaneSequelize, DataTypes);
-  SuperAdminUser = require('./superAdminModel')(controlPlaneSequelize, DataTypes);
-  ClusterMetadata = require('./clusterMetadataModel')(controlPlaneSequelize, DataTypes);
-  TenantMigrationLog = require('./tenantMigrationLogModel')(controlPlaneSequelize, DataTypes);
-  Plan = require('./planModel')(controlPlaneSequelize, DataTypes);
-  AuditLog = require('./auditLogModel').AuditLog;
-  TenantRegistry = require('./tenantRegistryModel')(controlPlaneSequelize, DataTypes);
-  SystemMetrics = require('./systemMetricsModel')(controlPlaneSequelize, DataTypes);
-
-  // Define Associations
-  Business.hasOne(TenantConnection, { foreignKey: 'businessId', as: 'connection' });
-  TenantConnection.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
-
-  Plan.hasMany(Subscription, { foreignKey: 'planId', as: 'subscriptions' });
-  Subscription.belongsTo(Plan, { foreignKey: 'planId', as: 'plan' });
-  Subscription.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
-  Business.hasMany(Subscription, { foreignKey: 'businessId', as: 'subscriptions' });
-
-  Business.hasOne(TenantRegistry, { foreignKey: 'businessId', as: 'registry' });
-  TenantRegistry.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
-} else {
-  // No database connection - create all placeholder models
-  const createPlaceholderModel = require('./placeholderModel');
+  // Use the centralized factory to ensure single source of truth and correct classification
+  // This is synchronous because setupModelDefinitions was already called or is handled lazily
+  ModelFactory.setupModelDefinitions();
   
-  Business = createPlaceholderModel(controlPlaneSequelize);
-  TenantConnection = createPlaceholderModel(controlPlaneSequelize);
-  Subscription = createPlaceholderModel(controlPlaneSequelize);
-  SuperAdminUser = createPlaceholderModel(controlPlaneSequelize);
-  ClusterMetadata = createPlaceholderModel(controlPlaneSequelize);
-  TenantMigrationLog = createPlaceholderModel(controlPlaneSequelize);
-  Plan = createPlaceholderModel(controlPlaneSequelize);
-  AuditLog = createPlaceholderModel(controlPlaneSequelize);
-  TenantRegistry = createPlaceholderModel(controlPlaneSequelize);
-  SystemMetrics = createPlaceholderModel(controlPlaneSequelize);
+  // Initialize models on the control plane instance
+  // Since createModels is async but it's often called later, we can't easily wait here
+  // But we can manually trigger it if needed.
+  // Actually, for immediate export, we can't await. 
+  // Most callers of this file expect these exports to be ready.
+} else {
+  throw new Error('🚨 CRITICAL: Control plane database connection not established.');
 }
 
-const init = async (options = { sync: false }) => {
-  if (options.sync && isRealConnection) {
-    console.warn('⚠️ Global sync requested but disabled for strict isolation. Use dedicated scripts for synchronization.');
-  }
-};
-
+// Export the specific models from the unified ModelFactory
+// We define getters to ensure they are available after initialization
 module.exports = {
   controlPlaneSequelize,
-  Business,
-  TenantConnection,
-  Subscription,
-  SuperAdminUser,
-  ClusterMetadata,
-  TenantMigrationLog,
-  Plan,
-  AuditLog,
-  TenantRegistry,
-  SystemMetrics,
-  init
+  get Business() { return controlPlaneSequelize.models.Business; },
+  get TenantConnection() { return controlPlaneSequelize.models.TenantConnection; },
+  get Subscription() { return controlPlaneSequelize.models.Subscription; },
+  get SuperAdminUser() { return controlPlaneSequelize.models.SuperAdminUser; },
+  get ClusterMetadata() { return controlPlaneSequelize.models.ClusterMetadata; },
+  get TenantMigrationLog() { return controlPlaneSequelize.models.TenantMigrationLog; },
+  get Plan() { return controlPlaneSequelize.models.Plan; },
+  get AuditLog() { return controlPlaneSequelize.models.AuditLog; },
+  get TenantRegistry() { return controlPlaneSequelize.models.TenantRegistry; },
+  get SystemMetrics() { return controlPlaneSequelize.models.SystemMetrics; },
+  get User() { return controlPlaneSequelize.models.User; },
+  init: async () => await ModelFactory.createModels(controlPlaneSequelize)
 };

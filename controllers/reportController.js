@@ -114,7 +114,7 @@ exports.getItemWiseSales = async (req, res, next) => {
                     {
                         model: Order,
                         where: orderWhereClause,
-                        attributes: ['id', 'status', 'createdAt']
+                        attributes: ['id', 'status', 'created_at']
                     },
                     {
                         model: Product,
@@ -191,11 +191,11 @@ exports.getSystemStats = async (req, res, next) => {
             return finalData;
         });
 
-        console.log("STEP 6 - Controller Received:", result);
-        console.log("STEP 6.1 - Data:", result?.data);
-        console.log("STEP 7 - Sending Response:", result?.data);
-        
-        return res.json({ success: true, data: result.data ?? {} });
+        if (!result || !result.data || Object.keys(result.data).length === 0) {
+            throw createHttpError(500, "Critical report data missing");
+        }
+
+        return res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);
     }

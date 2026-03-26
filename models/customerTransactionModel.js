@@ -9,19 +9,19 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         customerId: {
+            field: 'customer_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'customer_id'
+            allowNull: false
         },
         orderId: {
             type: DataTypes.UUID,
@@ -29,36 +29,37 @@ module.exports = (sequelize) => {
             field: 'order_id'
         },
         transactionType: {
+            field: 'transaction_type',
             type: DataTypes.STRING,
-            allowNull: false,
-            field: 'transaction_type'
+            allowNull: false
         },
         amount: {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         paymentMethod: {
+            field: 'payment_method',
             type: DataTypes.STRING,
-            allowNull: true,
-            field: 'payment_method'
+            allowNull: true
         },
         description: {
             type: DataTypes.TEXT
         },
         transactionDate: {
+            field: 'transaction_date',
             type: DataTypes.DATE,
-            allowNull: false,
-            field: 'transaction_date'
+            allowNull: false
         },
         createdBy: {
+            field: 'created_by',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'created_by'
+            allowNull: true
         }
     }, {
         tableName: 'customer_transactions',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -82,9 +83,8 @@ module.exports = (sequelize) => {
 
     // Define associations
     CustomerTransaction.associate = function(models) {
-        CustomerTransaction.belongsTo(models.Customer, { foreignKey: 'customerId', as: 'customer' });
-        CustomerTransaction.belongsTo(models.Order, { foreignKey: 'orderId', as: 'order' });
-        CustomerTransaction.belongsTo(models.User, { foreignKey: 'createdBy', as: 'creator' });
+        CustomerTransaction.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
+        CustomerTransaction.belongsTo(models.Order, { foreignKey: 'order_id', as: 'order' });
     };
 
     return CustomerTransaction;

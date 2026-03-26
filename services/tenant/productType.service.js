@@ -4,7 +4,6 @@
  */
 
 const createHttpError = require('http-errors');
-const { safeQuery } = require("../../utils/safeQuery");
 
 /**
  * Get all product types
@@ -16,13 +15,10 @@ const getProductTypes = async (req) => {
         const { transactionModels: models } = context;
         const { ProductType } = models;
         
-        const types = await safeQuery(
-            () => ProductType.findAll({
-                where: { businessId },
-                order: [['name', 'ASC']]
-            }),
-            []
-        );
+        const types = await ProductType.findAll({
+            where: { businessId },
+            order: [['name', 'ASC']]
+        });
         
         return types;
     });

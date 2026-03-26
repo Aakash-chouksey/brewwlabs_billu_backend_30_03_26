@@ -1,34 +1,34 @@
+/**
+ * AREA CONTROLLER - Neon-Safe Transaction Pattern
+ */
+
 const createHttpError = require("http-errors");
-const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get all areas
  */
 exports.getAreas = async (req, res, next) => {
     try {
-        enforceOutletScope(req);
         const { businessId, outletId } = req;
 
         const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
             const { Area } = models;
             
-            const { whereClause } = buildStrictWhereClause(req);
+            const whereClause = { businessId };
+            if (outletId) whereClause.outletId = outletId;
             
-            return await safeQuery(
-                () => Area.findAll({
-                    where: whereClause,
-                    order: [['name', 'ASC']]
-                }),
-                []
-            );
+            const areas = await Area.findAll({
+                where: whereClause,
+                order: [['name', 'ASC']],
+                transaction: context.transaction
+            });
+            
+            return areas || [];
         });
 
-        console.log('[AREA CONTROLLER] getAreas result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        const responseData = result.data || result;
-        res.json({ success: true, data: responseData || [] });
+        const responseData = result.data || result || [];
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -39,7 +39,6 @@ exports.getAreas = async (req, res, next) => {
  */
 exports.addArea = async (req, res, next) => {
     try {
-        enforceOutletScope(req);
         const { businessId, outletId } = req;
         const { name, description, capacity } = req.body;
 
@@ -47,7 +46,12 @@ exports.addArea = async (req, res, next) => {
             throw createHttpError(400, "Area name is required");
         }
 
-        const result = await req.executeWithTenant(async (context) => {
+        if (!outletId) {
+            throw createHttpError(400, "Outlet ID is required");
+        }
+
+        const area = await req.executeWithTenant(async (context) => {
+            // Get models from context (NOT from req.models - removed by middleware)
             const { transaction, transactionModels: models } = context;
             const { Area } = models;
             
@@ -56,14 +60,11 @@ exports.addArea = async (req, res, next) => {
                 outletId,
                 name,
                 description,
-                capacity: capacity || 20
-            }, { transaction });
+                capacity: capacity || null
+            }, { transaction: context.transaction });
         });
 
-        console.log('[AREA CONTROLLER] addArea result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        const responseData = result.data || result;
-        res.status(201).json({ success: true, data: responseData, message: "Area created" });
+        res.status(201).json({ success: true, data: area, message: "Area created" });
     } catch (error) {
         next(error);
     }
@@ -74,34 +75,26 @@ exports.addArea = async (req, res, next) => {
  */
 exports.updateArea = async (req, res, next) => {
     try {
-        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
         const updateData = req.body;
 
-        const result = await req.executeWithTenant(async (context) => {
+        const area = await req.executeWithTenant(async (context) => {
+            // Get models from context (NOT from req.models - removed by middleware)
             const { transaction, transactionModels: models } = context;
             const { Area } = models;
             
-            const { whereClause } = buildStrictWhereClause(req, { id });
-
-            const area = await safeQuery(
-                () => Area.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const area = await Area.findOne({
+                where: { id, businessId },
+                transaction: context.transaction
+            });
             if (!area) throw createHttpError(404, "Area not found");
 
-            await area.update(updateData, { transaction });
+            await area.update(updateData, { transaction: context.transaction });
             return area;
         });
 
-        console.log('[AREA CONTROLLER] updateArea result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        const responseData = result.data || result;
-        res.json({ success: true, data: responseData, message: "Area updated" });
+        res.json({ success: true, data: area, message: "Area updated" });
     } catch (error) {
         next(error);
     }
@@ -112,7 +105,6 @@ exports.updateArea = async (req, res, next) => {
  */
 exports.deleteArea = async (req, res, next) => {
     try {
-        enforceOutletScope(req);
         const { id } = req.params;
         const { businessId } = req;
 
@@ -120,30 +112,22 @@ exports.deleteArea = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Area, Table } = models;
             
-            const { whereClause } = buildStrictWhereClause(req, { id });
-
             // Check if area has tables
-            const tables = await safeQuery(
-                () => Table.count({
-                    where: { areaId: id },
-                    transaction
-                }),
-                0
-            );
+            const tables = await Table.count({
+                where: { areaId: id },
+                transaction: context.transaction
+            });
             if (tables > 0) {
                 throw createHttpError(400, `Cannot delete area with ${tables} tables`);
             }
 
-            const area = await safeQuery(
-                () => Area.findOne({
-                    where: whereClause,
-                    transaction
-                }),
-                null
-            );
+            const area = await Area.findOne({
+                where: { id, businessId },
+                transaction: context.transaction
+            });
             if (!area) throw createHttpError(404, "Area not found");
 
-            await area.destroy({ transaction });
+            await area.destroy({ transaction: context.transaction });
         });
 
         res.json({ success: true, message: "Area deleted" });

@@ -24,7 +24,7 @@ const tableManagementController = {
                 return await Table.findAll({
                     where: whereClause,
                     include: [{ model: Area, as: 'area' }],
-                    order: [['tableNumber', 'ASC']]
+                    order: [['tableNo', 'ASC']]
                 });
             });
 
@@ -44,9 +44,9 @@ const tableManagementController = {
     createTable: async (req, res, next) => {
         try {
             const { businessId, outletId } = req;
-            const { tableNumber, name, capacity, areaId, status, positionX, positionY } = req.body;
+            const { tableNo, name, capacity, areaId, status, positionX, positionY } = req.body;
 
-            if (!tableNumber) {
+            if (!tableNo) {
                 throw createHttpError(400, 'Table number is required');
             }
 
@@ -56,7 +56,7 @@ const tableManagementController = {
 
                 // Check if table number already exists within this outlet
                 const existing = await Table.findOne({
-                    where: { businessId, outletId: outletId || null, tableNumber },
+                    where: { businessId, outletId: outletId || null, tableNo },
                     transaction
                 });
 
@@ -68,8 +68,8 @@ const tableManagementController = {
                     id: uuidv4(),
                     businessId,
                     outletId: outletId || null,
-                    tableNumber,
-                    name: name || `Table ${tableNumber}`,
+                    tableNo,
+                    name: name || `Table ${tableNo}`,
                     capacity: capacity || 4,
                     areaId: areaId || null,
                     status: status || 'AVAILABLE',
@@ -110,7 +110,7 @@ const tableManagementController = {
                 }
 
                 const updateData = {};
-                const fields = ['tableNumber', 'name', 'capacity', 'areaId', 'status', 'positionX', 'positionY'];
+                const fields = ['tableNo', 'name', 'capacity', 'areaId', 'status', 'positionX', 'positionY'];
                 fields.forEach(field => {
                     if (req.body[field] !== undefined) updateData[field] = req.body[field];
                 });

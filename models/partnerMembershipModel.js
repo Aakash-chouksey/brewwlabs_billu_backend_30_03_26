@@ -7,13 +7,26 @@ module.exports = (sequelize) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
         },
-        businessId: { type: DataTypes.UUID, allowNull: false },
-        planId: { type: DataTypes.UUID, allowNull: false },
-        startDate: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-        endDate: { type: DataTypes.DATE },
+        businessId: {
+            field: 'business_id',
+            type: DataTypes.UUID, allowNull: false },
+        planId: {
+            field: 'plan_id',
+            type: DataTypes.UUID, allowNull: false },
+        startDate: {
+            field: 'start_date',
+            type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+        endDate: {
+            field: 'end_date',
+            type: DataTypes.DATE },
         status: { type: DataTypes.STRING, defaultValue: 'active' },
-        paymentId: { type: DataTypes.STRING }
+        paymentId: {
+            field: 'payment_id',
+            type: DataTypes.STRING }
     }, {
+        tableName: 'partner_memberships',
+        underscored: true,
+        freezeTableName: true,
         timestamps: true
     });
 

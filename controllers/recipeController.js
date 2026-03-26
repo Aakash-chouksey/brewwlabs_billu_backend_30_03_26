@@ -12,20 +12,22 @@ exports.getRecipes = async (req, res, next) => {
     try {
         const { businessId } = req;
 
-        const recipes = await req.readWithTenant(async (context) => {
+        const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
             const { Recipe, Product } = models;
             
-            return await Recipe.findAll({
+            const recipes = await Recipe.findAll({
                 where: { businessId },
-                include: [{ model: Product, attributes: ['id', 'name', 'sku'] }],
+                include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
                 order: [['name', 'ASC']]
             });
+            
+            return recipes || [];
         });
 
-        console.log('[RECIPE CONTROLLER] getRecipes result:', JSON.stringify(recipes, null, 2).substring(0, 500));
+        console.log('[RECIPE CONTROLLER] getRecipes result:', JSON.stringify(result, null, 2).substring(0, 500));
         
-        const responseData = recipes.data || recipes;
+        const responseData = result.data || result || [];
         res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
@@ -42,19 +44,16 @@ exports.getRecipe = async (req, res, next) => {
 
         const recipe = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
-            const { Recipe, Product, RecipeIngredient, Inventory } = models;
-            
             const recipe = await Recipe.findOne({
                 where: { id, businessId },
                 include: [
-                    { model: Product, attributes: ['id', 'name', 'sku', 'price'] },
+                    { model: Product, as: 'product', attributes: ['id', 'name', 'sku', 'price'] },
                     { 
-                        model: RecipeIngredient, 
+                        model: RecipeItem, 
                         as: 'ingredients', 
                         include: [{ 
-                            model: Inventory, 
-                            as: 'inventory', 
-                            include: [{ model: Product, as: 'product' }] 
+                            model: InventoryItem, 
+                            as: 'inventoryItem'
                         }]
                     }
                 ]
@@ -87,7 +86,7 @@ exports.createRecipe = async (req, res, next) => {
 
         const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
-            const { Recipe, RecipeIngredient, Product } = models;
+            const { Recipe, RecipeItem, Product } = models;
             
             // Verify product exists
             const product = await Product.findOne({
@@ -109,10 +108,10 @@ exports.createRecipe = async (req, res, next) => {
             // Create ingredients
             const ingredientRecords = await Promise.all(
                 ingredients.map(async (ing) => {
-                    return await RecipeIngredient.create({
+                    return await RecipeItem.create({
                         recipeId: recipe.id,
-                        inventoryId: ing.inventoryId,
-                        quantity: ing.quantity,
+                        inventoryItemId: ing.inventoryId,
+                        quantityRequired: ing.quantity,
                         unit: ing.unit,
                         notes: ing.notes || ''
                     }, { transaction });
@@ -142,7 +141,7 @@ exports.updateRecipe = async (req, res, next) => {
 
         const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
-            const { Recipe, RecipeIngredient, Product, Inventory } = models;
+            const { Recipe, RecipeItem, Product, InventoryItem } = models;
             
             const recipe = await Recipe.findOne({
                 where: { id, businessId },
@@ -163,12 +162,12 @@ exports.updateRecipe = async (req, res, next) => {
 
             // Update ingredients if provided
             if (ingredients && Array.isArray(ingredients)) {
-                await RecipeIngredient.destroy({ where: { recipeId: id }, transaction });
+                await RecipeItem.destroy({ where: { recipeId: id }, transaction });
                 await Promise.all(ingredients.map(ing => 
-                    RecipeIngredient.create({
+                    RecipeItem.create({
                         recipeId: id,
-                        inventoryId: ing.inventoryId,
-                        quantity: ing.quantity,
+                        inventoryItemId: ing.inventoryId,
+                        quantityRequired: ing.quantity,
                         unit: ing.unit,
                         notes: ing.notes || ''
                     }, { transaction })
@@ -177,11 +176,11 @@ exports.updateRecipe = async (req, res, next) => {
 
             return await Recipe.findByPk(id, {
                 include: [
-                    { model: Product, attributes: ['id', 'name', 'sku', 'price'] },
+                    { model: Product, as: 'product', attributes: ['id', 'name', 'sku', 'price'] },
                     { 
-                        model: RecipeIngredient, 
+                        model: RecipeItem, 
                         as: 'ingredients', 
-                        include: [{ model: Inventory, as: 'inventory' }] 
+                        include: [{ model: InventoryItem, as: 'inventoryItem' }] 
                     }
                 ],
                 transaction
@@ -207,12 +206,12 @@ exports.deleteRecipe = async (req, res, next) => {
 
         await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
-            const { Recipe, RecipeIngredient } = models;
+            const { Recipe, RecipeItem } = models;
             
             const recipe = await Recipe.findOne({ where: { id, businessId }, transaction });
             if (!recipe) throw createHttpError(404, "Recipe not found");
             
-            await RecipeIngredient.destroy({ where: { recipeId: id }, transaction });
+            await RecipeItem.destroy({ where: { recipeId: id }, transaction });
             await recipe.destroy({ transaction });
         });
 
@@ -233,14 +232,14 @@ exports.checkAvailability = async (req, res, next) => {
 
         const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
-            const { Recipe, RecipeIngredient, Inventory } = models;
+            const { Recipe, RecipeItem, InventoryItem } = models;
             
             const recipe = await Recipe.findOne({
                 where: { id, businessId },
                 include: [{ 
-                    model: RecipeIngredient, 
+                    model: RecipeItem, 
                     as: 'ingredients', 
-                    include: [{ model: Inventory, as: 'inventory' }] 
+                    include: [{ model: InventoryItem, as: 'inventoryItem' }] 
                 }]
             });
 
@@ -255,14 +254,14 @@ exports.checkAvailability = async (req, res, next) => {
             let maxCanMake = Infinity;
 
             for (const ing of ingredients) {
-                const inventory = ing.inventory;
-                const required = ing.quantity * multiplier;
-                const available = Number(inventory?.quantity || 0);
+                const inventory = ing.inventoryItem;
+                const required = ing.quantityRequired * multiplier;
+                const available = Number(inventory?.currentStock || 0);
                 const hasEnough = available >= required;
 
                 if (!hasEnough) canPrepare = false;
                 
-                const possible = Math.floor(available / ing.quantity);
+                const possible = Math.floor(available / ing.quantityRequired);
                 maxCanMake = Math.min(maxCanMake, possible);
 
                 availability.push({
@@ -304,18 +303,18 @@ exports.getCostAnalysis = async (req, res, next) => {
 
         const result = await req.readWithTenant(async (context) => {
             const { transactionModels: models } = context;
-            const { Recipe, RecipeIngredient, Inventory, Product } = models;
+            const { Recipe, RecipeItem, InventoryItem, Product } = models;
             
             const recipe = await Recipe.findOne({
                 where: { id, businessId },
                 include: [
-                    { model: Product, attributes: ['id', 'name', 'price'] },
+                    { model: Product, as: 'product', attributes: ['id', 'name', 'price'] },
                     { 
-                        model: RecipeIngredient, 
+                        model: RecipeItem, 
                         as: 'ingredients', 
                         include: [{ 
-                            model: Inventory, 
-                            as: 'inventory', 
+                            model: InventoryItem, 
+                            as: 'inventoryItem', 
                             include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] 
                         }]
                     }
@@ -328,22 +327,22 @@ exports.getCostAnalysis = async (req, res, next) => {
             let totalCost = 0;
 
             const ingredientCosts = ingredients.map(ing => {
-                const unitCost = Number(ing.inventory?.unitCost || 0);
-                const cost = unitCost * ing.quantity;
+                const unitCost = Number(ing.inventoryItem?.costPerUnit || 0);
+                const cost = unitCost * ing.quantityRequired;
                 totalCost += cost;
 
                 return {
                     ingredientId: ing.id,
-                    inventoryId: ing.inventoryId,
-                    name: ing.inventory?.product?.name || 'Unknown',
-                    quantity: ing.quantity,
+                    inventoryItemId: ing.inventoryItemId,
+                    name: ing.inventoryItem?.name || 'Unknown',
+                    quantity: ing.quantityRequired,
                     unit: ing.unit,
                     unitCost,
                     totalCost: Math.round(cost * 100) / 100
                 };
             });
 
-            const productPrice = Number(recipe.Product?.price || 0);
+            const productPrice = Number(recipe.product?.price || 0);
             const profit = productPrice - totalCost;
             const profitMargin = productPrice > 0 ? (profit / productPrice) * 100 : 0;
 

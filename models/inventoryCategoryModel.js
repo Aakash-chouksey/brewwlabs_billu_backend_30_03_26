@@ -8,11 +8,13 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'outlet_id'
@@ -25,6 +27,7 @@ module.exports = (sequelize) => {
         tableName: 'inventory_categories',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             {
                 fields: ['business_id']

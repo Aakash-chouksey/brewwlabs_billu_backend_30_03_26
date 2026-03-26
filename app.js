@@ -25,7 +25,7 @@ const { connectUnifiedDB } = require('./config/unified_database');
 const { validateControlPlane } = require('./config/control_plane_db');
 const { applyNeonSafeMiddlewareChains } = require('./src/architecture/neonSafeMiddlewareChain');
 const { globalErrorHandler } = require('./middlewares/globalErrorHandlers');
-const { searchPathResetMiddleware, connectionCleanupMiddleware } = require('./middlewares/searchPathReset');
+// Legacy middleware removed for Neon safety
 const { standardResponseMiddleware, responseValidationMiddleware } = require('./utils/standardResponse');
 const neonTransactionSafeExecutor = require('./services/neonTransactionSafeExecutor');
 
@@ -119,7 +119,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ========================================
 // Resets search_path to public after every request
 // Prevents: login breaking after dashboard, cross-tenant leaks, random failures
-app.use(searchPathResetMiddleware);
+// searchPathResetMiddleware removed
 
 // ========================================
 // PHASE 4 & 8: STANDARD RESPONSE MIDDLEWARE
@@ -230,6 +230,45 @@ app.get('/health/detailed', async (req, res) => {
 applyNeonSafeMiddlewareChains(app);
 
 // ========================================
+// CRITICAL: SCHEMA RESET MIDDLEWARE (MUST BE AFTER ALL ROUTES)
+// ========================================
+// This ensures search_path is ALWAYS reset to public after every request
+// Prevents: schema leakage, cross-tenant contamination, login breaking after dashboard
+const { sequelize } = require('./config/unified_database');
+
+app.use(async (req, res, next) => {
+    // Store original end function
+    const originalEnd = res.end;
+    const originalJson = res.json;
+    
+    // Override res.end to reset schema before ending response
+    res.end = async function(chunk, encoding) {
+        // Reset search_path to public (fire and forget, don't block response)
+        try {
+            await sequelize.query('SET search_path TO public');
+        } catch (error) {
+            // Silent fail - don't block response for cleanup
+        }
+        // Call original end
+        originalEnd.call(this, chunk, encoding);
+    };
+    
+    // Also wrap res.json for JSON responses
+    res.json = async function(body) {
+        // Reset search_path to public before sending JSON
+        try {
+            await sequelize.query('SET search_path TO public');
+        } catch (error) {
+            // Silent fail - don't block response for cleanup
+        }
+        // Call original json
+        return originalJson.call(this, body);
+    };
+    
+    next();
+});
+
+// ========================================
 // 404 HANDLER (Catch-all for undefined routes)
 // ========================================
 app.use('*', (req, res) => {
@@ -306,56 +345,61 @@ app.use((err, req, res, next) => {
     if (error.name === 'SequelizeConnectionError' || error.name === 'SequelizeConnectionRefusedError') {
       return res.status(503).json({
         success: false,
-        message: 'Database unavailable. Please try again later.',
-        data: {}
+        message: 'Database unavailable. Please try again later.'
       });
     }
 
     if (error.name === 'SequelizeTimeoutError') {
       return res.status(408).json({
         success: false,
-        message: 'Database query timed out. Please try again.',
-        data: {}
+        message: 'Database query timed out. Please try again.'
       });
     }
 
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
-        message: errorMessage || 'Authentication failed',
-        data: {}
+        message: errorMessage || 'Authentication failed'
       });
     }
 
     if (errorMessage && errorMessage.includes('transaction')) {
       return res.status(500).json({
         success: false,
-        message: 'Database transaction failed. Please try again.',
-        data: {}
+        message: 'Database transaction failed. Please try again.'
       });
     }
 
-    // Remove fake success fallbacks (Phase 1 Fix)
-    // These were hiding real errors by returning 200 OK
-    // if (errorMessage && errorMessage.includes('undefined')) { ... }
-    // if (errorMessage && (errorMessage.includes('column') || errorMessage.includes('does not exist'))) { ... }
+    // Handle "undefined" column errors - THROW ACTUAL ERROR
+    if (errorMessage && errorMessage.includes('undefined')) {
+      console.error('🚨 UNDEFINED ERROR:', errorMessage);
+      throw new Error(errorMessage);
+    }
 
-    // Default error response - ALWAYS return success: false
-    // This ensures real errors are exposed to developers and logs
+    // Handle missing column errors - MUST FAIL FAST
+    if (errorMessage && (errorMessage.includes('column') || errorMessage.includes('does not exist'))) {
+      console.error('🚨 SCHEMA ERROR:', errorMessage);
+      return res.status(500).json({
+        success: false,
+        message: 'Database schema inconsistency. Please contact support.',
+        details: errorMessage
+      });
+    }
+
+    // Default error response - ALWAYS return success: false with correct status code
     const statusCode = error.status || error.statusCode || 500;
     const isDev = process.env.NODE_ENV === 'development';
     
     return res.status(statusCode).json({
       success: false,
-      message: isDev ? errorMessage : 'An unexpected error occurred. Please try again.',
-      data: {}
+      message: isDev ? errorMessage : 'An unexpected error occurred. Please try again.'
     });
   } catch (responseError) {
     // Last resort: if response fails, just end the response
     console.error('❌ Failed to send error response:', responseError?.message);
     try {
       if (res && !res.headersSent) {
-        res.end(JSON.stringify({ success: false, message: 'Handled safely', data: {} }));
+        res.end(JSON.stringify({ success: false, message: 'Critical error occurred' }));
       }
     } catch (e) {
       console.error('❌ CRITICAL: Cannot send any response');
@@ -375,14 +419,6 @@ const initializeNeonSafeDatabases = async () => {
     
     // 2. Validate control plane database
     await validateControlPlane();
-    
-    // 3. PRE-LOAD MODELS - Critical for performance
-    // Prevents 30s delay on first request
-    console.log('📦 Pre-loading models...');
-    const { ModelFactory } = require('./src/architecture/modelFactory');
-    const { sequelize } = require('./config/unified_database');
-    await ModelFactory.createModels(sequelize);
-    console.log('✅ Models pre-loaded successfully');
     
     console.log('✅ All Neon-safe database connections established');
   } catch (error) {
@@ -466,7 +502,7 @@ const startBackgroundJobs = () => {
   cron.schedule('*/15 * * * *', () => {
     console.log('📈 Triggering background metrics update...');
     const scriptPath = path.join(__dirname, 'scripts', 'update_system_metrics.js');
-    exec(`node ${scriptPath}`, (error, stdout, stderr) => {
+    exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error(`❌ Metrics update failed: ${error.message}`);
         return;
@@ -482,7 +518,7 @@ const startBackgroundJobs = () => {
   setTimeout(() => {
     console.log('📈 Initial metrics population...');
     const scriptPath = path.join(__dirname, 'scripts', 'update_system_metrics.js');
-    exec(`node ${scriptPath}`, (error, stdout) => {
+    exec(`node "${scriptPath}"`, (error, stdout) => {
        if (!error) console.log(`✅ Initial metrics populated: ${stdout.trim()}`);
     });
   }, 30000);
@@ -513,3 +549,5 @@ startPeriodicTasks();
 startBackgroundJobs();
 
 module.exports = app;
+
+// Trigger nodemon restart Thu Mar 26 21:10:53 IST 2026

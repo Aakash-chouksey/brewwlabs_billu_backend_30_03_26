@@ -8,12 +8,14 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id',
             unique: true
         },
         schemaName: {
+            field: 'schema_name',
             type: DataTypes.STRING,
             allowNull: false,
             field: 'schema_name',
@@ -24,6 +26,7 @@ module.exports = (sequelize) => {
             defaultValue: 'pending_schema_init'
         },
         createdAt: {
+            field: 'created_at',
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
             field: 'created_at'

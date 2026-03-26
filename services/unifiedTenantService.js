@@ -37,7 +37,8 @@ class UnifiedTenantService {
             const result = await neonTransactionSafeExecutor.readWithTenant(
                 TENANT_TYPES.CONTROL_PLANE, 
                 async (transaction) => {
-                    const { Business } = transaction.models;
+                    const getBusinessModel = require('../models/businessModel');
+                    const Business = getBusinessModel(controlPlaneSequelize);
                     
                     const tenant = await Business.findOne({
                         where: { id: tenantId },

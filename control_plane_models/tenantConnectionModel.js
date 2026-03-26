@@ -1,8 +1,8 @@
 module.exports = (sequelize, DataTypes) => {
   const TenantConnection = sequelize.define('TenantConnection', {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    businessId: { 
-      type: DataTypes.UUID, 
+    businessId: {
+            type: DataTypes.UUID, 
       allowNull: false,
       field: 'business_id',
       unique: true,
@@ -11,50 +11,51 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    dbName: { 
-      type: DataTypes.STRING, 
+    dbName: {
+            type: DataTypes.STRING, 
       allowNull: false, 
       field: 'db_name',
       validate: { notEmpty: true }
     },
-    dbHost: { 
-      type: DataTypes.STRING, 
+    dbHost: {
+            type: DataTypes.STRING, 
       allowNull: false, 
       field: 'db_host',
       validate: { notEmpty: true }
     },
-    dbPort: { 
-      type: DataTypes.INTEGER, 
+    dbPort: {
+            type: DataTypes.INTEGER, 
       defaultValue: 5432, 
       field: 'db_port'
     },
-    dbUser: { 
-      type: DataTypes.STRING, 
+    dbUser: {
+            type: DataTypes.STRING, 
       allowNull: false, 
       field: 'db_user'
     },
-    encryptedPassword: { 
-      type: DataTypes.TEXT, 
+    encryptedPassword: {
+            type: DataTypes.TEXT, 
       allowNull: false, 
       field: 'encrypted_password'
     },
     encryptionVersion: {
-      type: DataTypes.STRING(10),
+        field: 'encryption_version',
+            type: DataTypes.STRING(10),
       defaultValue: 'v2',
       field: 'encryption_version'
     },
     dbRegion: {
-      type: DataTypes.STRING(50),
+            type: DataTypes.STRING(50),
       allowNull: true,
       field: 'db_region'
     },
     poolMaxConnections: {
-      type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER,
       defaultValue: 10,
       field: 'pool_max_connections'
     },
     poolMinConnections: {
-      type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER,
       defaultValue: 1,
       field: 'pool_min_connections'
     },

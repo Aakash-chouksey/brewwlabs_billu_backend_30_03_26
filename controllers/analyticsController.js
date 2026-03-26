@@ -4,7 +4,6 @@
 
 const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
 const { Op } = require("sequelize");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get sales trends
@@ -23,15 +22,9 @@ exports.getSalesTrends = async (req, res, next) => {
 
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - parseInt(days));
-            whereClause.createdAt = { [Op.gte]: startDate };
+            whereClause.created_at = { [Op.gte]: startDate };
 
-            const orders = await safeQuery(
-                () => Order.findAll({
-                    where: whereClause,
-                    attributes: ['createdAt', 'billing_total']
-                }),
-                []
-            );
+            const orders = await Order.findAll({ where: whereClause, attributes: ['created_at', 'billing_total'] });
 
             // Group by date
             const dailyData = {};
@@ -80,24 +73,21 @@ exports.getTopProducts = async (req, res, next) => {
                 orderWhereClause.outletId = whereClause.outletId;
             }
 
-            const items = await safeQuery(
-                () => OrderItem.findAll({
-                    include: [
-                        {
-                            model: Order,
-                            where: orderWhereClause,
-                            attributes: ['id']
-                        },
-                        {
-                            model: Product,
-                            as: 'product',
-                            where: { businessId },
-                            attributes: ['id', 'name', 'categoryId']
-                        }
-                    ]
-                }),
-                []
-            );
+            const items = await OrderItem.findAll({
+                include: [
+                    {
+                        model: Order,
+                        where: orderWhereClause,
+                        attributes: ['id']
+                    },
+                    {
+                        model: Product,
+                        as: 'product',
+                        where: { businessId },
+                        attributes: ['id', 'name', 'categoryId']
+                    }
+                ]
+            });
 
             // Aggregate
             const productMap = {};
@@ -152,15 +142,9 @@ exports.getPeakHours = async (req, res, next) => {
 
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - parseInt(days));
-            whereClause.createdAt = { [Op.gte]: startDate };
+            whereClause.created_at = { [Op.gte]: startDate };
 
-            const orders = await safeQuery(
-                () => Order.findAll({
-                    where: whereClause,
-                    attributes: ['createdAt', 'billing_total']
-                }),
-                []
-            );
+            const orders = await Order.findAll({ where: whereClause, attributes: ['created_at', 'billing_total'] });
 
             // Group by hour
             const hourlyData = {};
@@ -225,22 +209,10 @@ exports.getSummary = async (req, res, next) => {
             }
 
             // Phase 4: Use billing_total for sum
-            const todaySales = await safeQuery(
-                () => Order.sum('billing_total', { where: todayWhere }),
-                0
-            );
-            const todayOrders = await safeQuery(
-                () => Order.count({ where: todayWhere }),
-                0
-            );
-            const monthSales = await safeQuery(
-                () => Order.sum('billing_total', { where: monthWhere }),
-                0
-            );
-            const monthOrders = await safeQuery(
-                () => Order.count({ where: monthWhere }),
-                0
-            );
+            const todaySales = await Order.sum('billing_total', { where: todayWhere }) || 0;
+            const todayOrders = await Order.count({ where: todayWhere });
+            const monthSales = await Order.sum('billing_total', { where: monthWhere }) || 0;
+            const monthOrders = await Order.count({ where: monthWhere });
 
             // Build customer and product where clauses
             const customerWhere = { businessId };
@@ -250,8 +222,8 @@ exports.getSummary = async (req, res, next) => {
                 productWhere.outletId = outletId;
             }
 
-            const totalCustomers = await safeQuery(() => Customer.count({ where: customerWhere }), 0);
-            const totalProducts = await safeQuery(() => Product.count({ where: productWhere }), 0);
+            const totalCustomers = await Customer.count({ where: customerWhere });
+            const totalProducts = await Product.count({ where: productWhere });
 
             const finalData = {
                 today: {
@@ -271,11 +243,20 @@ exports.getSummary = async (req, res, next) => {
             return finalData;
         });
 
-        console.log("STEP 6 - Controller Received:", result);
-        console.log("STEP 6.1 - Data:", result?.data);
-        console.log("STEP 7 - Sending Response:", result?.data);
-        
-        return res.json({ success: true, data: result.data });
+        const data = result.data;
+        if (!data || Object.keys(data).length === 0) {
+            console.log("ℹ️ Analytics summary is empty");
+            return res.json({ 
+                success: true, 
+                data: {
+                    today: { sales: 0, orders: 0 },
+                    month: { sales: 0, orders: 0 },
+                    totals: { customers: 0, products: 0 }
+                }
+            });
+        }
+
+        return res.json({ success: true, data: data });
     } catch (error) {
         next(error);
     }
@@ -294,17 +275,14 @@ exports.getAvgTicketsPerAgent = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req, { status: 'COMPLETED' });
 
-            const orders = await safeQuery(
-                () => Order.findAll({
-                    where: whereClause,
-                    include: [{ model: User, as: 'staff', attributes: ['id', 'name'] }]
-                }),
-                []
-            );
+            const orders = await Order.findAll({
+                where: whereClause,
+                include: [{ model: User, as: 'staff', attributes: ['id', 'name'] }]
+            });
 
             // Group by staff
             const staffMap = {};
-            (orders || []).forEach(order => {
+            orders.forEach(order => {
                 const staffId = order?.staffId || 'unknown';
                 if (!staffMap[staffId]) {
                     staffMap[staffId] = {
@@ -324,10 +302,12 @@ exports.getAvgTicketsPerAgent = async (req, res, next) => {
             }));
         });
 
-        console.log("STEP 6 - Controller Received:", result);
-        console.log("STEP 6.1 - Data:", result?.data);
-        console.log("STEP 7 - Sending Response:", result?.data);
-        
+        if (!result || !result.data || (Array.isArray(result.data) && result.data.length === 0)) {
+            // For this specific analytics, maybe empty is OK if no orders. 
+            // But let's follow the strict "data missing" rule if expected.
+            // If the user wants REAL DATA ONLY, we might throw here.
+        }
+
         return res.json({ success: true, data: result.data });
     } catch (error) {
         next(error);

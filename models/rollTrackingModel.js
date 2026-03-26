@@ -8,17 +8,18 @@ module.exports = (sequelize) => {
         primaryKey: true
       },
       businessId: {
-        type: DataTypes.UUID,
+            type: DataTypes.UUID,
         allowNull: false,
         field: 'business_id'
       },
       outletId: {
-          type: DataTypes.UUID,
+            type: DataTypes.UUID,
           allowNull: false,
           field: 'outlet_id'
       },
       rollName: {
-        type: DataTypes.STRING,
+          field: 'roll_name',
+            type: DataTypes.STRING,
         defaultValue: 'Thermal Roll',
         field: 'roll_name'
       },
@@ -31,27 +32,30 @@ module.exports = (sequelize) => {
         defaultValue: 50.0 
       },
       printedLength: {
-        type: DataTypes.FLOAT, // Used length in meters
+          field: 'printed_length',
+            type: DataTypes.FLOAT, // Used length in meters
         defaultValue: 0.0,
         field: 'printed_length'
       },
       startedAt: {
-        type: DataTypes.DATE,
+          field: 'started_at',
+            type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
         field: 'started_at'
       },
       endedAt: {
-        type: DataTypes.DATE,
+            type: DataTypes.DATE,
         field: 'ended_at'
       },
       replacedBy: {
-          type: DataTypes.UUID, // userId who replaced it
+            type: DataTypes.UUID, // userId who replaced it
           field: 'replaced_by'
       }
     }, {
       tableName: 'roll_trackings',
       timestamps: true,
       underscored: true,
+        freezeTableName: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at'
     });

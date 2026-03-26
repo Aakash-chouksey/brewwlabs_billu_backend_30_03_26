@@ -4,7 +4,6 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const { safeQuery } = require('../utils/safeQuery');
 
 const outletController = {
     /**
@@ -14,23 +13,25 @@ const outletController = {
         try {
             const { businessId } = req;
 
-            const outlets = await req.readWithTenant(async (context) => {
+            const result = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Outlet } = models;
 
-                return await safeQuery(
-                    () => Outlet.findAll({
-                        where: { businessId },
-                        order: [['isPrimary', 'DESC'], ['createdAt', 'DESC']]
-                    }),
-                    []
-                );
+                const outlets = await Outlet.findAll({
+                    where: { businessId },
+                    order: [['is_head_office', 'DESC'], ['created_at', 'DESC']]
+                });
+                
+                return outlets || [];
             });
 
+            // Handle safe response - ensure data is always an array
+            const outlets = result.data || result || [];
+            
             res.json({
                 success: true,
-                data: outlets || [],
-                count: (outlets || []).length
+                data: outlets,
+                count: outlets.length || 0
             });
         } catch (error) {
             next(error);
@@ -58,7 +59,7 @@ const outletController = {
                     email,
                     gstNumber,
                     isActive: true,
-                    isPrimary: false
+                    isHeadOffice: false
                 }, { transaction });
             });
 
@@ -85,13 +86,10 @@ const outletController = {
                 const { transaction, transactionModels: models } = context;
                 const { Outlet } = models;
 
-                const outlet = await safeQuery(
-                    () => Outlet.findOne({
-                        where: { id, businessId },
-                        transaction
-                    }),
-                    null
-                );
+                const outlet = await Outlet.findOne({
+                    where: { id, businessId },
+                    transaction
+                });
 
                 if (!outlet) {
                     throw new Error('Outlet not found');

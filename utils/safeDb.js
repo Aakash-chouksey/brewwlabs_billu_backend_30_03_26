@@ -11,12 +11,13 @@
  * @param {number} defaultValue - Default if conversion fails (default: 0)
  * @returns {number} Safe number
  */
-const safeNumber = (val, defaultValue = 0) => {
+const safeNumber = (val) => {
   if (val === null || val === undefined || val === '' || Number.isNaN(val)) {
-    return defaultValue;
+    throw new Error(`Invalid number provided: ${val}`);
   }
   const num = Number(val);
-  return Number.isNaN(num) ? defaultValue : num;
+  if (Number.isNaN(num)) throw new Error(`Could not convert value to number: ${val}`);
+  return num;
 };
 
 /**
@@ -25,9 +26,9 @@ const safeNumber = (val, defaultValue = 0) => {
  * @param {Array} defaultValue - Default if not array (default: [])
  * @returns {Array} Safe array
  */
-const safeArray = (val, defaultValue = []) => {
+const safeArray = (val) => {
   if (val === null || val === undefined) {
-    return defaultValue;
+    throw new Error('Array expected but got null/undefined');
   }
   if (Array.isArray(val)) {
     return val;
@@ -37,10 +38,10 @@ const safeArray = (val, defaultValue = []) => {
     try {
       return Array.from(val);
     } catch {
-      return defaultValue;
+      throw new Error(`Failed to convert value to array: ${val}`);
     }
   }
-  return defaultValue;
+  throw new Error(`Value is not an array: ${typeof val}`);
 };
 
 /**
@@ -49,14 +50,14 @@ const safeArray = (val, defaultValue = []) => {
  * @param {Object} defaultValue - Default if not object (default: {})
  * @returns {Object} Safe object
  */
-const safeObject = (val, defaultValue = {}) => {
+const safeObject = (val) => {
   if (val === null || val === undefined) {
-    return defaultValue;
+    throw new Error('Object expected but got null/undefined');
   }
   if (typeof val === 'object' && !Array.isArray(val)) {
     return val;
   }
-  return defaultValue;
+  throw new Error(`Value is not an object: ${typeof val}`);
 };
 
 /**

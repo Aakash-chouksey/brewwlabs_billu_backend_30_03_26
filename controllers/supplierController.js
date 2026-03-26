@@ -18,15 +18,17 @@ exports.getSuppliers = async (req, res, next) => {
             const { transactionModels: models } = context;
             const { Supplier } = models;
             
-            return await Supplier.findAll({
+            const suppliers = await Supplier.findAll({
                 where: { businessId },
                 order: [['name', 'ASC']]
             });
+            
+            return suppliers || [];
         });
 
         console.log('[SUPPLIER CONTROLLER] getSuppliers result:', JSON.stringify(result, null, 2).substring(0, 500));
         
-        const responseData = result.data || result;
+        const responseData = result.data || result || [];
         res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);

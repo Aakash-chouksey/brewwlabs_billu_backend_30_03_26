@@ -8,19 +8,19 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         productId: {
+            field: 'product_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'product_id'
+            allowNull: false
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,
@@ -30,12 +30,14 @@ module.exports = (sequelize) => {
             type: DataTypes.TEXT
         },
         prepTime: {
+            field: 'prep_time',
             type: DataTypes.INTEGER,
             defaultValue: 0,
             field: 'prep_time',
             comment: 'Preparation time in minutes'
         },
         isActive: {
+            field: 'is_active',
             type: DataTypes.BOOLEAN,
             defaultValue: true,
             field: 'is_active'
@@ -48,6 +50,7 @@ module.exports = (sequelize) => {
         tableName: 'recipes',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -60,8 +63,8 @@ module.exports = (sequelize) => {
     });
 
     Recipe.associate = (models) => {
-        Recipe.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
-        Recipe.hasMany(models.RecipeItem, { foreignKey: 'recipeId', as: 'recipeItems' });
+        Recipe.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
+        Recipe.hasMany(models.RecipeItem, { foreignKey: 'recipe_id', as: 'ingredients' });
     };
 
     return Recipe;

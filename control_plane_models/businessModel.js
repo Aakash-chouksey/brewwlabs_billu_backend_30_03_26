@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING 
     },
     gstNumber: {
-      type: DataTypes.STRING,
+            type: DataTypes.STRING,
       field: 'gst_number',
       comment: 'GST Number for tax compliance'
     },
@@ -36,12 +36,13 @@ module.exports = (sequelize, DataTypes) => {
       comment: 'SOLO = single cafe, FRANCHISE = multiple outlets'
     },
     ownerId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       field: 'owner_id',
       comment: 'Primary owner of the business'
     },
-    isActive: { 
-      type: DataTypes.BOOLEAN, 
+    isActive: {
+        field: 'is_active',
+            type: DataTypes.BOOLEAN, 
       allowNull: false,
       defaultValue: true,
       field: 'is_active'
@@ -56,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'free'
     },
     businessId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: true,
       field: 'business_id',
       comment: 'Self-reference for business hierarchy'

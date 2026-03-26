@@ -8,11 +8,13 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'outlet_id'
@@ -22,14 +24,17 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         openTime: {
+            field: 'open_time',
             type: DataTypes.STRING, // e.g., "09:00"
             allowNull: false
         },
         closeTime: {
+            field: 'close_time',
             type: DataTypes.STRING, // e.g., "22:00"
             allowNull: false
         },
         isClosed: {
+            field: 'is_closed',
             type: DataTypes.BOOLEAN,
             defaultValue: false
         }
@@ -37,6 +42,7 @@ module.exports = (sequelize) => {
         tableName: 'timings',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             {
                 fields: ['business_id']

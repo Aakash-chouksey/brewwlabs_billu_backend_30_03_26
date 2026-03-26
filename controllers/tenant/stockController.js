@@ -200,9 +200,14 @@ const stockController = {
                     where: whereClause,
                     include: [{ 
                         model: Inventory, 
-                        include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }] 
+                        as: 'inventory',
+                        include: [{ 
+                            model: Product, 
+                            as: 'product', 
+                            attributes: ['id', 'name', 'sku', 'price', 'currentStock', 'isActive'] 
+                        }] 
                     }],
-                    order: [['createdAt', 'DESC']]
+                    order: [['created_at', 'DESC']]
                 });
             });
 
@@ -230,9 +235,9 @@ const stockController = {
                 return await Inventory.findAll({
                     where: {
                         businessId,
-                        quantity: { [Op.lte]: sequelize.col('reorderLevel') }
+                        quantity: { [Op.lte]: sequelize.col('reorder_level') }
                     },
-                    include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }],
+                    include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
                     order: [['quantity', 'ASC']]
                 });
             });

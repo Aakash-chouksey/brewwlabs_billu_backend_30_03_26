@@ -83,8 +83,7 @@ const globalErrorHandler = (err, req, res, next) => {
     // Sanitize error response - never expose internal details in production
     const errorResponse = {
         success: false,
-        message: message,
-        data: {} // Phase 3: Always return empty data object for stability
+        message: message
     };
 
     // Only include error details in development
@@ -96,8 +95,8 @@ const globalErrorHandler = (err, req, res, next) => {
         errorResponse.method = req.method;
     }
 
-    // Phase 4: Handle "safe" errors with 200 status if they are expected empty results
-    const finalStatus = (statusCode === 404 && req.method === 'GET') ? 200 : statusCode;
+    // Always return proper error status - never mask with 200
+    const finalStatus = statusCode;
     
     return res.status(finalStatus).json(errorResponse);
 };

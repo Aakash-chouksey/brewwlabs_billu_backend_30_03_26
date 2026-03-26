@@ -8,10 +8,12 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false
         },
@@ -31,10 +33,14 @@ module.exports = (sequelize) => {
             defaultValue: DataTypes.NOW
         },
         paymentMethod: {
+            field: 'payment_method',
             type: DataTypes.STRING,
             defaultValue: "Cash"
         }
     }, {
+        tableName: 'incomes',
+        underscored: true,
+        freezeTableName: true,
         timestamps: true
     });
 

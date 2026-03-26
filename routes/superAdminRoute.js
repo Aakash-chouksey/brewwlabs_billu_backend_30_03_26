@@ -16,10 +16,16 @@ router.use(adminDatabaseGuard);
 // GET /admin/tenants - List all registered tenants
 router.get("/tenants", superAdminController.getAllTenants);
 
+// GET /admin/tenants/pending - List tenants awaiting approval (onboarding status)
+router.get("/tenants/pending", superAdminController.getPendingTenants);
+
+// GET /admin/tenants/search?email=... - Search tenant by business email
+router.get("/tenants/search", superAdminController.searchTenantByEmail);
+
 // GET /admin/tenants/:tenantId - Detailed info for a specific tenant
 router.get("/tenants/:tenantId", superAdminController.getTenantDetails);
 
-// PATCH /admin/tenants/:tenantId/status - Suspend/Activate tenant
+// PATCH /admin/tenants/:tenantId/status - Approve/Suspend/Activate tenant
 router.patch("/tenants/:tenantId/status", superAdminController.updateTenantStatus);
 
 /**

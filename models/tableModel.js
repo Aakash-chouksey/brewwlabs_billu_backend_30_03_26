@@ -9,12 +9,12 @@ module.exports = (sequelize) => {
         primaryKey: true
     },
     businessId: {
-        type: DataTypes.UUID,
+            type: DataTypes.UUID,
         allowNull: false,
         field: 'business_id'
     },
     outletId: {
-        type: DataTypes.UUID,
+            type: DataTypes.UUID,
         allowNull: false,
         field: 'outlet_id'
     },
@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
         allowNull: false
     },
     tableNo: {
-        type: DataTypes.STRING,
+            type: DataTypes.STRING,
         allowNull: true,
         field: 'table_no'
     },
@@ -32,7 +32,8 @@ module.exports = (sequelize) => {
         defaultValue: 4
     },
     areaId: {
-        type: DataTypes.UUID, // FK to Area (optional for now)
+        field: 'area_id',
+            type: DataTypes.UUID, // FK to Area (optional for now)
         allowNull: true,
         field: 'area_id'
     },
@@ -41,7 +42,8 @@ module.exports = (sequelize) => {
         defaultValue: 'Available'
     },
     currentOrderId: {
-        type: DataTypes.UUID, // FK to Order
+        field: 'current_order_id',
+            type: DataTypes.UUID, // FK to Order
         allowNull: true,
         field: 'current_order_id'
     },
@@ -51,19 +53,21 @@ module.exports = (sequelize) => {
         defaultValue: 'square'
     },
     currentOccupancy: {
-        type: DataTypes.INTEGER,
+        field: 'current_occupancy',
+            type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 0,
         field: 'current_occupancy'
     },
     qrCode: {
-        type: DataTypes.STRING,
+            type: DataTypes.STRING,
         allowNull: true,
         field: 'qr_code'
     }
 }, {
     timestamps: true,
     underscored: true,
+        freezeTableName: true,
     tableName: 'tables',
     indexes: [
         { fields: ['business_id'] },

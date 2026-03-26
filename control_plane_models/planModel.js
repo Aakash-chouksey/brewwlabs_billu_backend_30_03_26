@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 0.00
     },
     billingCycle: {
-      type: DataTypes.STRING,
+            type: DataTypes.STRING,
       defaultValue: 'monthly',
       field: 'billing_cycle'
     },
@@ -36,27 +36,28 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: {}
     },
     isActive: {
-      type: DataTypes.BOOLEAN,
+            type: DataTypes.BOOLEAN,
       defaultValue: true,
       field: 'is_active'
     },
     isPublic: {
-      type: DataTypes.BOOLEAN,
+            type: DataTypes.BOOLEAN,
       defaultValue: true,
       field: 'is_public'
     },
     sortOrder: {
-      type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER,
       defaultValue: 0,
       field: 'sort_order'
     },
     trialDays: {
-      type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER,
       defaultValue: 0,
       field: 'trial_days'
     }
   }, {
     tableName: 'plans',
+        underscored: true,
     timestamps: true,
     indexes: [
       { fields: ['slug'], unique: true },

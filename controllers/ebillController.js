@@ -24,7 +24,7 @@ exports.generateEBill = async (req, res, next) => {
                         as: 'items', 
                         include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] 
                     },
-                    { model: Customer }
+                    { model: Customer, as: 'customer' }
                 ]
             });
 
@@ -63,7 +63,10 @@ exports.generateEBill = async (req, res, next) => {
             return bill;
         });
 
-        res.json({ success: true, data: result });
+        console.log('[EBILL CONTROLLER] generateEBill result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -94,7 +97,7 @@ exports.sendBillViaWhatsApp = async (req, res, next) => {
                         as: 'items', 
                         include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] 
                     },
-                    { model: Customer }
+                    { model: Customer, as: 'customer' }
                 ],
                 transaction
             });
@@ -111,7 +114,10 @@ exports.sendBillViaWhatsApp = async (req, res, next) => {
             };
         });
 
-        res.json({ success: true, data: result, message: "Bill sent via WhatsApp" });
+        console.log('[EBILL CONTROLLER] sendBillViaWhatsApp result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Bill sent via WhatsApp" });
     } catch (error) {
         next(error);
     }

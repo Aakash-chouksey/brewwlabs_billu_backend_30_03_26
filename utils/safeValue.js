@@ -9,9 +9,9 @@
  * @param {*} fallback - Fallback if value is null/undefined/NaN
  * @returns {*} - Safe value
  */
-const safe = (value, fallback = null) => {
-  if (value === null || value === undefined) return fallback;
-  if (typeof value === 'number' && isNaN(value)) return fallback;
+const safe = (value) => {
+  if (value === null || value === undefined) throw new Error('Value is null or undefined');
+  if (typeof value === 'number' && isNaN(value)) throw new Error('Value is NaN');
   return value;
 };
 
@@ -43,13 +43,13 @@ const safeGet = (obj, path, fallback = null) => {
  * @param {*} errorHandler - Optional error handler
  * @returns {*} - Result or fallback
  */
-const safeCall = async (fn, fallback = null, errorHandler = null) => {
+const safeCall = async (fn, errorHandler = null) => {
   try {
     const result = await fn();
-    return safe(result, fallback);
+    return safe(result);
   } catch (error) {
     if (errorHandler) errorHandler(error);
-    return fallback;
+    throw error;
   }
 };
 

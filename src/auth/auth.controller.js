@@ -1,4 +1,4 @@
-const authService = require('../../services/auth.service');
+const authService = require('../../services/authService');
 const config = require('../../config/config');
 const { failedLoginTracker } = require('../../middlewares/authRateLimiting');
 const { logAuthEvent } = require('../../security/auditLogger');

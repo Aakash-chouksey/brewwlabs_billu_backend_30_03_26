@@ -8,35 +8,37 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         recipeId: {
+            field: 'recipe_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'recipe_id'
         },
         inventoryItemId: {
+            field: 'inventory_item_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'inventory_item_id'
+            allowNull: false
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         quantityRequired: {
+            field: 'quantity_required',
             type: DataTypes.DECIMAL(10, 3),
-            allowNull: false,
-            field: 'quantity_required'
+            allowNull: false
         },
         unit: {
             type: DataTypes.STRING,
             allowNull: false
         },
         isOptional: {
+            field: 'is_optional',
             type: DataTypes.BOOLEAN,
             defaultValue: false,
             field: 'is_optional'
@@ -48,6 +50,7 @@ module.exports = (sequelize) => {
         tableName: 'recipe_items',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -61,8 +64,8 @@ module.exports = (sequelize) => {
     });
 
     RecipeItem.associate = (models) => {
-        RecipeItem.belongsTo(models.Recipe, { foreignKey: 'recipeId', as: 'recipe' });
-        RecipeItem.belongsTo(models.InventoryItem, { foreignKey: 'inventoryItemId', as: 'InventoryItem' });
+        RecipeItem.belongsTo(models.Recipe, { foreignKey: 'recipe_id', as: 'recipe' });
+        RecipeItem.belongsTo(models.InventoryItem, { foreignKey: 'inventory_item_id', as: 'inventoryItem' });
     };
 
     return RecipeItem;

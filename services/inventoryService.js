@@ -10,14 +10,15 @@ const { Op } = require("sequelize");
  * Check if product can be prepared with current inventory
  */
 exports.canPrepareProduct = async (models, productId, quantity, businessId, outletId) => {
-    const { Inventory, Product, Recipe, RecipeIngredient } = models;
+    const { Inventory, Product, Recipe, RecipeItem } = models;
     
     // Check if product has a recipe
     const recipe = await Recipe.findOne({
         where: { productId },
         include: [{
-            model: RecipeIngredient,
-            include: [{ model: Inventory, where: { businessId, outletId } }]
+            model: RecipeItem,
+            as: 'ingredients',
+            include: [{ model: InventoryItem, as: 'inventoryItem' }]
         }]
     });
 
@@ -39,21 +40,21 @@ exports.canPrepareProduct = async (models, productId, quantity, businessId, outl
     }
 
     // Check recipe ingredients
-    const ingredients = recipe.RecipeIngredients || [];
+    const ingredients = recipe.ingredients || [];
     const availability = [];
     let canPrepare = true;
 
     for (const ing of ingredients) {
-        const inventory = ing.Inventory;
-        const requiredQty = ing.quantity * quantity;
-        const availableQty = inventory?.quantity || 0;
+        const inventory = ing.inventoryItem;
+        const requiredQty = (ing.quantityRequired || 0) * quantity;
+        const availableQty = inventory?.currentStock || 0;
         const hasEnough = availableQty >= requiredQty;
 
         if (!hasEnough) canPrepare = false;
 
         availability.push({
-            inventoryId: ing.inventoryId,
-            name: inventory?.Product?.name || 'Unknown',
+            inventoryId: ing.inventoryItemId,
+            name: inventory?.name || 'Unknown',
             required: requiredQty,
             available: availableQty,
             hasEnough,
@@ -102,44 +103,44 @@ exports.checkOrderAvailability = async (models, orderItems, businessId, outletId
  * Deduct inventory for single product sale
  */
 exports.deductInventoryForSale = async (models, productId, quantity, orderId, businessId, outletId, userId) => {
-    const { Inventory, InventoryTransaction, Product, Recipe, RecipeIngredient } = models;
+    const { Inventory, InventoryTransaction, Product, Recipe, RecipeItem, InventoryItem } = models;
 
     const recipe = await Recipe.findOne({
         where: { productId },
         include: [{
-            model: RecipeIngredient,
-            include: [{ model: Inventory, where: { businessId, outletId } }]
+            model: RecipeItem,
+            as: 'ingredients',
+            include: [{ model: InventoryItem, as: 'inventoryItem' }]
         }]
     });
 
     const deductions = [];
 
-    if (recipe && recipe.RecipeIngredients) {
+    if (recipe && recipe.ingredients) {
         // Deduct recipe ingredients
-        for (const ing of recipe.RecipeIngredients) {
-            const inventory = ing.Inventory;
+        for (const ing of recipe.ingredients) {
+            const inventory = ing.inventoryItem;
             if (!inventory) continue;
 
-            const deductQty = ing.quantity * quantity;
-            const oldQty = inventory.quantity;
+            const deductQty = (ing.quantityRequired || 0) * quantity;
+            const oldQty = inventory.currentStock || 0;
             const newQty = oldQty - deductQty;
 
-            await inventory.update({ quantity: newQty });
+            await inventory.update({ currentStock: newQty });
 
             const tx = await InventoryTransaction.create({
                 businessId,
                 outletId,
-                inventoryId: inventory.id,
-                productId: ing.productId,
+                inventoryItemId: inventory.id,
                 type: 'SALE',
                 quantity: deductQty,
-                unitCost: inventory.unitCost,
-                totalCost: inventory.unitCost * deductQty,
+                unitCost: inventory.costPerUnit || 0,
+                totalCost: (inventory.costPerUnit || 0) * deductQty,
                 previousQuantity: oldQty,
                 newQuantity: newQty,
                 referenceType: 'ORDER',
                 referenceId: orderId,
-                notes: `Sale: Product ${productId}`,
+                notes: `Sale: Product ${productId} (Recipe Ingredient)`,
                 performedBy: userId
             });
 
@@ -234,7 +235,7 @@ exports.getConsumptionReport = async (models, businessId, outletId, startDate, e
 
     const transactions = await InventoryTransaction.findAll({
         where: whereClause,
-        include: [{ model: Product, attributes: ['id', 'name', 'sku'] }],
+        include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
         order: [['createdAt', 'DESC']]
     });
 
@@ -245,8 +246,8 @@ exports.getConsumptionReport = async (models, businessId, outletId, startDate, e
         if (!consumption[pid]) {
             consumption[pid] = {
                 productId: pid,
-                name: tx.Product?.name || 'Unknown',
-                sku: tx.Product?.sku || '',
+                name: tx.product?.name || 'Unknown',
+                sku: tx.product?.sku || '',
                 totalQuantity: 0,
                 totalValue: 0,
                 byType: {}
@@ -281,7 +282,7 @@ exports.getLowStockAlerts = async (models, businessId, outletId) => {
 
     const inventory = await Inventory.findAll({
         where: whereClause,
-        include: [{ model: Product }]
+        include: [{ model: Product, as: 'product' }]
     });
 
     const alerts = inventory
@@ -292,10 +293,10 @@ exports.getLowStockAlerts = async (models, businessId, outletId) => {
         .map(item => ({
             inventoryId: item.id,
             productId: item.productId,
-            name: item.Product?.name || 'Unknown',
+            name: item.product?.name || 'Unknown',
             currentQuantity: item.quantity,
-            reorderLevel: item.reorderLevel || item.Product?.reorderLevel || 10,
-            shortage: (item.reorderLevel || item.Product?.reorderLevel || 10) - item.quantity,
+            reorderLevel: item.reorderLevel || item.product?.reorderLevel || 10,
+            shortage: (item.reorderLevel || item.product?.reorderLevel || 10) - item.quantity,
             outletId: item.outletId
         }));
 
@@ -317,7 +318,7 @@ exports.getInventoryValueReport = async (models, businessId, outletId) => {
 
     const inventory = await Inventory.findAll({
         where: whereClause,
-        include: [{ model: Product, include: [{ model: Category, as: 'category' }] }]
+        include: [{ model: Product, as: 'product', include: [{ model: Category, as: 'category' }] }]
     });
 
     let totalValue = 0;
@@ -329,7 +330,7 @@ exports.getInventoryValueReport = async (models, businessId, outletId) => {
         totalValue += value;
         totalItems += item.quantity;
 
-        const catName = item.Product?.Category?.name || 'Uncategorized';
+        const catName = item.product?.category?.name || 'Uncategorized';
         if (!byCategory[catName]) {
             byCategory[catName] = { category: catName, items: 0, value: 0, quantity: 0 };
         }
@@ -349,7 +350,7 @@ exports.getInventoryValueReport = async (models, businessId, outletId) => {
         details: inventory.map(item => ({
             inventoryId: item.id,
             productId: item.productId,
-            name: item.Product?.name || 'Unknown',
+            name: item.product?.name || 'Unknown',
             quantity: item.quantity,
             unitCost: item.unitCost,
             totalValue: Math.round(item.quantity * item.unitCost * 100) / 100

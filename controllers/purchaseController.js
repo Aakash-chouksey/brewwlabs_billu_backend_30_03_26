@@ -99,7 +99,10 @@ exports.addPurchase = async (req, res, next) => {
             return { purchase, items: purchaseItems };
         });
 
-        res.status(201).json({ success: true, data: result, message: "Purchase recorded" });
+        console.log('[PURCHASE CONTROLLER] addPurchase result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Purchase recorded" });
     } catch (error) {
         next(error);
     }
@@ -128,14 +131,17 @@ exports.getPurchases = async (req, res, next) => {
             return await Purchase.findAll({
                 where: whereClause,
                 include: [
-                    { model: PurchaseItem, include: [{ model: Product, attributes: ['id', 'name'] }] },
-                    { model: Supplier, attributes: ['id', 'name', 'phone'] }
+                    { model: PurchaseItem, as: 'purchaseItems', include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] },
+                    { model: Supplier, as: 'supplier', attributes: ['id', 'name', 'phone'] }
                 ],
-                order: [['createdAt', 'DESC']]
+                order: [['created_at', 'DESC']]
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[PURCHASE CONTROLLER] getPurchases result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }

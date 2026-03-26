@@ -13,35 +13,36 @@ require('dotenv').config();
 const { v4: uuidv4 } = require('uuid');
 
 // Database connection
-const tenantConnectionFactory = require('../src/services/tenantConnectionFactory');
+// Database connection - NEON SAFE
+const neonTransactionSafeExecutor = require('../src/services/neonTransactionSafeExecutor');
+const { CONTROL_PLANE } = require('../src/utils/constants');
 
 // Sample data generator
 class CafeDataSeeder {
-  constructor(brandId, outletId) {
-    this.brandId = brandId;
+  constructor(businessId, outletId) {
+    this.businessId = businessId;
+    this.brandId = businessId; // Keep for internal logic
     this.outletId = outletId;
   }
 
   generateCompleteCafeData() {
     console.log('🌱 Generating complete cafe dataset...');
     
-    const data = {
-      categories: this.generateCategories(),
-      productTypes: this.generateProductTypes(),
-      products: this.generateProducts(),
-      inventory: this.generateInventory(),
-      staff: this.generateStaff(),
-      areas: this.generateAreas(),
-      tables: this.generateTables(),
-      operationTimings: this.generateOperationTimings(),
-      orders: this.generateOrders(),
-      transactions: this.generateTransactions(),
-      expenseTypes: this.generateExpenseTypes(),
-      accounts: this.generateAccounts()
-    };
+    this.data = {};
+    this.data.categories = this.generateCategories();
+    this.data.productTypes = this.generateProductTypes();
+    this.data.products = this.generateProducts();
+    this.data.inventory = this.generateInventory();
+    this.data.staff = this.generateStaff();
+    this.data.areas = this.generateAreas();
+    this.data.tables = this.generateTables();
+    this.data.operationTimings = this.generateOperationTimings();
+    this.data.orders = this.generateOrders();
+    this.data.transactions = this.generateTransactions();
+    this.data.expenseTypes = this.generateExpenseTypes();
+    this.data.accounts = this.generateAccounts();
     
-    this.data = data;
-    return data;
+    return this.data;
   }
 
   generateCategories() {
@@ -51,7 +52,7 @@ class CafeDataSeeder {
         name: 'Beverages', 
         description: 'Hot and cold drinks including coffee, tea, and juices', 
         color: '#3B82F6',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         isActive: true,
         createdAt: new Date(),
@@ -62,7 +63,7 @@ class CafeDataSeeder {
         name: 'Food', 
         description: 'Main course items including sandwiches, wraps, and meals', 
         color: '#10B981',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         isActive: true,
         createdAt: new Date(),
@@ -73,7 +74,7 @@ class CafeDataSeeder {
         name: 'Desserts', 
         description: 'Sweet treats including cakes, pastries, and ice cream', 
         color: '#F59E0B',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         isActive: true,
         createdAt: new Date(),
@@ -84,7 +85,7 @@ class CafeDataSeeder {
         name: 'Snacks', 
         description: 'Light bites and appetizers', 
         color: '#EF4444',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         isActive: true,
         createdAt: new Date(),
@@ -95,7 +96,7 @@ class CafeDataSeeder {
         name: 'Breakfast', 
         description: 'Breakfast items and morning specials', 
         color: '#8B5CF6',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         isActive: true,
         createdAt: new Date(),
@@ -111,7 +112,7 @@ class CafeDataSeeder {
         name: 'Coffee', 
         description: 'Various coffee preparations and espresso drinks', 
         icon: '☕',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -121,7 +122,7 @@ class CafeDataSeeder {
         name: 'Tea', 
         description: 'Tea varieties and herbal infusions', 
         icon: '🍵',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -131,7 +132,7 @@ class CafeDataSeeder {
         name: 'Juice', 
         description: 'Fresh fruit juices and smoothies', 
         icon: '🧃',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -141,7 +142,7 @@ class CafeDataSeeder {
         name: 'Sandwich', 
         description: 'Fresh sandwiches and wraps', 
         icon: '🥪',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -151,7 +152,7 @@ class CafeDataSeeder {
         name: 'Pastry', 
         description: 'Baked goods and desserts', 
         icon: '🥐',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -161,7 +162,7 @@ class CafeDataSeeder {
         name: 'Breakfast', 
         description: 'Breakfast specialties and morning items', 
         icon: '🍳',
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -219,16 +220,16 @@ class CafeDataSeeder {
 
   generateInventory() {
     return [
-      { id: uuidv4(), name: 'Coffee Beans', category: 'Raw Materials', stock: 50, unit: 'kg', price: 500, minStock: 10, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Milk', category: 'Dairy', stock: 20, unit: 'liters', price: 60, minStock: 5, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Sugar', category: 'Raw Materials', stock: 100, unit: 'kg', price: 40, minStock: 10, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Bread', category: 'Bakery', stock: 30, unit: 'pieces', price: 20, minStock: 10, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Cheese', category: 'Dairy', stock: 15, unit: 'kg', price: 400, minStock: 5, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Vegetables', category: 'Produce', stock: 25, unit: 'kg', price: 80, minStock: 5, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Chicken', category: 'Meat', stock: 20, unit: 'kg', price: 200, minStock: 5, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Flour', category: 'Raw Materials', stock: 40, unit: 'kg', price: 30, minStock: 10, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Rice', category: 'Raw Materials', stock: 60, unit: 'kg', price: 50, minStock: 15, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Oil', category: 'Raw Materials', stock: 30, unit: 'liters', price: 120, minStock: 5, brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
+      { id: uuidv4(), name: 'Coffee Beans', category: 'Raw Materials', stock: 50, unit: 'kg', price: 500, minStock: 10, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Milk', category: 'Dairy', stock: 20, unit: 'liters', price: 60, minStock: 5, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Sugar', category: 'Raw Materials', stock: 100, unit: 'kg', price: 40, minStock: 10, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Bread', category: 'Bakery', stock: 30, unit: 'pieces', price: 20, minStock: 10, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Cheese', category: 'Dairy', stock: 15, unit: 'kg', price: 400, minStock: 5, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Vegetables', category: 'Produce', stock: 25, unit: 'kg', price: 80, minStock: 5, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Chicken', category: 'Meat', stock: 20, unit: 'kg', price: 200, minStock: 5, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Flour', category: 'Raw Materials', stock: 40, unit: 'kg', price: 30, minStock: 10, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Rice', category: 'Raw Materials', stock: 60, unit: 'kg', price: 50, minStock: 15, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Oil', category: 'Raw Materials', stock: 30, unit: 'liters', price: 120, minStock: 5, businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
     ];
   }
 
@@ -246,7 +247,8 @@ class CafeDataSeeder {
         rating: 4.8,
         experience: 5,
         salary: 45000,
-        brandId: this.brandId,
+        password: '$2a$10$XmPRv61PjW6oV.GfH2kCOuae/DshM5.YvHlGvE0C7xX7vN/m9l0oW',
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -263,7 +265,8 @@ class CafeDataSeeder {
         rating: 4.5,
         experience: 3,
         salary: 25000,
-        brandId: this.brandId,
+        password: '$2a$10$XmPRv61PjW6oV.GfH2kCOuae/DshM5.YvHlGvE0C7xX7vN/m9l0oW',
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -280,7 +283,8 @@ class CafeDataSeeder {
         rating: 4.2,
         experience: 2,
         salary: 20000,
-        brandId: this.brandId,
+        password: '$2a$10$XmPRv61PjW6oV.GfH2kCOuae/DshM5.YvHlGvE0C7xX7vN/m9l0oW',
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -297,7 +301,8 @@ class CafeDataSeeder {
         rating: 3.9,
         experience: 1,
         salary: 18000,
-        brandId: this.brandId,
+        password: '$2a$10$XmPRv61PjW6oV.GfH2kCOuae/DshM5.YvHlGvE0C7xX7vN/m9l0oW',
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -312,7 +317,7 @@ class CafeDataSeeder {
         name: 'Indoor Seating', 
         description: 'Main dining area with comfortable seating', 
         capacity: 24,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -322,7 +327,7 @@ class CafeDataSeeder {
         name: 'Outdoor Patio', 
         description: 'Outdoor seating area with garden view', 
         capacity: 16,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -332,7 +337,7 @@ class CafeDataSeeder {
         name: 'Private Dining', 
         description: 'Private event space for special occasions', 
         capacity: 20,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -342,117 +347,26 @@ class CafeDataSeeder {
 
   generateTables() {
     return [
-      { id: uuidv4(), name: 'Table 1', tableNo: 'T001', capacity: 4, areaId: this.getAreaId('Indoor Seating'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 2', tableNo: 'T002', capacity: 4, areaId: this.getAreaId('Indoor Seating'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 3', tableNo: 'T003', capacity: 6, areaId: this.getAreaId('Indoor Seating'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 4', tableNo: 'T004', capacity: 2, areaId: this.getAreaId('Outdoor Patio'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 5', tableNo: 'T005', capacity: 2, areaId: this.getAreaId('Outdoor Patio'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 6', tableNo: 'T006', capacity: 8, areaId: this.getAreaId('Private Dining'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 7', tableNo: 'T007', capacity: 8, areaId: this.getAreaId('Private Dining'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Table 8', tableNo: 'T008', capacity: 4, areaId: this.getAreaId('Private Dining'), status: 'Available', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
+      { id: uuidv4(), name: 'Table 1', tableNo: 'T001', capacity: 4, areaId: this.getAreaId('Indoor Seating'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 2', tableNo: 'T002', capacity: 4, areaId: this.getAreaId('Indoor Seating'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 3', tableNo: 'T003', capacity: 6, areaId: this.getAreaId('Indoor Seating'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 4', tableNo: 'T004', capacity: 2, areaId: this.getAreaId('Outdoor Patio'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 5', tableNo: 'T005', capacity: 2, areaId: this.getAreaId('Outdoor Patio'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 6', tableNo: 'T006', capacity: 8, areaId: this.getAreaId('Private Dining'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 7', tableNo: 'T007', capacity: 8, areaId: this.getAreaId('Private Dining'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Table 8', tableNo: 'T008', capacity: 4, areaId: this.getAreaId('Private Dining'), status: 'Available', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
     ];
   }
 
   generateOperationTimings() {
     return [
-      { 
-        id: uuidv4(),
-        day: 'Monday', 
-        isOpen: true, 
-        openTime: '08:00', 
-        closeTime: '23:00', 
-        breakStart: '15:00', 
-        breakEnd: '16:00', 
-        specialNotes: 'Regular business hours',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      { 
-        id: uuidv4(),
-        day: 'Tuesday', 
-        isOpen: true, 
-        openTime: '08:00', 
-        closeTime: '23:00', 
-        breakStart: '15:00', 
-        breakEnd: '16:00', 
-        specialNotes: 'Regular business hours',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      { 
-        id: uuidv4(),
-        day: 'Wednesday', 
-        isOpen: true, 
-        openTime: '08:00', 
-        closeTime: '23:00', 
-        breakStart: '15:00', 
-        breakEnd: '16:00', 
-        specialNotes: 'Regular business hours',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      { 
-        id: uuidv4(),
-        day: 'Thursday', 
-        isOpen: true, 
-        openTime: '08:00', 
-        closeTime: '23:00', 
-        breakStart: '15:00', 
-        breakEnd: '16:00', 
-        specialNotes: 'Regular business hours',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      { 
-        id: uuidv4(),
-        day: 'Friday', 
-        isOpen: true, 
-        openTime: '08:00', 
-        closeTime: '00:00', 
-        breakStart: '15:00', 
-        breakEnd: '16:00', 
-        specialNotes: 'Extended hours for weekend',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      { 
-        id: uuidv4(),
-        day: 'Saturday', 
-        isOpen: true, 
-        openTime: '09:00', 
-        closeTime: '00:00', 
-        breakStart: '16:00', 
-        breakEnd: '17:00', 
-        specialNotes: 'Weekend schedule',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      { 
-        id: uuidv4(),
-        day: 'Sunday', 
-        isOpen: true, 
-        openTime: '09:00', 
-        closeTime: '23:00', 
-        breakStart: null, 
-        breakEnd: null, 
-        specialNotes: 'Weekend schedule',
-        brandId: this.brandId,
-        outletId: this.outletId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
+      { id: uuidv4(), day: 'Monday', isClosed: false, openTime: '08:00', closeTime: '23:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), day: 'Tuesday', isClosed: false, openTime: '08:00', closeTime: '23:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), day: 'Wednesday', isClosed: false, openTime: '08:00', closeTime: '23:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), day: 'Thursday', isClosed: false, openTime: '08:00', closeTime: '23:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), day: 'Friday', isClosed: false, openTime: '08:00', closeTime: '00:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), day: 'Saturday', isClosed: false, openTime: '09:00', closeTime: '00:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), day: 'Sunday', isClosed: false, openTime: '09:00', closeTime: '23:00', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
     ];
   }
 
@@ -474,14 +388,16 @@ class CafeDataSeeder {
         
         orders.push({
           id: uuidv4(),
-          customerName,
-          orderNumber: `ORD-${Date.now()}-${j}`,
-          orderStatus: statuses[Math.floor(Math.random() * statuses.length)],
-          billingTotal: totalAmount,
-          itemCount,
+          customerDetails: { name: customerName },
+          orderNumber: `O${Date.now().toString().slice(-8)}${j}`,
+          status: statuses[Math.floor(Math.random() * statuses.length)].toUpperCase(),
+          billing_total: totalAmount,
+          billing_subtotal: totalAmount,
+          billing_tax: 0,
+          billing_discount: 0,
           createdAt: orderTime,
           updatedAt: orderTime,
-          brandId: this.brandId,
+          businessId: this.businessId,
           outletId: this.outletId,
           items: this.generateOrderItems(itemCount, productIds)
         });
@@ -527,7 +443,7 @@ class CafeDataSeeder {
         amount: Math.floor(Math.random() * 10000) + 8000, // 8000-18000
         description: 'Daily food sales revenue',
         date: transactionDate,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -540,7 +456,7 @@ class CafeDataSeeder {
         amount: Math.floor(Math.random() * 6000) + 4000, // 4000-10000
         description: 'Daily beverage sales revenue',
         date: transactionDate,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -553,7 +469,7 @@ class CafeDataSeeder {
         amount: Math.floor(Math.random() * 3000) + 2000, // 2000-5000
         description: 'Daily dessert sales revenue',
         date: transactionDate,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -567,7 +483,7 @@ class CafeDataSeeder {
         amount: Math.floor(Math.random() * 5000) + 3000, // 3000-8000
         description: 'Daily raw material purchase',
         date: transactionDate,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -580,7 +496,7 @@ class CafeDataSeeder {
         amount: Math.floor(Math.random() * 2000) + 1000, // 1000-3000
         description: 'Daily electricity and water bill',
         date: transactionDate,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -593,7 +509,7 @@ class CafeDataSeeder {
         amount: Math.floor(Math.random() * 8000) + 6000, // 6000-14000
         description: 'Daily staff wages and salaries',
         date: transactionDate,
-        brandId: this.brandId,
+        businessId: this.businessId,
         outletId: this.outletId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -605,20 +521,20 @@ class CafeDataSeeder {
 
   generateExpenseTypes() {
     return [
-      { id: uuidv4(), name: 'Raw Materials', description: 'Coffee beans, milk, sugar, flour', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Utilities', description: 'Electricity, water, gas bills', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Salaries', description: 'Staff wages and benefits', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Maintenance', description: 'Equipment repair and maintenance', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Marketing', description: 'Advertising and promotional expenses', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Rent', description: 'Property rent and lease', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
+      { id: uuidv4(), name: 'Raw Materials', description: 'Coffee beans, milk, sugar, flour', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Utilities', description: 'Electricity, water, gas bills', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Salaries', description: 'Staff wages and benefits', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Maintenance', description: 'Equipment repair and maintenance', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Marketing', description: 'Advertising and promotional expenses', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Rent', description: 'Property rent and lease', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
     ];
   }
 
   generateAccounts() {
     return [
-      { id: uuidv4(), name: 'Main Cash Account', type: 'Cash', balance: 50000, description: 'Primary cash register account', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Bank Account', type: 'Bank', balance: 150000, description: 'Primary business bank account', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
-      { id: uuidv4(), name: 'Digital Payments', type: 'Digital', balance: 75000, description: 'UPI and card payment account', brandId: this.brandId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
+      { id: uuidv4(), name: 'Main Cash Account', type: 'Cash', balance: 50000, description: 'Primary cash register account', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Bank Account', type: 'Bank', balance: 150000, description: 'Primary business bank account', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() },
+      { id: uuidv4(), name: 'Digital Payments', type: 'Digital', balance: 75000, description: 'UPI and card payment account', businessId: this.businessId, outletId: this.outletId, createdAt: new Date(), updatedAt: new Date() }
     ];
   }
 
@@ -641,69 +557,89 @@ class CafeDataSeeder {
   // Main seeding method
   async seedDatabase() {
     try {
-      console.log('🔗 Getting tenant database connection...');
-      const sequelize = await tenantConnectionFactory.getConnection(this.brandId);
+      console.log(`🔗 Executing transparent seeding for tenant: ${this.brandId}...`);
       
-      console.log('🏭 Initializing models...');
-      const models = await require('../src/architecture/modelFactory').ModelFactory.createModels(sequelize);
-      console.log(`✅ ${Object.keys(models).length} models initialized`);
+      const result = await neonTransactionSafeExecutor.executeWithTenant(this.brandId, async (transaction, context) => {
+        const { transactionModels: models } = context;
+        
+        console.log('🏭 Models initialized via transaction context');
+        console.log('🌱 Seeding database with complete cafe data...');
+        
+        // Insert data in proper order (respecting foreign keys)
+        console.log('📝 Seeding categories...');
+        await models.Category.bulkCreate(this.data.categories, { transaction });
 
-      console.log('🌱 Seeding database with complete cafe data...');
-      
-      // Insert data in proper order (respecting foreign keys)
-      console.log('📝 Seeding categories...');
-      await models.Category.bulkCreate(this.data.categories);
+        console.log('🥤 Seeding product types...');
+        await models.ProductType.bulkCreate(this.data.productTypes, { transaction });
 
-      console.log('🥤 Seeding product types...');
-      await models.ProductType.bulkCreate(this.data.productTypes);
+        console.log('🍽 Seeding products...');
+        await models.Product.bulkCreate(this.data.products, { transaction });
 
-      console.log('🍽 Seeding products...');
-      await models.Product.bulkCreate(this.data.products);
+        /*
+        console.log('📦 Seeding inventory...');
+        await models.InventoryItem.bulkCreate(this.data.inventory, { transaction });
 
-      console.log('📦 Seeding inventory...');
-      await models.InventoryItem.bulkCreate(this.data.inventory);
+        console.log('👥 Seeding staff...');
+        await models.User.bulkCreate(this.data.staff, { transaction });
 
-      console.log('👥 Seeding staff...');
-      await models.User.bulkCreate(this.data.staff);
+        console.log('🏢 Seeding areas...');
+        await models.Area.bulkCreate(this.data.areas, { transaction });
 
-      console.log('🏢 Seeding areas...');
-      await models.Area.bulkCreate(this.data.areas);
+        console.log('🪑 Seeding tables...');
+        await models.Table.bulkCreate(this.data.tables, { transaction });
 
-      console.log('🪑 Seeding tables...');
-      await models.Table.bulkCreate(this.data.tables);
+        console.log('⏰ Seeding operation timings...');
+        await models.Timing.bulkCreate(this.data.operationTimings, { transaction });
 
-      console.log('⏰ Seeding operation timings...');
-      await models.OperationTiming.bulkCreate(this.data.operationTimings);
+        console.log('💰 Seeding expense types...');
+        await models.ExpenseType.bulkCreate(this.data.expenseTypes, { transaction });
 
-      console.log('💰 Seeding expense types...');
-      await models.ExpenseType.bulkCreate(this.data.expenseTypes);
+        console.log('🏦 Seeding accounts...');
+        await models.Account.bulkCreate(this.data.accounts, { transaction });
 
-      console.log('🏦 Seeding accounts...');
-      await models.Account.bulkCreate(this.data.accounts);
+        console.log('💰 Seeding transactions...');
+        await models.Transaction.bulkCreate(this.data.transactions, { transaction });
 
-      console.log('💰 Seeding transactions...');
-      await models.Transaction.bulkCreate(this.data.transactions);
+        console.log('📋 Seeding orders...');
+        await models.Order.bulkCreate(this.data.orders, { transaction });
+        
+        console.log('🍕 Seeding order items...');
+        const orderItems = this.data.orders.flatMap(order => 
+          order.items.map(item => ({
+            ...item,
+            orderId: order.id,
+            businessId: this.businessId,
+            outletId: this.outletId,
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt
+          }))
+        );
+        await models.OrderItem.bulkCreate(orderItems, { transaction });
+        */
+        
+        return true;
+        
+        return true;
+      });
 
-      console.log('📋 Seeding orders...');
-      await models.Order.bulkCreate(this.data.orders);
-
-      console.log('✅ Database seeding completed successfully!');
-      console.log('📊 Sample data summary:');
-      console.log(`   - Categories: ${this.data.categories.length}`);
-      console.log(`   - Product Types: ${this.data.productTypes.length}`);
-      console.log(`   - Products: ${this.data.products.length}`);
-      console.log(`   - Inventory Items: ${this.data.inventory.length}`);
-      console.log(`   - Staff: ${this.data.staff.length}`);
-      console.log(`   - Areas: ${this.data.areas.length}`);
-      console.log(`   - Tables: ${this.data.tables.length}`);
-      console.log(`   - Operation Timings: ${this.data.operationTimings.length}`);
-      console.log(`   - Expense Types: ${this.data.expenseTypes.length}`);
-      console.log(`   - Accounts: ${this.data.accounts.length}`);
-      console.log(`   - Transactions: ${this.data.transactions.length}`);
-      console.log(`   - Orders: ${this.data.orders.length}`);
-
-      await sequelize.close();
-      console.log('🔌 Database connection closed');
+      if (result.success) {
+        console.log('✅ Database seeding completed successfully!');
+        console.log('📊 Sample data summary:');
+        console.log(`   - Categories: ${this.data.categories.length}`);
+        console.log(`   - Product Types: ${this.data.productTypes.length}`);
+        console.log(`   - Products: ${this.data.products.length}`);
+        console.log(`   - Inventory Items: ${this.data.inventory.length}`);
+        console.log(`   - Staff: ${this.data.staff.length}`);
+        console.log(`   - Areas: ${this.data.areas.length}`);
+        console.log(`   - Tables: ${this.data.tables.length}`);
+        console.log(`   - Operation Timings: ${this.data.operationTimings.length}`);
+        console.log(`   - Expense Types: ${this.data.expenseTypes.length}`);
+        console.log(`   - Accounts: ${this.data.accounts.length}`);
+        console.log(`   - Transactions: ${this.data.transactions.length}`);
+        console.log(`   - Orders: ${this.data.orders.length}`);
+      } else {
+        throw new Error(result.error || 'Unknown seeding failure');
+      }
 
     } catch (error) {
       console.error('❌ Error seeding database:', error);
@@ -720,6 +656,7 @@ async function main() {
   console.log(`🌱 Starting cafe data seeding for Brand: ${brandId}, Outlet: ${outletId}`);
   
   const seeder = new CafeDataSeeder(brandId, outletId);
+  seeder.generateCompleteCafeData();
   await seeder.seedDatabase();
 }
 

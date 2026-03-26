@@ -8,19 +8,28 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: true,
             field: 'outlet_id'
         },
         
-        paymentId: { type: DataTypes.STRING },
-        orderId: { type: DataTypes.STRING }, // Razorpay Order ID
-        internalOrderId: { type: DataTypes.UUID, allowNull: true },
+        paymentId: {
+        
+            field: 'payment_id',
+            type: DataTypes.STRING },
+        orderId: {
+            field: 'order_id',
+            type: DataTypes.STRING }, // Razorpay Order ID
+        internalOrderId: {
+            field: 'internal_order_id',
+            type: DataTypes.UUID, allowNull: true },
         
         amount: { type: DataTypes.DECIMAL(10, 2) },
         currency: { type: DataTypes.STRING },
@@ -32,6 +41,7 @@ module.exports = (sequelize) => {
         tableName: 'payments',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             {
                 fields: ['business_id']
@@ -41,6 +51,11 @@ module.exports = (sequelize) => {
             }
         ]
     });
+
+    Payment.associate = function(models) {
+        Payment.belongsTo(models.Order, { foreignKey: 'internalOrderId', as: 'order' });
+        Payment.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
+    };
 
     return Payment;
 };

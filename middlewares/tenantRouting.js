@@ -1,6 +1,6 @@
 /**
  * TENANT ROUTING MIDDLEWARE
- * Legacy compatibility middleware - replaced by neonSafeTenantMiddleware in production
+ * Legacy compatibility middleware - replaced by tenantMiddleware in production
  */
 
 /**
@@ -8,7 +8,7 @@
  * This is a compatibility shim for routes that still reference tenantRouting
  */
 exports.tenantRoutingMiddleware = async (req, res, next) => {
-    // In the Neon-safe architecture, tenant context is set by neonSafeTenantMiddleware
+    // In the Neon-safe architecture, tenant context is set by tenantMiddleware
     // This middleware acts as a pass-through for backwards compatibility
     if (!req.businessId && req.auth?.businessId) {
         req.businessId = req.auth.businessId;

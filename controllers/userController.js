@@ -1,8 +1,7 @@
-const authService = require('../services/auth.service');
+const authService = require('../services/authService');
 const config = require('../config/config');
 const bcrypt = require('bcryptjs');
 const createHttpError = require('http-errors');
-const { safeQuery } = require('../utils/safeQuery');
 
 /**
  * Admin login - REFACTORED to use Data-First AuthService
@@ -65,20 +64,14 @@ exports.getUsers = async (req, res, next) => {
             const { transactionModels: models } = context;
             const { User, Outlet } = models;
             
-            return await safeQuery(
-                () => User.findAll({
-                    where: { businessId },
-                    include: [{ model: Outlet, attributes: ['id', 'name'] }],
-                    attributes: { exclude: ['password'] }
-                }),
-                []
-            );
+            return await User.findAll({
+                where: { businessId },
+                include: [{ model: Outlet, as: 'outlet', attributes: ['id', 'name'] }],
+                attributes: { exclude: ['password'] }
+            });
         });
 
-        console.log('[USER CONTROLLER] getUsers result:', JSON.stringify(users, null, 2).substring(0, 500));
-        
-        const responseData = users.data || users;
-        res.json({ success: true, data: responseData || [] });
+        res.json({ success: true, data: users.data || [] });
     } catch (error) {
         next(error);
     }
@@ -103,13 +96,10 @@ exports.createUser = async (req, res, next) => {
             const { User } = models;
             
             // Check email uniqueness
-            const existing = await safeQuery(
-                () => User.findOne({
-                    where: { email },
-                    transaction
-                }),
-                null
-            );
+            const existing = await User.findOne({
+                where: { email },
+                transaction
+            });
             if (existing) throw createHttpError(409, "Email already registered");
 
             return await User.create({
@@ -126,11 +116,8 @@ exports.createUser = async (req, res, next) => {
             }, { transaction });
         });
 
-        console.log('[USER CONTROLLER] createUser result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        const responseData = result.data || result;
-        const { password: _, ...userWithoutPassword } = responseData.toJSON();
-        res.status(201).json({ success: true, data: userWithoutPassword, message: "User created" });
+        const { password: _, ...userWithoutPassword } = result.data.toJSON();
+        res.status(201).json({ success: true, data: userWithoutPassword, message: result.message || "User created" });
     } catch (error) {
         next(error);
     }
@@ -149,13 +136,10 @@ exports.updateUser = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { User } = models;
             
-            const user = await safeQuery(
-                () => User.findOne({
-                    where: { id, businessId },
-                    transaction
-                }),
-                null
-            );
+            const user = await User.findOne({
+                where: { id, businessId },
+                transaction
+            });
             if (!user) throw createHttpError(404, "User not found");
 
             // Hash password if updating
@@ -167,11 +151,8 @@ exports.updateUser = async (req, res, next) => {
             return user;
         });
 
-        console.log('[USER CONTROLLER] updateUser result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        const responseData = result.data || result;
-        const { password: _, ...userWithoutPassword } = responseData.toJSON();
-        res.json({ success: true, data: userWithoutPassword, message: "User updated" });
+        const { password: _, ...userWithoutPassword } = result.data.toJSON();
+        res.json({ success: true, data: userWithoutPassword, message: result.message || "User updated" });
     } catch (error) {
         next(error);
     }
@@ -189,13 +170,10 @@ exports.deleteUser = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { User } = models;
             
-            const user = await safeQuery(
-                () => User.findOne({
-                    where: { id, businessId },
-                    transaction
-                }),
-                null
-            );
+            const user = await User.findOne({
+                where: { id, businessId },
+                transaction
+            });
             if (!user) throw createHttpError(404, "User not found");
 
             await user.destroy({ transaction });

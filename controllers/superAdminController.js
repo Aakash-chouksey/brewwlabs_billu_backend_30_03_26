@@ -87,33 +87,131 @@ class SuperAdminController {
 
     /**
      * PATCH /admin/tenants/:tenantId/status
-     * Suspend or activate a tenant.
+     * Approve, suspend or activate a tenant.
+     * Supports: onboarding → active (approval), active → suspended, suspended → active
      */
     async updateTenantStatus(req, res, next) {
         try {
             const { tenantId } = req.params;
             const { status } = req.body;
 
-            if (!['active', 'suspended'].includes(status)) {
-                throw new Error('Invalid status');
+            // Allow onboarding → active for approval workflow
+            const validStatuses = ['active', 'suspended', 'onboarding'];
+            if (!validStatuses.includes(status)) {
+                throw new Error('Invalid status. Must be: active, suspended, or onboarding');
             }
 
-            await req.executeWithTenant(async (context) => {
+            const result = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { TenantRegistry, Business } = models;
 
                 const registry = await TenantRegistry.findOne({ where: { businessId: tenantId }, transaction });
                 if (!registry) throw new Error('Tenant not found');
 
+                const oldStatus = registry.status;
                 await registry.update({ status }, { transaction });
                 
                 const business = await Business.findOne({ where: { id: tenantId }, transaction });
                 if (business) {
                     await business.update({ status: status === 'active' ? 'active' : 'inactive' }, { transaction });
                 }
+
+                return { oldStatus, newStatus: status, businessName: business?.name };
             }, CONTROL_PLANE);
 
-            res.json({ success: true, message: `Tenant status updated to ${status}` });
+            res.json({ 
+                success: true, 
+                message: `Tenant ${result.data?.businessName || tenantId} status updated from "${result.data?.oldStatus}" to "${status}"`,
+                data: result.data
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * GET /admin/tenants/pending
+     * Get all tenants awaiting approval (onboarding status)
+     */
+    async getPendingTenants(req, res, next) {
+        try {
+            const result = await req.readWithTenant(async (context) => {
+                const { transactionModels: models } = context;
+                const { TenantRegistry, Business } = models;
+
+                return await TenantRegistry.findAll({
+                    where: { status: 'onboarding' },
+                    include: [{ 
+                        model: Business, 
+                        as: 'registryBusiness', 
+                        attributes: ['id', 'name', 'email', 'phone', 'status', 'created_at'] 
+                    }]
+                });
+            }, CONTROL_PLANE);
+
+            res.json({ 
+                success: true, 
+                count: result.data?.length || 0,
+                data: result.data 
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * GET /admin/tenants/search?email=aakash@gmail.com
+     * Search tenants by business email
+     */
+    async searchTenantByEmail(req, res, next) {
+        try {
+            const { email } = req.query;
+            
+            if (!email) {
+                throw new Error('Email query parameter is required');
+            }
+
+            const result = await req.readWithTenant(async (context) => {
+                const { transactionModels: models } = context;
+                const { TenantRegistry, Business } = models;
+
+                // Find business by email first
+                const business = await Business.findOne({
+                    where: { email },
+                    attributes: ['id', 'name', 'email', 'phone', 'status', 'createdAt']
+                });
+
+                if (!business) {
+                    return null;
+                }
+
+                // Get registry entry for this business
+                const registry = await TenantRegistry.findOne({
+                    where: { businessId: business.id },
+                    attributes: ['status', 'schema_name', 'created_at']
+                });
+
+                return { business, registry };
+            }, CONTROL_PLANE);
+
+            if (!result) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: `No tenant found with email: ${email}` 
+                });
+            }
+
+            res.json({ 
+                success: true, 
+                data: {
+                    businessId: result.data?.business?.id,
+                    name: result.data?.business?.name,
+                    email: result.data?.business?.email,
+                    status: result.data?.registry?.status || 'unknown',
+                    schemaName: result.data?.registry?.schemaName,
+                    createdAt: result.data?.business?.createdAt
+                }
+            });
         } catch (error) {
             next(error);
         }

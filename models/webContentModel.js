@@ -8,11 +8,13 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: true,
             field: 'outlet_id'
@@ -20,12 +22,15 @@ module.exports = (sequelize) => {
         page: { type: DataTypes.STRING, allowNull: false }, // e.g., 'home', 'about', 'contact'
         title: { type: DataTypes.STRING },
         content: { type: DataTypes.TEXT },
-        metaDescription: { type: DataTypes.STRING },
+        metaDescription: {
+            field: 'meta_description',
+            type: DataTypes.STRING },
         images: { type: DataTypes.JSONB, defaultValue: [] }
     }, {
         tableName: 'web_contents',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             { fields: ['business_id'] },
             { fields: ['business_id', 'outlet_id'] },
@@ -34,7 +39,7 @@ module.exports = (sequelize) => {
     });
 
     WebContent.associate = function(models) {
-        WebContent.belongsTo(models.Business, { foreignKey: 'business_id', as: 'business' });
+        // REMOVED cross-schema association to Business
         WebContent.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
     };
 

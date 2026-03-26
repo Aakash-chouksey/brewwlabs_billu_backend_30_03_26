@@ -9,14 +9,14 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,
@@ -39,33 +39,34 @@ module.exports = (sequelize) => {
             type: DataTypes.TEXT
         },
         totalDue: {
+            field: 'total_due',
             type: DataTypes.DECIMAL(10, 2),
-            defaultValue: 0.00,
-            field: 'total_due'
+            defaultValue: 0.00
         },
         totalPaid: {
+            field: 'total_paid',
             type: DataTypes.DECIMAL(10, 2),
-            defaultValue: 0.00,
-            field: 'total_paid'
+            defaultValue: 0.00
         },
         lastVisitAt: {
             type: DataTypes.DATE,
             field: 'last_visit_at'
         },
         visitCount: {
+            field: 'visit_count',
             type: DataTypes.INTEGER,
-            defaultValue: 0,
-            field: 'visit_count'
+            defaultValue: 0
         },
         isActive: {
+            field: 'is_active',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_active'
+            defaultValue: true
         }
     }, {
         tableName: 'customers',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [

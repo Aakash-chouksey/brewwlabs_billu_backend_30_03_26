@@ -1,12 +1,13 @@
 const Sequelize = require('sequelize');
-const { CONTROL_PLANE, PUBLIC_SCHEMA, TENANT_SCHEMA_PREFIX } = require('../src/utils/constants');
-const { ModelFactory } = require('../src/architecture/modelFactory');
+const { CONTROL_PLANE, PUBLIC_SCHEMA, TENANT_SCHEMA_PREFIX } = require('../utils/constants');
+const { ModelFactory } = require('../architecture/modelFactory');
+const { enforceSchema, securityCheck } = require('../utils/schemaEnforcement');
 
 // Lazy load database to prevent require-time connection
 let sequelize;
 const getSequelize = () => {
   if (!sequelize) {
-    sequelize = require('../config/unified_database').sequelize;
+    sequelize = require('../../config/unified_database').sequelize;
   }
   return sequelize;
 };
@@ -90,6 +91,9 @@ class NeonTransactionSafeExecutor {
         const operationId = `op_${++this.operationCounter}_${Date.now()}`;
         const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         let transaction = null;
+        const totalStartTime = Date.now();
+        
+        console.log(`[NeonExecutor] START operation ${operationId} for tenant ${tenantId}`);
         
         // CRITICAL: Check if this is an AUTH/PUBLIC_ONLY operation
         const isPublicOnly = options.publicOnly === true || options.operationType === 'AUTH';
@@ -99,14 +103,18 @@ class NeonTransactionSafeExecutor {
         
         try {
             // PHASE 4 FIX: Use cached models, don't reinitialize per request
+            const modelCacheStart = Date.now();
             await getCachedModels(getSequelize());
+            console.log(`[NeonExecutor] Model cache check took ${Date.now() - modelCacheStart}ms`);
             
             // 2. Start transaction with Neon-optimized settings
+            const txStartTime = Date.now();
             transaction = await getSequelize().transaction({
                 isolationLevel: options.isolationLevel || Sequelize.Transaction.ISOLATION_LEVELS.READ_COMMITTED,
                 type: options.type || Sequelize.Transaction.TYPES.DEFERRED,
                 deferrable: options.deferrable || null
             });
+            console.log(`[NeonExecutor] Transaction start took ${Date.now() - txStartTime}ms`);
 
             // Track transaction for monitoring and cleanup
             this.activeTransactions.set(transactionId, {
@@ -129,6 +137,7 @@ class NeonTransactionSafeExecutor {
 
             // STRICT CHECK: Schema must exist
             if (tenantId !== CONTROL_PLANE && tenantId !== 'health_check') {
+                const schemaCheckStart = Date.now();
                 const schemaCheck = await getSequelize().query(
                     `SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schemaName`,
                     {
@@ -137,6 +146,7 @@ class NeonTransactionSafeExecutor {
                         transaction
                     }
                 );
+                console.log(`[NeonExecutor] Schema check took ${Date.now() - schemaCheckStart}ms`);
                 
                 if (!schemaCheck.length) {
                     // FAST FAIL: Return 503 instead of throwing generic error
@@ -148,19 +158,10 @@ class NeonTransactionSafeExecutor {
                 }
             }
 
-            // 4. STRICT: Set search_path - TENANT ONLY (no public fallback)
-            // FIX 5: Removed public from tenant search path
-            const searchPath = (tenantId === CONTROL_PLANE || tenantId === 'health_check')
-                ? `"${PUBLIC_SCHEMA}"`
-                : `"${schemaName}"`;  // STRICT: tenant schema ONLY
-
-            await getSequelize().query(
-                `SET LOCAL search_path TO ${searchPath}`,
-                { 
-                    transaction,
-                    type: Sequelize.QueryTypes.SET 
-                }
-            );
+            // 4. 🔒 SCHEMA ENFORCEMENT: Validate schema - NO search_path
+            // Using explicit schema-bound models instead
+            enforceSchema(schemaName, tenantId);
+            securityCheck(schemaName, tenantId, 'executeWithTenant');
 
             // 5. Inject schema-bound models into transaction - USE CACHE IF AVAILABLE
             const tenantModels = {};
@@ -174,10 +175,13 @@ class NeonTransactionSafeExecutor {
             // FIX 2: Use cached models or get from sequelize
             const cacheKey = schemaName;
             let cachedSchemaModels = tenantModelCache.get(cacheKey);
+            const cacheLookupStart = Date.now();
             
             if (!cachedSchemaModels) {
+                console.log(`[NeonExecutor] Cache MISS for ${cacheKey}, building schema models...`);
                 // Build models for this schema (first time only)
                 cachedSchemaModels = {};
+                const modelBuildStart = Date.now();
                 for (const [name, model] of Object.entries(getSequelize().models)) {
                     const isPublicModel = publicModels.includes(name);
                     
@@ -191,6 +195,7 @@ class NeonTransactionSafeExecutor {
                         cachedSchemaModels[name] = model.schema(schemaName);
                     }
                 }
+                console.log(`[NeonExecutor] Model building took ${Date.now() - modelBuildStart}ms`);
                 
                 // Cache for future requests (LRU style)
                 if (tenantModelCache.size >= TENANT_CACHE_MAX_SIZE) {
@@ -198,6 +203,8 @@ class NeonTransactionSafeExecutor {
                     tenantModelCache.delete(firstKey);
                 }
                 tenantModelCache.set(cacheKey, cachedSchemaModels);
+            } else {
+                console.log(`[NeonExecutor] Cache HIT for ${cacheKey} (${Date.now() - cacheLookupStart}ms)`);
             }
             
             // Use cached models
@@ -206,6 +213,7 @@ class NeonTransactionSafeExecutor {
 
             let result;
             try {
+                const opStartTime = Date.now();
                 const sequelizeInstance = getSequelize();
                 result = await operation(transaction, {
                     tenantId,
@@ -215,8 +223,14 @@ class NeonTransactionSafeExecutor {
                     models: sequelizeInstance.models,
                     transactionModels: transaction.models
                 });
+                console.log(`[NeonExecutor] User operation took ${Date.now() - opStartTime}ms`);
                 
+                const commitStart = Date.now();
                 await transaction.commit();
+                console.log(`[NeonExecutor] Transaction commit took ${Date.now() - commitStart}ms`);
+                
+                const totalTime = Date.now() - totalStartTime;
+                console.log(`[NeonExecutor] SUCCESS operation ${operationId} - Total: ${totalTime}ms`);
                 
                 return {
                     success: true,
@@ -224,7 +238,7 @@ class NeonTransactionSafeExecutor {
                     operationId,
                     transactionId,
                     tenantId,
-                    duration: Date.now() - this.activeTransactions.get(transactionId).startTime
+                    duration: totalTime
                 };
             } catch (operationError) {
                 if (!transaction.finished) await transaction.rollback();
@@ -450,6 +464,9 @@ class NeonTransactionSafeExecutor {
 
 // Singleton instance
 const neonTransactionSafeExecutor = new NeonTransactionSafeExecutor();
+
+// 🔒 FREEZE: Lock the tenant model cache to prevent modification
+Object.freeze(tenantModelCache);
 
 // Export main executor and cache utilities
 module.exports = neonTransactionSafeExecutor;

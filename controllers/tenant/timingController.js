@@ -41,24 +41,31 @@ const timingController = {
             const { businessId } = req;
             const { day, openTime, closeTime, isOpen } = req.body;
 
+            if (!day) {
+                return res.status(400).json({ success: false, message: 'Day is required' });
+            }
+
+            // Normalize day to uppercase
+            const normalizedDay = day.toUpperCase();
+
             const timing = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { OperationTiming } = models;
 
                 // Check if timing already exists for this day
                 const existing = await OperationTiming.findOne({
-                    where: { businessId, day },
+                    where: { businessId, day: normalizedDay },
                     transaction
                 });
 
                 if (existing) {
-                    throw new Error(`Timing already exists for ${day}. Use PUT to update.`);
+                    throw new Error(`Timing already exists for ${normalizedDay}. Use PUT to update.`);
                 }
 
                 return await OperationTiming.create({
                     id: uuidv4(),
                     businessId,
-                    day,
+                    day: normalizedDay,
                     openTime,
                     closeTime,
                     isOpen: isOpen !== undefined ? isOpen : true
@@ -99,7 +106,7 @@ const timingController = {
                 }
 
                 const updateData = {};
-                if (day !== undefined) updateData.day = day;
+                if (day !== undefined) updateData.day = day.toUpperCase();
                 if (openTime !== undefined) updateData.openTime = openTime;
                 if (closeTime !== undefined) updateData.closeTime = closeTime;
                 if (isOpen !== undefined) updateData.isOpen = isOpen;

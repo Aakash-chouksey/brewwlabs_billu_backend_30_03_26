@@ -8,19 +8,19 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         expenseTypeId: {
+            field: 'expense_type_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'expense_type_id'
+            allowNull: false
         },
         amount: {
             type: DataTypes.DECIMAL(10, 2),
@@ -34,6 +34,7 @@ module.exports = (sequelize) => {
             defaultValue: DataTypes.NOW
         },
         paymentMethod: {
+            field: 'payment_method',
             type: DataTypes.STRING,
             defaultValue: "Cash"
         }
@@ -41,6 +42,7 @@ module.exports = (sequelize) => {
         tableName: 'expenses',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             {
                 fields: ['business_id']
@@ -58,7 +60,6 @@ module.exports = (sequelize) => {
     });
 
     Expense.associate = function(models) {
-        Expense.belongsTo(models.Business, { foreignKey: 'business_id', as: 'business' });
         Expense.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
         Expense.belongsTo(models.ExpenseType, { foreignKey: 'expense_type_id', as: 'expenseType' });
     };

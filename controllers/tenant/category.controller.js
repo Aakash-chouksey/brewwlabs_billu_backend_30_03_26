@@ -4,7 +4,6 @@
 
 const createHttpError = require("http-errors");
 const { Op } = require("sequelize");
-const { safeQuery } = require("../../utils/safeQuery");
 const cache = require("../../utils/cache");
 
 /**
@@ -18,13 +17,10 @@ exports.getCategories = async (req, res, next) => {
             const { transactionModels: models } = context;
             const { Category } = models;
             
-            return await safeQuery(
-                () => Category.findAll({
-                    where: { businessId, outletId },
-                    order: [['sortOrder', 'ASC'], ['name', 'ASC']]
-                }),
-                []
-            );
+            return await Category.findAll({
+                where: { businessId, outletId },
+                order: [['sortOrder', 'ASC'], ['name', 'ASC']]
+            });
         });
 
         console.log('[CATEGORY CONTROLLER] getCategories result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -53,13 +49,10 @@ exports.addCategory = async (req, res, next) => {
             const { Category } = models;
             
             // Check for duplicate name in same outlet
-            const existing = await safeQuery(
-                () => Category.findOne({
-                    where: { businessId, outletId, name: { [Op.iLike]: name } },
-                    transaction
-                }),
-                null
-            );
+            const existing = await Category.findOne({
+                where: { businessId, outletId, name: { [Op.iLike]: name } },
+                transaction
+            });
             if (existing) throw createHttpError(400, "Category with this name already exists in this outlet");
 
             return await Category.create({
@@ -100,24 +93,18 @@ exports.updateCategory = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Category } = models;
             
-            const category = await safeQuery(
-                () => Category.findOne({
-                    where: { id, businessId, outletId },
-                    transaction
-                }),
-                null
-            );
+            const category = await Category.findOne({
+                where: { id, businessId, outletId },
+                transaction
+            });
             if (!category) throw createHttpError(404, "Category not found");
 
             // Check name uniqueness if changing
             if (updateData.name && updateData.name.toLowerCase() !== category.name.toLowerCase()) {
-                const existing = await safeQuery(
-                    () => Category.findOne({
-                        where: { businessId, outletId, name: { [Op.iLike]: updateData.name }, id: { [Op.ne]: id } },
-                        transaction
-                    }),
-                    null
-                );
+                const existing = await Category.findOne({
+                    where: { businessId, outletId, name: { [Op.iLike]: updateData.name }, id: { [Op.ne]: id } },
+                    transaction
+                });
                 if (existing) throw createHttpError(400, "Another category already has this name");
             }
 
@@ -151,24 +138,18 @@ exports.deleteCategory = async (req, res, next) => {
             const { Category, Product } = models;
             
             // Check for dependencies
-            const productsCount = await safeQuery(
-                () => Product.count({
-                    where: { categoryId: id, businessId },
-                    transaction
-                }),
-                0
-            );
+            const productsCount = await Product.count({
+                where: { categoryId: id, businessId },
+                transaction
+            });
             if (productsCount > 0) {
                 throw createHttpError(400, `Cannot delete category with ${productsCount} associated products`);
             }
 
-            const category = await safeQuery(
-                () => Category.findOne({
-                    where: { id, businessId, outletId },
-                    transaction
-                }),
-                null
-            );
+            const category = await Category.findOne({
+                where: { id, businessId, outletId },
+                transaction
+            });
             if (!category) throw createHttpError(404, "Category not found");
 
             await category.destroy({ transaction });

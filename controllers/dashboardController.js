@@ -1,10 +1,5 @@
-const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-/**
- * DASHBOARD CONTROLLER - Neon-Safe Transaction Pattern
- */
-
 const { Op } = require("sequelize");
-const { safeQuery } = require("../utils/safeQuery");
+const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
 
 /**
  * Get dashboard statistics
@@ -30,27 +25,21 @@ exports.getDashboardStats = async (req, res, next) => {
 
             // Phase 2: Safe DB Operations using safeQuery
             // Sales today
-            const todaySales = await safeQuery(
-                () => Order.sum('billing_total', {
-                    where: {
-                        ...whereClause,
-                        status: 'COMPLETED',
-                        createdAt: { [Op.between]: [today, tomorrow] }
-                    }
-                }),
-                0
-            );
+            const todaySales = await Order.sum('billing_total', {
+                where: {
+                    ...whereClause,
+                    status: 'COMPLETED',
+                    createdAt: { [Op.between]: [today, tomorrow] }
+                }
+            }) || 0;
 
             // Orders today
-            const todayOrders = await safeQuery(
-                () => Order.count({
-                    where: {
-                        ...whereClause,
-                        createdAt: { [Op.between]: [today, tomorrow] }
-                    }
-                }),
-                0
-            );
+            const todayOrders = await Order.count({
+                where: {
+                    ...whereClause,
+                    createdAt: { [Op.between]: [today, tomorrow] }
+                }
+            });
 
             // Build product and customer where clauses
             const productWhere = { businessId };
@@ -70,57 +59,55 @@ exports.getDashboardStats = async (req, res, next) => {
                 occupiedTables,
                 activeOrders
             ] = await Promise.all([
-                safeQuery(() => Product.count({ where: productWhere }), 0),
-                safeQuery(() => Product.count({ where: { ...productWhere, is_active: true } }), 0),
-                safeQuery(() => Customer.count({ where: customerWhere }), 0),
-                safeQuery(() => Order.count({ where: { ...whereClause, status: 'PENDING' } }), 0),
-                safeQuery(() => Table.count({ where: outletId ? { outletId } : { businessId } }), 0),
-                safeQuery(() => Table.count({ 
+                Product.count({ where: productWhere }),
+                Product.count({ where: { ...productWhere, is_active: true } }),
+                Customer.count({ where: customerWhere }),
+                Order.count({ where: { ...whereClause, status: 'PENDING' } }),
+                Table.count({ where: outletId ? { outletId } : { businessId } }),
+                Table.count({ 
                     where: outletId ? { outletId, status: 'OCCUPIED' } : { businessId, status: 'OCCUPIED' } 
-                }), 0),
-                safeQuery(() => Order.count({
+                }),
+                Order.count({
                     where: {
                         ...whereClause,
                         status: { [Op.in]: ['PENDING', 'IN_PROGRESS', 'READY', 'SERVED'] }
                     }
-                }), 0)
+                })
             ]);
 
             // Recent orders (last 5) - separate as it returns objects not counts
-            const recentOrders = await safeQuery(
-                () => Order.findAll({
-                    where: whereClause,
-                    order: [['createdAt', 'DESC']],
-                    limit: 5
-                }),
-                []
-            );
+            const recentOrders = await Order.findAll({
+                where: whereClause,
+                order: [['created_at', 'DESC']],
+                limit: 5
+            });
 
-            // Top selling products (last 7 days)
+            // Top selling products (last 7 days) - Use Order's createdAt since OrderItem may not have timestamps
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-            const topProducts = await safeQuery(
-                () => OrderItem.findAll({
+            const topProducts = await OrderItem.findAll({
+                include: [{
+                    model: Order,
+                    as: 'order',
                     where: {
                         createdAt: { [Op.gte]: sevenDaysAgo }
                     },
-                    include: [{
-                        model: Product,
-                        as: 'product',
-                        where: productWhere,
-                        attributes: ['id', 'name']
-                    }],
-                    attributes: [
-                        'productId',
-                        [sequelize.fn('SUM', sequelize.col('quantity')), 'totalSold']
-                    ],
-                    group: ['productId', 'Product.id', 'Product.name'],
-                    order: [[sequelize.fn('SUM', sequelize.col('quantity')), 'DESC']],
-                    limit: 5
-                }),
-                []
-            );
+                    attributes: []
+                }, {
+                    model: Product,
+                    as: 'product',
+                    where: productWhere,
+                    attributes: ['id', 'name']
+                }],
+                attributes: [
+                    'productId',
+                    [sequelize.fn('SUM', sequelize.col('quantity')), 'totalSold']
+                ],
+                group: ['productId', 'product.id', 'product.name'],
+                order: [[sequelize.fn('SUM', sequelize.col('quantity')), 'DESC']],
+                limit: 5
+            });
 
             const bestSeller = topProducts.length > 0 
                 ? topProducts[0].product?.name || 'N/A' 
@@ -158,13 +145,31 @@ exports.getDashboardStats = async (req, res, next) => {
             };
         });
 
-        console.log("STEP 6 - Controller Received:", result);
-        console.log("STEP 6.1 - Data:", result?.data);
-        console.log("STEP 7 - Sending Response:", result?.data);
-        
+        const data = result.data;
+
+        // Handle empty dashboard data gracefully (STEP 6)
+        if (!data || Object.keys(data).length === 0) {
+            console.log("ℹ️ Dashboard data is empty");
+            return res.json({ 
+                success: true, 
+                data: {
+                    revenue: 0,
+                    activeOrders: 0,
+                    occupiedTables: "0 / 0",
+                    bestSeller: 'N/A',
+                    sales: { today: 0, ordersToday: 0 },
+                    products: { total: 0, active: 0 },
+                    customers: { total: 0 },
+                    orders: { pending: 0, active: 0 },
+                    recentOrders: [],
+                    topProducts: []
+                }
+            });
+        }
+
         return res.json({ 
             success: true, 
-            data: result.data ?? {} // Phase 7 Fix
+            data: data
         });
     } catch (error) {
         next(error);

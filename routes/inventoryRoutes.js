@@ -60,6 +60,10 @@ router.post('/wastage', inventoryController.addWastage);
 // Stock adjustment
 router.post('/adjust', inventoryController.adjustStock);
 
+// 🔥 ALIASES for user testing
+router.post('/add', inventoryController.addItem);
+router.post('/transaction', inventoryController.adjustStock);
+
 // ==================== TRANSACTIONS ====================
 
 // Get inventory transactions

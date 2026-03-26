@@ -8,20 +8,20 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         metricName: {
+            field: 'metric_name',
             type: DataTypes.STRING,
             allowNull: false,
-            field: 'metric_name',
             unique: true
         },
         metricValue: {
+            field: 'metric_value',
             type: DataTypes.JSONB,
-            allowNull: false,
-            field: 'metric_value'
+            allowNull: false
         },
         lastUpdated: {
+            field: 'last_updated',
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
-            field: 'last_updated'
+            defaultValue: DataTypes.NOW
         }
     }, {
         tableName: 'system_metrics',

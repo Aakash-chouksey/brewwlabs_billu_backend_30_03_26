@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Test configuration
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8003';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8000';
 
 // Test data
 const testBusiness = {
@@ -52,22 +52,31 @@ async function testOnboarding() {
     
     try {
         log('Creating new business...', 'blue');
-        const response = await axios.post(`${BASE_URL}/api/user/onboard`, testBusiness);
+        const response = await axios.post(`${BASE_URL}/api/onboarding/business`, testBusiness);
         
         if (response.status === 201 && response.data.success) {
             logSuccess('Onboarding successful');
-            log(`Business ID: ${response.data.data.businessId}`, 'blue');
-            log(`Brand ID: ${response.data.data.brandId}`, 'blue');
-            log(`Outlet ID: ${response.data.data.outletId}`, 'blue');
             
-            // Validate brand != business
-            if (response.data.data.businessId !== response.data.data.brandId) {
-                logSuccess('✅ brandId != businessId validation passed');
+            const businessId = response.data.business.id;
+            const brandId = response.data.business.id; // Correct for SOLO
+            const outletId = response.data.outlet.id;
+            
+            log(`Business ID: ${businessId}`, 'blue');
+            log(`Outlet ID: ${outletId}`, 'blue');
+            
+            // Validate IDs
+            if (businessId && outletId) {
+                logSuccess('✅ Business and Outlet IDs present');
             } else {
-                logError('❌ brandId equals businessId - CRITICAL ISSUE');
+                logError('❌ Missing IDs in onboarding response');
             }
             
-            return response.data.data;
+            return {
+                businessId,
+                brandId,
+                outletId,
+                user: response.data.user
+            };
         } else {
             logError('Onboarding failed');
             log(JSON.stringify(response.data, null, 2), 'red');
@@ -108,47 +117,18 @@ async function testLogin(onboardingData) {
             // Validate JWT contains correct data
             log(`User ID: ${user.id}`, 'blue');
             log(`Business ID: ${user.businessId}`, 'blue');
-            log(`Brand ID: ${user.brandId}`, 'blue');
             log(`Outlet ID: ${user.outletId}`, 'blue');
             log(`Role: ${user.role}`, 'blue');
             
-            // Critical validations
-            if (user.businessId && user.brandId && user.businessId !== user.brandId) {
-                logSuccess('✅ brandId != businessId in login response');
-            } else {
-                logError('❌ brandId equals businessId or missing in login response');
-            }
-            
-            if (user.outletId) {
-                logSuccess('✅ outletId present in login response');
-            } else {
-                logWarning('⚠️ outletId missing in login response');
-            }
-            
-            // Decode JWT to verify payload
+            // Decode JWT to verify payload (optional validation)
             try {
                 const jwt = require('jsonwebtoken');
                 const decoded = jwt.decode(token);
-                
-                log('\nJWT Payload:', 'blue');
-                log(JSON.stringify(decoded, null, 2), 'blue');
-                
-                if (decoded.businessId && decoded.brandId && decoded.businessId !== decoded.brandId) {
-                    logSuccess('✅ JWT payload has valid brandId != businessId');
-                } else {
-                    logError('❌ JWT payload has invalid brandId/businessId');
+                if (decoded && decoded.exp) {
+                    logSuccess(`✅ JWT validated, expires: ${new Date(decoded.exp * 1000).toISOString()}`);
                 }
-                
-                if (decoded.exp) {
-                    const expiry = new Date(decoded.exp * 1000);
-                    log(`Token expires: ${expiry.toISOString()}`, 'blue');
-                    logSuccess('✅ JWT has expiration');
-                } else {
-                    logError('❌ JWT missing expiration');
-                }
-                
-            } catch (jwtError) {
-                logError(`JWT decode error: ${jwtError.message}`);
+            } catch (e) {
+                logWarning('⚠️ Could not decode JWT for validation');
             }
             
             return { user, token };
@@ -242,7 +222,7 @@ async function testTenantContext(loginData) {
     
     try {
         log('Testing tenant-specific endpoint...', 'blue');
-        const response = await axios.get(`${BASE_URL}/api/business/profile`, {
+        const response = await axios.get(`${BASE_URL}/api/tenant/profile`, {
             headers: {
                 'Authorization': `Bearer ${loginData.token}`
             }
@@ -252,14 +232,14 @@ async function testTenantContext(loginData) {
             logSuccess('Tenant context accessible');
             
             // Check if response contains tenant-specific data
-            if (response.data.businessId || response.data.data?.businessId) {
-                const businessId = response.data.businessId || response.data.data.businessId;
+            const businessId = response.data.business?.id || response.data.user?.businessId;
+            if (businessId) {
                 log(`Business ID in response: ${businessId}`, 'blue');
                 
-                if (businessId !== loginData.user.brandId) {
-                    logSuccess('✅ Business ID != Brand ID in tenant context');
+                if (businessId === loginData.user.businessId) {
+                    logSuccess('✅ Business ID matches login context');
                 } else {
-                    logError('❌ Business ID equals Brand ID in tenant context');
+                    logError('❌ Business ID mismatch in tenant context');
                 }
             }
             

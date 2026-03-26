@@ -1,3 +1,7 @@
+const { enforceSchema, securityCheck } = require('../src/utils/schemaEnforcement');
+const { TENANT_SCHEMA_PREFIX } = require('../src/utils/constants');
+const tenantModelLoader = require('../src/architecture/tenantModelLoader');
+
 // Lazy load database to prevent require-time connection
 let sequelize;
 const getSequelize = () => {
@@ -22,12 +26,22 @@ class NeonSafeDatabase {
     /**
      * Execute ANY database operation within transaction context
      * This is the SINGLE ENTRY POINT for all database operations
+     * 
+     * 🔒 CRITICAL: Uses schema-bound models, NO search_path
      */
     async execute(tenantId, operation, options = {}) {
         const executionId = ++this.queryCount;
         const txId = ++this.transactionCount;
         
         console.log(`🔐 [${executionId}] Starting Neon-safe execution for tenant: ${tenantId}`);
+        
+        // 🔒 STRICT SCHEMA ENFORCEMENT
+        const schemaName = `${TENANT_SCHEMA_PREFIX}${tenantId}`;
+        enforceSchema(schemaName, tenantId);
+        securityCheck(schemaName, tenantId, 'execute');
+        
+        // Get schema-bound models BEFORE transaction
+        const models = await tenantModelLoader.getTenantModels(getSequelize(), schemaName);
         
         let transaction;
         
@@ -38,18 +52,19 @@ class NeonSafeDatabase {
                 type: options.type || getSequelize().Transaction.TYPES.DEFERRED
             });
 
-            // Set tenant schema INSIDE transaction
-            await getSequelize().query(
-                `SET search_path TO "tenant_${tenantId}", public`,
-                { transaction, type: getSequelize().QueryTypes.SET }
-            );
+            // NO SET search_path - Using schema-bound models instead (SECURITY FIX)
+            // await getSequelize().query(
+            //     `SET search_path TO "tenant_${tenantId}", public`,
+            //     { transaction, type: getSequelize().QueryTypes.SET }
+            // );
 
-            // Execute the operation
-            const result = await operation(transaction, {
+            // Execute the operation with schema-bound models
+            const result = await operation(transaction, models, {
                 tenantId,
                 executionId,
                 txId,
-                sequelize: getSequelize()
+                sequelize: getSequelize(),
+                schemaName
             });
 
             // Commit

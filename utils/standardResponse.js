@@ -1,22 +1,25 @@
 /**
  * STANDARD API RESPONSE HELPERS
  * 
- * PHASE 4: FORCE STANDARD RESPONSE FORMAT
- * ALL APIs MUST return: { success: true/false, message: "", data: {} }
+ * Response format: { success: true/false, message: "", data: <real_data|null> }
+ * NO forced empty objects - returns real data or null
  */
 
 /**
  * Send standardized success response
  * @param {Object} res - Express response object
- * @param {Object} data - Response data (default: {})
+ * @param {Object} data - Response data (REQUIRED)
  * @param {string} message - Success message (default: "OK")
  * @param {number} statusCode - HTTP status code (default: 200)
  */
-const sendSuccess = (res, data = {}, message = "OK", statusCode = 200) => {
+const sendSuccess = (res, data, message = "OK", statusCode = 200) => {
+  if (data === null || data === undefined) {
+    throw new Error("sendSuccess requires data. Use sendError for failures.");
+  }
   return res.status(statusCode).json({
     success: true,
     message,
-    data: data || {}
+    data
   });
 };
 
@@ -24,14 +27,14 @@ const sendSuccess = (res, data = {}, message = "OK", statusCode = 200) => {
  * Send standardized error response
  * @param {Object} res - Express response object
  * @param {string} message - Error message
- * @param {Object} data - Additional error data (default: {})
+ * @param {Object} data - Additional error data (default: null)
  * @param {number} statusCode - HTTP status code (default: 400)
  */
-const sendError = (res, message = "Error occurred", data = {}, statusCode = 400) => {
+const sendError = (res, message = "Error occurred", data = null, statusCode = 400) => {
   return res.status(statusCode).json({
     success: false,
     message,
-    data: data || {}
+    data
   });
 };
 
@@ -53,25 +56,26 @@ const responseValidationMiddleware = (req, res, next) => {
   const originalJson = res.json;
 
   res.json = function(data) {
-    // If data is not an object or is null, create standard error response
+    // If data is not an object or is null, block it
     if (!data || typeof data !== 'object') {
-      console.warn('⚠️ [PHASE 8] Invalid response blocked:', data);
+      console.warn('⚠️ [PHASE 8] Invalid response format blocked:', data);
       return originalJson.call(this, {
         success: false,
-        message: "Invalid response format",
-        data: {}
+        message: "Invalid response format: Object required",
+        data: null
       });
     }
 
-    // Ensure required fields exist while preserving ALL original fields
-    if (data.success === undefined) {
-      data.success = true;
-    }
-    if (!data.message) {
-      data.message = 'OK';
-    }
-    if (!data.data) {
-      data.data = {};
+    // STRICT CHECK: Ensure required fields exist
+    // Do NOT silently add success: true or data: {}
+    if (data.success === undefined || data.data === undefined) {
+      console.error('🚨 [PHASE 8] Response missing required Fields (success or data):', JSON.stringify(data).substring(0, 100));
+      
+      if (process.env.NODE_ENV === 'development') {
+          // In development, throw to catch bugs early
+          // but we can't throw inside res.json without crashing the loop 
+          // so we just log heavily
+      }
     }
 
     return originalJson.call(this, data);

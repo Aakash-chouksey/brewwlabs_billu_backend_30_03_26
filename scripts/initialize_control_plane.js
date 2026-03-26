@@ -85,9 +85,15 @@ async function initializeControlPlane() {
     
     // 3. Initialize models
     log('blue', '🏗️ Initializing control plane models...');
-    const { Business, TenantConnection, Subscription, SuperAdminUser, ClusterMetadata, TenantMigrationLog, Plan, AuditLog, TenantRegistry } = require('../control_plane_models');
+    const controlModels = require('../control_plane_models');
+    
+    // Initialize the models first
+    await controlModels.init();
+    log('green', '✅ Model factory initialized');
+    
+    const { Business, TenantConnection, Subscription, SuperAdminUser, ClusterMetadata, TenantMigrationLog, Plan, AuditLog, TenantRegistry } = controlModels;
     // Also include the unified User and Outlet models for public schema access
-    const User = require('../models/userModel')(controlPlaneSequelize, require('sequelize').DataTypes);
+    const User = require('../control_plane_models/userModel')(controlPlaneSequelize, require('sequelize').DataTypes);
     const Outlet = require('../models/outletModel')(controlPlaneSequelize, require('sequelize').DataTypes);
     
     // 4. Create tables if they don't exist
@@ -96,6 +102,7 @@ async function initializeControlPlane() {
     const tables = [
       { name: 'businesses', model: Business },
       { name: 'users', model: User },
+      { name: 'outlets', model: Outlet },
       { name: 'tenant_connections', model: TenantConnection },
       { name: 'plans', model: Plan },
       { name: 'subscriptions', model: Subscription },
@@ -148,7 +155,7 @@ async function initializeControlPlane() {
     // 6. Test business creation
     log('blue', '🧪 Testing business creation...');
     try {
-      const testBusiness = await Business.create({
+      const testBusiness = await Business.schema('public').create({
         name: 'Test Business',
         email: 'test@example.com',
         status: 'active'
@@ -157,7 +164,7 @@ async function initializeControlPlane() {
       log('green', `✅ Test business created with ID: ${testBusiness.id}`);
       
       // Clean up test business
-      await testBusiness.destroy();
+      await Business.schema('public').destroy({ where: { id: testBusiness.id } });
       log('green', '✅ Test business cleaned up');
     } catch (error) {
       log('red', `❌ Business creation test failed: ${error.message}`);

@@ -17,15 +17,15 @@ module.exports = (sequelize) => {
             defaultValue: 0,
             get() { return parseFloat(this.getDataValue('balance')); }
         },
-        businessId: { 
+        businessId: {
+            field: 'business_id',
             type: DataTypes.UUID, 
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
-        outletId: { 
+        outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID, 
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         status: { 
             type: DataTypes.STRING, 
@@ -34,7 +34,8 @@ module.exports = (sequelize) => {
     }, {
         tableName: 'accounts',
         timestamps: true,
-        underscored: true
+        underscored: true,
+        freezeTableName: true
     });
 
     return Account;

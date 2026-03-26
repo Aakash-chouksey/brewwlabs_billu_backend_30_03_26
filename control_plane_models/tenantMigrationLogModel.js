@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true
     },
     businessId: {
-      type: DataTypes.UUID,
+            type: DataTypes.UUID,
       allowNull: false,
       field: 'business_id',
       comment: 'Business ID for which migration was executed'
@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'tenant_migration_log',
+        underscored: true,
     timestamps: true,
     indexes: [
       { fields: ['business_id'] },

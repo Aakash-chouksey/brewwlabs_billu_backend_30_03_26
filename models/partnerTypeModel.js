@@ -8,17 +8,21 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         name: { type: DataTypes.STRING, allowNull: false },
-        commissionPercentage: { type: DataTypes.FLOAT, defaultValue: 0 },
+        commissionPercentage: {
+            field: 'commission_percentage',
+            type: DataTypes.FLOAT, defaultValue: 0 },
         description: { type: DataTypes.STRING }
     }, {
         tableName: 'partner_types',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             { fields: ['business_id'] },
             { fields: ['business_id', 'name'], unique: true }

@@ -17,7 +17,7 @@ const businessController = {
                 
                 return await Business.findOne({
                     where: { id: businessId },
-                    attributes: ['id', 'name', 'email', 'phone', 'address', 'gstNumber', 'logo', 'status', 'createdAt']
+                    attributes: ['id', 'name', 'email', 'phone', 'address', 'gstNumber', 'status', 'created_at']
                 });
             });
 
@@ -37,7 +37,7 @@ const businessController = {
     updateBusinessInfo: async (req, res, next) => {
         try {
             const { businessId } = req;
-            const { name, address, phone, email, gstNumber, logo } = req.body;
+            const { name, address, phone, email, gstNumber } = req.body;
 
             const updated = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
@@ -58,7 +58,6 @@ const businessController = {
                 if (phone !== undefined) updateData.phone = phone;
                 if (email !== undefined) updateData.email = email;
                 if (gstNumber !== undefined) updateData.gstNumber = gstNumber;
-                if (logo !== undefined) updateData.logo = logo;
 
                 return await business.update(updateData, { transaction });
             });

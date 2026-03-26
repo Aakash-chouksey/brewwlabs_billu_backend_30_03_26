@@ -5,7 +5,6 @@
 
 const createHttpError = require("http-errors");
 const bcrypt = require("bcryptjs");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get all staff/users
@@ -20,17 +19,17 @@ exports.getStaff = async (req, res, next) => {
             const { transactionModels: models } = context;
             const { User, Outlet } = models;
             
-            return await safeQuery(
-                () => User.findAll({
-                    where: { businessId },
-                    include: [{ model: Outlet, attributes: ['id', 'name'] }],
-                    attributes: { exclude: ['password'] }
-                }),
-                []
-            );
+            return await User.findAll({
+                where: { businessId },
+                include: [{ model: Outlet, as: 'outlet', attributes: ['id', 'name'] }],
+                attributes: { exclude: ['password'] }
+            });
         });
 
-        res.json({ success: true, data: result || [] });
+        console.log('[STAFF CONTROLLER] getStaff result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -77,7 +76,10 @@ exports.createStaff = async (req, res, next) => {
             }, { transaction });
         });
 
-        const { password: _, ...userWithoutPassword } = result.toJSON();
+        console.log('[STAFF CONTROLLER] createStaff result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        const { password: _, ...userWithoutPassword } = responseData.toJSON();
         res.status(201).json({ success: true, data: userWithoutPassword, message: "Staff created" });
     } catch (error) {
         next(error);
@@ -98,14 +100,11 @@ exports.updateStaff = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { User } = models;
             
-            const user = await safeQuery(
-                () => User.findOne({
-                    where: { id, businessId },
-                    transaction
-                }),
-                null
-            );
-            if (!user) throw createHttpError(404, "Staff not found");
+            const user = await User.findOne({
+                where: { id, businessId },
+                transaction
+            });
+            if (!user) throw createHttpError(44, "Staff not found");
 
             // Hash password if updating
             if (updateData.password) {
@@ -116,7 +115,10 @@ exports.updateStaff = async (req, res, next) => {
             return user;
         });
 
-        const { password: _, ...userWithoutPassword } = result.toJSON();
+        console.log('[STAFF CONTROLLER] updateStaff result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        const { password: _, ...userWithoutPassword } = responseData.toJSON();
         res.json({ success: true, data: userWithoutPassword, message: "Staff updated" });
     } catch (error) {
         next(error);
@@ -137,24 +139,18 @@ exports.deleteStaff = async (req, res, next) => {
             const { User, Order } = models;
             
             // Check if staff has orders
-            const orders = await safeQuery(
-                () => Order.count({
-                    where: { staffId: id },
-                    transaction
-                }),
-                0
-            );
+            const orders = await Order.count({
+                where: { staffId: id },
+                transaction
+            });
             if (orders > 0) {
                 throw createHttpError(400, `Cannot delete staff with ${orders} orders`);
             }
 
-            const user = await safeQuery(
-                () => User.findOne({
-                    where: { id, businessId },
-                    transaction
-                }),
-                null
-            );
+            const user = await User.findOne({
+                where: { id, businessId },
+                transaction
+            });
             if (!user) throw createHttpError(404, "Staff not found");
 
             await user.destroy({ transaction });

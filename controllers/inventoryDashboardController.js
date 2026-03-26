@@ -68,7 +68,10 @@ exports.getDashboardSummary = async (req, res, next) => {
             };
         });
 
-        res.json({ success: true, data: result });
+        console.log('[INVENTORY DASHBOARD CONTROLLER] getDashboardSummary result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }

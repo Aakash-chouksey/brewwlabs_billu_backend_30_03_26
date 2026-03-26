@@ -8,81 +8,82 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         orderNumber: {
+            field: 'order_number',
             type: DataTypes.STRING(50),
-            allowNull: false,
-            field: 'order_number'
+            allowNull: false
         },
         customerDetails: {
+            field: 'customer_details',
             type: DataTypes.JSONB,
-            allowNull: true,
-            field: 'customer_details'
+            allowNull: true
         },
         tableId: {
+            field: 'table_id',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'table_id'
+            allowNull: true
         },
         status: {
             type: DataTypes.STRING(50),
             allowNull: false,
             defaultValue: 'CREATED'
         },
-        billing_subtotal: {
+        billingSubtotal: {
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
             defaultValue: 0.00,
             field: 'billing_subtotal'
         },
-        billing_tax: {
+        billingTax: {
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
             defaultValue: 0.00,
             field: 'billing_tax'
         },
-        billing_discount: {
+        billingDiscount: {
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
             defaultValue: 0.00,
             field: 'billing_discount'
         },
-        billing_total: {
+        billingTotal: {
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
             defaultValue: 0.00,
             field: 'billing_total'
         },
         paymentMethod: {
+            field: 'payment_method',
             type: DataTypes.STRING(50),
-            allowNull: true,
-            field: 'payment_method'
+            allowNull: true
         },
         paymentStatus: {
+            field: 'payment_status',
             type: DataTypes.STRING(50),
-            allowNull: true,
-            field: 'payment_status'
+            allowNull: true
         },
         createdAt: {
-            type: DataTypes.DATE,
-            field: 'created_at'
+            field: 'created_at',
+            type: DataTypes.DATE
         },
         updatedAt: {
-            type: DataTypes.DATE,
-            field: 'updated_at'
+            field: 'updated_at',
+            type: DataTypes.DATE
         }
     }, {
         tableName: 'orders',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -93,9 +94,12 @@ module.exports = (sequelize) => {
     });
 
     Order.associate = function(models) {
-        Order.belongsTo(models.Business, { foreignKey: 'business_id', as: 'business' });
         Order.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
         Order.hasMany(models.OrderItem, { foreignKey: 'order_id', as: 'items' });
+        Order.hasMany(models.Payment, { foreignKey: 'internalOrderId', as: 'payments' });
+        Order.belongsTo(models.Table, { foreignKey: 'tableId', as: 'table' });
+        Order.belongsTo(models.Customer, { foreignKey: 'customerId', as: 'customer' });
+        Order.belongsTo(models.User, { foreignKey: 'staffId', as: 'staff', constraints: false });
     };
 
     return Order;

@@ -62,7 +62,10 @@ exports.verifyPayment = async (req, res, next) => {
             return payment;
         });
 
-        res.json({ success: true, data: result, message: "Payment verified (Sandbox Mode)" });
+        console.log('[PAYMENT CONTROLLER] verifyPayment result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Payment verified (Sandbox Mode)" });
     } catch (error) {
         next(error);
     }

@@ -8,14 +8,14 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,
@@ -25,14 +25,15 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING
         },
         isEnabled: {
+            field: 'is_enabled',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_enabled'
+            defaultValue: true
         }
     }, {
         tableName: 'expense_types',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         indexes: [
             { fields: ['business_id'] },
             { fields: ['business_id', 'outlet_id'] },

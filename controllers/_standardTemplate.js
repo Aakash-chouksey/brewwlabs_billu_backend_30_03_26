@@ -26,7 +26,7 @@ exports.getExample = async (req, res, next) => {
       
       const products = await Product.findAll({
         where: { businessId: req.businessId },
-        include: [{ model: Category }]
+        include: [{ model: Category, as: 'category' }]
       });
       
       // Always return safe arrays

@@ -4,7 +4,6 @@
  */
 
 const { Op } = require('sequelize');
-const { safeQuery } = require('../../utils/safeQuery');
 
 const liveController = {
     /**
@@ -18,25 +17,22 @@ const liveController = {
                 const { transactionModels: models } = context;
                 const { Order, OrderItem, Product, Table, Customer } = models;
 
-                return await safeQuery(
-                    () => Order.findAll({
-                        where: {
-                            businessId,
-                            outletId,
-                            status: {
-                                [Op.notIn]: ['COMPLETED', 'CANCELLED', 'ARCHIVED']
-                            }
-                        },
-                        include: [
-                            { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product' }] },
-                            { model: Table, as: 'table' },
-                            { model: Customer, as: 'customer' }
-                        ],
-                        order: [['createdAt', 'DESC']],
-                        limit: 50
-                    }),
-                    []
-                );
+                return await Order.findAll({
+                    where: {
+                        businessId,
+                        outletId,
+                        status: {
+                            [Op.notIn]: ['COMPLETED', 'CANCELLED', 'ARCHIVED']
+                        }
+                    },
+                    include: [
+                        { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product' }] },
+                        { model: Table, as: 'table' },
+                        { model: Customer, as: 'customer' }
+                    ],
+                    order: [['created_at', 'DESC']],
+                    limit: 50
+                });
             });
 
             res.json({
@@ -68,57 +64,42 @@ const liveController = {
                 tomorrow.setDate(tomorrow.getDate() + 1);
 
                 // Phase 5: Force Fail-Safe APIs using safeQuery
-                const activeOrdersCount = await safeQuery(
-                    () => Order.count({
-                        where: {
-                            businessId,
-                            outletId,
-                            status: { [Op.notIn]: ['COMPLETED', 'CANCELLED'] }
-                        }
-                    }),
-                    0
-                );
+                const activeOrdersCount = await Order.count({
+                    where: {
+                        businessId,
+                        outletId,
+                        status: { [Op.notIn]: ['COMPLETED', 'CANCELLED'] }
+                    }
+                });
 
-                const todayOrdersCount = await safeQuery(
-                    () => Order.count({
-                        where: {
-                            businessId,
-                            outletId,
-                            createdAt: { [Op.gte]: today, [Op.lt]: tomorrow }
-                        }
-                    }),
-                    0
-                );
+                const todayOrdersCount = await Order.count({
+                    where: {
+                        businessId,
+                        outletId,
+                        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow }
+                    }
+                });
 
-                const todayRevenueSum = await safeQuery(
-                    () => Order.sum('billing_total', {
-                        where: {
-                            businessId,
-                            outletId,
-                            createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
-                            status: { [Op.notIn]: ['CANCELLED'] }
-                        }
-                    }),
-                    0
-                );
+                const todayRevenueSum = await Order.sum('billing_total', {
+                    where: {
+                        businessId,
+                        outletId,
+                        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+                        status: { [Op.notIn]: ['CANCELLED'] }
+                    }
+                }) || 0;
 
-                const occupiedTablesCount = await safeQuery(
-                    () => Table.count({
-                        where: {
-                            businessId,
-                            outletId,
-                            status: 'OCCUPIED'
-                        }
-                    }),
-                    0
-                );
+                const occupiedTablesCount = await Table.count({
+                    where: {
+                        businessId,
+                        outletId,
+                        status: 'OCCUPIED'
+                    }
+                });
 
-                const totalTablesCount = await safeQuery(
-                    () => Table.count({
-                        where: { businessId, outletId }
-                    }),
-                    0
-                );
+                const totalTablesCount = await Table.count({
+                    where: { businessId, outletId }
+                });
 
                 return {
                     activeOrders: activeOrdersCount,

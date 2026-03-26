@@ -20,7 +20,7 @@ function failSafe(fn, operationName = 'Operation') {
       // Validate request object
       if (!req || typeof req !== 'object') {
         console.error(`❌ ${operationName}: Invalid request object`);
-        return res.status(200).json(apiResponse.error('Invalid request'));
+        return res.status(400).json(apiResponse.error('Invalid request'));
       }
 
       // Validate response object
@@ -47,12 +47,13 @@ function failSafe(fn, operationName = 'Operation') {
         timestamp: new Date().toISOString()
       });
 
-      // Always return a safe response
+      // Return proper error response with 500 status
       if (!res.headersSent) {
-        return res.status(200).json(apiResponse.error(
+        const statusCode = error.statusCode || error.status || 500;
+        return res.status(statusCode).json(apiResponse.error(
           process.env.NODE_ENV === 'development' 
             ? safeString(error?.message) 
-            : 'Operation failed safely'
+            : error.message || 'Internal Server Error'
         ));
       }
     }
@@ -91,7 +92,7 @@ function safeAsync(fn) {
         console.error('❌ SafeAsync Error:', safeString(error?.message));
         
         if (!res.headersSent) {
-          res.status(200).json(apiResponse.error('Request handled safely'));
+          res.status(500).json(apiResponse.error(error.message || 'Internal Server Error'));
         }
       });
   };
@@ -138,21 +139,20 @@ function safeProp(obj, prop, fallback = null) {
  * @param {any} fallback - Fallback value
  * @returns {any} Safe result
  */
-function safeDbResult(result, type = 'object', fallback = null) {
+function safeDbResult(result, type = 'object') {
   if (result === null || result === undefined) {
-    console.warn(`⚠️ Database returned null/undefined, using fallback`);
-    return fallback;
+    throw new Error(`CRITICAL: Database returned null/undefined for expected ${type}`);
   }
 
   switch (type) {
     case 'array':
-      return safeArray(result, fallback || []);
+      return safeArray(result);
     case 'object':
-      return safeObject(result, fallback || {});
+      return safeObject(result);
     case 'number':
-      return safeNumber(result, fallback || 0);
+      return safeNumber(result);
     case 'string':
-      return safeString(result, fallback || '');
+      return safeString(result);
     default:
       return result;
   }

@@ -8,39 +8,38 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         inventoryId: {
+            field: 'inventory_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'inventory_id'
+            allowNull: false
         },
         inventoryItemId: {
+            field: 'inventory_item_id',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'inventory_item_id'
+            allowNull: true
         },
         productId: {
+            field: 'product_id',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'product_id'
+            allowNull: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         type: {
             type: DataTypes.STRING,
-            allowNull: true,
-            field: 'type'
+            allowNull: true
         },
         transactionType: {
+            field: 'transaction_type',
             type: DataTypes.STRING,
-            allowNull: true,
-            field: 'transaction_type'
+            allowNull: true
         },
         quantity: {
             type: DataTypes.DECIMAL(10, 3),
@@ -95,6 +94,7 @@ module.exports = (sequelize) => {
         tableName: 'inventory_transactions',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -109,6 +109,7 @@ module.exports = (sequelize) => {
 
     InventoryTransaction.associate = (models) => {
         InventoryTransaction.belongsTo(models.Inventory, { foreignKey: 'inventoryId', as: 'inventory' });
+        InventoryTransaction.belongsTo(models.InventoryItem, { foreignKey: 'inventoryItemId', as: 'inventoryItem' });
         InventoryTransaction.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
     };
 

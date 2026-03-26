@@ -1,8 +1,11 @@
 /**
- * SCHEMA UTILITIES - PHASE 1 FIXES
+ * SCHEMA UTILITIES - PRODUCTION-GRADE SCHEMA ENFORCEMENT
  * 
- * Critical schema handling utilities for Neon safety
+ * Critical schema handling utilities for strict tenant isolation
+ * 🔒 NO search_path usage - Uses explicit schema binding only
  */
+
+const { enforceSchema, securityCheck } = require('../utils/schemaEnforcement');
 
 /**
  * 🥇 1. FIX SCHEMA NAME RESOLUTION
@@ -23,32 +26,32 @@ function resolveSchema(tenantId) {
 }
 
 /**
- * 🥈 2. VALIDATE SCHEMA EXISTS
+ * 🥈 2. VALIDATE SCHEMA EXISTS (NO search_path - uses information_schema)
  */
 async function validateSchema(schemaName, sequelize, transaction) {
     if (!schemaName) {
         throw new Error("Schema name required for validation");
     }
 
+    // 🔒 Enforce schema before validation
+    enforceSchema(schemaName);
+
     try {
-        // Use a simple check that doesn't require information_schema access
-        // Just try to set the schema and see if it works
-        await sequelize.query(
-            `SET search_path TO "${schemaName}", public`,
+        // Use information_schema query instead of SET search_path
+        const [result] = await sequelize.query(
+            `SELECT schema_name 
+             FROM information_schema.schemata 
+             WHERE schema_name = :schemaName`,
             { 
+                replacements: { schemaName },
                 transaction,
-                type: sequelize.QueryTypes.SET 
+                type: sequelize.QueryTypes.SELECT 
             }
         );
 
-        // Reset back to default
-        await sequelize.query(
-            `SET search_path TO public`,
-            { 
-                transaction,
-                type: sequelize.QueryTypes.SET 
-            }
-        );
+        if (!result) {
+            throw new Error(`Schema '${schemaName}' does not exist`);
+        }
 
         return true;
     } catch (error) {
@@ -57,54 +60,70 @@ async function validateSchema(schemaName, sequelize, transaction) {
 }
 
 /**
- * 🥉 3. SET TRANSACTION-SCOPED SCHEMA (CRITICAL)
+ * 🥉 3. GET TABLES IN SCHEMA (NO search_path)
  */
-async function setTransactionScopedSchema(schemaName, sequelize, transaction) {
+async function getSchemaTables(schemaName, sequelize, transaction) {
     if (!schemaName) {
         throw new Error("Schema name required");
     }
 
-    if (!transaction) {
-        throw new Error("Transaction required for schema setting");
-    }
+    // 🔒 Enforce schema
+    enforceSchema(schemaName);
 
     try {
-        // CRITICAL: Use SET LOCAL for transaction-scoped schema
-        await sequelize.query(
-            `SET LOCAL search_path TO "${schemaName}", public`,
+        const tables = await sequelize.query(
+            `SELECT table_name 
+             FROM information_schema.tables 
+             WHERE table_schema = :schemaName
+             AND table_type = 'BASE TABLE'`,
             { 
+                replacements: { schemaName },
                 transaction,
-                type: sequelize.QueryTypes.SET 
+                type: sequelize.QueryTypes.SELECT 
             }
         );
 
-        return true;
+        return tables.map(t => t.table_name);
     } catch (error) {
-        throw new Error(`Failed to set schema ${schemaName}: ${error.message}`);
+        throw new Error(`Failed to get tables for schema ${schemaName}: ${error.message}`);
     }
 }
 
 /**
- * 🏅 4. VERIFY SCHEMA AFTER SETTING
+ * 🏅 4. VERIFY SCHEMA AFTER INITIALIZATION
  */
 async function verifySchemaSet(schemaName, sequelize, transaction) {
     if (!schemaName) {
         throw new Error("Schema name required for verification");
     }
 
+    // 🔒 Enforce schema
+    enforceSchema(schemaName);
+
     try {
+        // Check schema exists in information_schema
         const [result] = await sequelize.query(
-            `SELECT current_schema() as schema`,
+            `SELECT schema_name 
+             FROM information_schema.schemata 
+             WHERE schema_name = :schemaName`,
             {
+                replacements: { schemaName },
                 type: sequelize.QueryTypes.SELECT,
                 transaction
             }
         );
 
-        const currentSchema = result.schema;
+        if (!result) {
+            throw new Error(`Schema verification failed: ${schemaName} not found in information_schema.schemata`);
+        }
+
+        // Check critical tables exist
+        const requiredTables = ['outlets', 'products', 'orders', 'categories'];
+        const tables = await getSchemaTables(schemaName, sequelize, transaction);
         
-        if (!currentSchema.includes(schemaName)) {
-            throw new Error(`Schema not applied correctly. Expected ${schemaName} in current schema, got: ${currentSchema}`);
+        const missing = requiredTables.filter(t => !tables.includes(t));
+        if (missing.length > 0) {
+            throw new Error(`Schema ${schemaName} missing required tables: ${missing.join(', ')}`);
         }
 
         return true;
@@ -114,28 +133,19 @@ async function verifySchemaSet(schemaName, sequelize, transaction) {
 }
 
 /**
- * 🧹 CLEANUP SCHEMA (for connection reuse safety)
+ * 🧹 CHECK SCHEMA IS VALID (replacement for resetSchema)
  */
-async function resetSchema(sequelize, transaction) {
+async function checkSchemaValid(schemaName, sequelize, transaction) {
     try {
-        if (transaction) {
-            // Reset to default within transaction
-            await sequelize.query(
-                `SET LOCAL search_path TO public`,
-                { 
-                    transaction,
-                    type: sequelize.QueryTypes.SET 
-                }
-            );
-        }
-        return true;
+        return await validateSchema(schemaName, sequelize, transaction);
     } catch (error) {
-        throw new Error(`Schema reset failed: ${error.message}`);
+        console.warn(`Schema check failed for ${schemaName}:`, error.message);
+        return false;
     }
 }
 
 /**
- * 🔍 GET CURRENT SCHEMA (for debugging)
+ * 🔍 GET CURRENT SCHEMA (for debugging - uses information_schema)
  */
 async function getCurrentSchema(sequelize, transaction) {
     try {
@@ -153,11 +163,20 @@ async function getCurrentSchema(sequelize, transaction) {
     }
 }
 
+/**
+ * 🔒 VALIDATE TENANT ACCESS
+ */
+function validateTenantAccess(tenantId, schemaName, operation) {
+    securityCheck(schemaName, tenantId, operation);
+    return true;
+}
+
 module.exports = {
     resolveSchema,
     validateSchema,
-    setTransactionScopedSchema,
+    getSchemaTables,
     verifySchemaSet,
-    resetSchema,
-    getCurrentSchema
+    checkSchemaValid,
+    getCurrentSchema,
+    validateTenantAccess
 };

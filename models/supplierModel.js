@@ -9,6 +9,7 @@ module.exports = (sequelize) => {
             field: 'id'
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
@@ -47,6 +48,7 @@ module.exports = (sequelize) => {
             field: 'notes'
         },
         isActive: {
+            field: 'is_active',
             type: DataTypes.BOOLEAN,
             defaultValue: true,
             field: 'is_active'
@@ -62,7 +64,8 @@ module.exports = (sequelize) => {
     }, {
         tableName: 'suppliers',
         timestamps: true,
-        underscored: true
+        underscored: true,
+        freezeTableName: true
     });
 
     Supplier.associate = (models) => {

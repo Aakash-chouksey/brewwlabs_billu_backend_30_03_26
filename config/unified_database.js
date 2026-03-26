@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const cls = require('cls-hooked');
+require('dotenv').config();
 
 // Initialize CLS namespace for automatic transaction passing
 const namespace = cls.createNamespace('neon-safe-namespace');

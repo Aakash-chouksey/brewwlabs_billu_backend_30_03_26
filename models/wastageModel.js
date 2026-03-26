@@ -12,16 +12,14 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false
         },
         inventoryItemId: {
+            field: 'inventory_item_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: 'inventory_items',
-                key: 'id'
-            }
+            allowNull: false
         },
         quantity: {
             type: DataTypes.DECIMAL(10, 2),
@@ -32,6 +30,7 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         wastageDate: {
+            field: 'wastage_date',
             type: DataTypes.DATE,
             allowNull: false,
             defaultValue: DataTypes.NOW
@@ -41,16 +40,20 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         recordedBy: {
+            field: 'recorded_by',
             type: DataTypes.UUID,
             allowNull: true,
             // Cross-schema FKs are tricky during sync, removing constraint for now
         },
         costValue: {
+            field: 'cost_value',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: true
         }
     }, {
-        tableName: 'Wastages',
+        tableName: 'wastages',
+        underscored: true,
+        freezeTableName: true,
         timestamps: true
     });
 

@@ -9,6 +9,9 @@
  */
 
 const { sequelize } = require('../config/unified_database');
+const { enforceSchema, securityCheck } = require('../src/utils/schemaEnforcement');
+const { TENANT_SCHEMA_PREFIX } = require('../src/utils/constants');
+const tenantModelLoader = require('../src/architecture/tenantModelLoader');
 
 /**
  * Execute database operations within a safe transaction
@@ -55,20 +58,23 @@ async function withTransaction(callback, options = {}) {
 }
 
 /**
- * Execute with tenant context (schema switching)
+ * Execute with tenant context (using schema-bound models - NO search_path)
  * @param {string} tenantId - Tenant identifier
- * @param {Function} callback - Async function
+ * @param {Function} callback - Async function receiving (transaction, models, schemaName)
  * @param {Object} options - Transaction options
  */
 async function withTenantTransaction(tenantId, callback, options = {}) {
+  // 🔒 Validate schema before transaction
+  const schemaName = `${TENANT_SCHEMA_PREFIX}${tenantId}`;
+  enforceSchema(schemaName, tenantId);
+  securityCheck(schemaName, tenantId, 'withTenantTransaction');
+  
+  // Get schema-bound models
+  const models = await tenantModelLoader.getTenantModels(sequelize, schemaName);
+  
   return withTransaction(async (transaction) => {
-    // Set schema for this transaction
-    await sequelize.query(
-      `SET search_path TO "tenant_${tenantId}", public`,
-      { transaction }
-    );
-    
-    return await callback(transaction);
+    // NO SET search_path - Using explicit schema-bound models instead
+    return await callback(transaction, models, schemaName);
   }, options);
 }
 

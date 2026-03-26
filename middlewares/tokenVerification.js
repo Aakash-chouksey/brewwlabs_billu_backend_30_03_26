@@ -6,6 +6,7 @@ const tokenBlacklist = require("../utils/inMemoryTokenBlacklist");
 // OPTIMIZATION: Direct model import for fast auth queries (no executor overhead)
 const { sequelize } = require('../config/unified_database');
 const { ModelFactory } = require('../src/architecture/modelFactory');
+const { PUBLIC_SCHEMA } = require('../src/utils/constants');
 
 // Cache for user lookups to reduce DB calls
 const userCache = new Map();
@@ -76,6 +77,9 @@ const isVerifiedUser = async (req, res, next) => {
                 }
 
                 try {
+                    // CRITICAL: Force public schema for control plane queries
+                    await sequelize.query(`SET search_path TO "${PUBLIC_SCHEMA}"`);
+                    
                     // OPTIMIZATION: Use direct model queries without executor overhead
                     // Ensure models are initialized on the global instance
                     const models = await ModelFactory.createModels(sequelize);
@@ -112,7 +116,9 @@ const isVerifiedUser = async (req, res, next) => {
                         ]);
                         
                         // CRITICAL: Check tenant status BEFORE allowing auth
-                        if (!tenantRegistry || tenantRegistry.status !== 'active') {
+                        // Allow both 'active' and 'onboarding' - onboarding means schema is being initialized
+                        const allowedStatuses = ['active', 'onboarding'];
+                        if (!tenantRegistry || !allowedStatuses.includes(tenantRegistry.status)) {
                             return next(createHttpError(503, 'Tenant not ready, please retry'));
                         }
                         

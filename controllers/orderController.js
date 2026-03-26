@@ -5,7 +5,6 @@
 const createHttpError = require("http-errors");
 const { Op } = require("sequelize");
 const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get all orders
@@ -31,24 +30,21 @@ exports.getOrders = async (req, res, next) => {
             }
 
             // Phase 2: Safe findAndCountAll
-            return await safeQuery(
-                () => Order.findAndCountAll({
-                    where: whereClause,
-                    include: [
-                        { 
-                            model: OrderItem, 
-                            as: 'items', 
-                            include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] 
-                        },
-                        { model: Customer, attributes: ['id', 'name', 'phone'] },
-                        { model: Table, attributes: ['id', 'name', 'number'] }
-                    ],
-                    order: [['createdAt', 'DESC']],
-                    limit: parseInt(limit),
-                    offset: parseInt(offset)
-                }),
-                { rows: [], count: 0 }
-            );
+            return await Order.findAndCountAll({
+                where: whereClause,
+                include: [
+                    { 
+                        model: OrderItem, 
+                        as: 'items', 
+                        include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] 
+                    },
+                    { model: Customer, as: 'customer', attributes: ['id', 'name', 'phone'] },
+                    { model: Table, as: 'table', attributes: ['id', 'name', 'tableNo'] }
+                ],
+                order: [['created_at', 'DESC']],
+                limit: parseInt(limit),
+                offset: parseInt(offset)
+            });
         });
 
         console.log("STEP 6 - Controller Received:", result);
@@ -87,23 +83,20 @@ exports.getOrderById = async (req, res, next) => {
             // Build strict where clause with MANDATORY outlet filtering
             const { whereClause } = buildStrictWhereClause(req, { id });
 
-            return await safeQuery(
-                () => Order.findOne({
-                    where: whereClause,
-                    include: [
-                        { 
-                            model: OrderItem, 
-                            as: 'items', 
-                            include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'price'] }] 
-                        },
-                        { model: Customer },
-                        { model: Table, attributes: ['id', 'name', 'number'] },
-                        { model: Payment },
-                        { model: User, as: 'staff', attributes: ['id', 'name', 'email'] }
-                    ]
-                }),
-                null
-            );
+            return await Order.findOne({
+                where: whereClause,
+                include: [
+                    { 
+                        model: OrderItem, 
+                        as: 'items', 
+                        include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'price'] }] 
+                    },
+                    { model: Customer, as: 'customer' },
+                    { model: Table, as: 'table', attributes: ['id', 'name', 'tableNo'] },
+                    { model: Payment, as: 'payments' },
+                    { model: User, as: 'staff', attributes: ['id', 'name', 'email'] }
+                ]
+            });
         });
 
         console.log('[ORDER CONTROLLER] getOrderById result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -148,13 +141,10 @@ exports.addOrder = async (req, res, next) => {
             const orderItemsRaw = [];
 
             for (const item of items) {
-                const product = await safeQuery(
-                    () => Product.findOne({
-                        where: { id: item.productId, businessId },
-                        transaction
-                    }),
-                    null
-                );
+                const product = await Product.findOne({
+                    where: { id: item.productId, businessId },
+                    transaction
+                });
                 
                 if (!product) throw createHttpError(404, `Product ${item.productId} not found`);
 
@@ -189,10 +179,10 @@ exports.addOrder = async (req, res, next) => {
                 orderNumber, // Required in newer model
                 type: type || 'DINE_IN',
                 status: 'PENDING',
-                billing_subtotal: subtotal,
-                billing_discount: discountAmount,
-                billing_tax: taxAmount,
-                billing_total: total,
+                billingSubtotal: subtotal,
+                billingDiscount: discountAmount,
+                billingTax: taxAmount,
+                billingTotal: total,
                 notes,
                 staffId: req.auth?.id
             }, { transaction });
@@ -205,25 +195,19 @@ exports.addOrder = async (req, res, next) => {
 
             // Update table status if table assigned
             if (tableId) {
-                await safeQuery(
-                    () => Table.update(
-                        { status: 'OCCUPIED' },
-                        { where: { id: tableId, businessId }, transaction }
-                    ),
-                    [0]
+                await Table.update(
+                    { status: 'OCCUPIED' },
+                    { where: { id: tableId, businessId }, transaction }
                 );
             }
 
-            return await safeQuery(
-                () => Order.findByPk(order.id, {
-                    include: [
-                        { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product' }] },
-                        { model: Table }
-                    ],
-                    transaction
-                }),
-                order
-            );
+            return await Order.findByPk(order.id, {
+                include: [
+                    { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product' }] },
+                    { model: Table, as: 'table' }
+                ],
+                transaction
+            });
         });
 
         console.log('[ORDER CONTROLLER] addOrder result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -256,26 +240,20 @@ exports.updateOrder = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req, { id });
 
-            const order = await safeQuery(
-                () => Order.findOne({
-                    where: whereClause,
-                    include: [{ model: OrderItem, as: 'items' }],
-                    transaction
-                }),
-                null
-            );
+            const order = await Order.findOne({
+                where: whereClause,
+                include: [{ model: OrderItem, as: 'items' }],
+                transaction
+            });
 
             if (!order) throw createHttpError(404, "Order not found");
 
             if (status) {
                 order.status = status;
                 if ((status === 'COMPLETED' || status === 'CANCELLED') && order.tableId) {
-                    await safeQuery(
-                        () => Table.update(
-                            { status: 'AVAILABLE' },
-                            { where: { id: order.tableId, businessId }, transaction }
-                        ),
-                        [0]
+                    await Table.update(
+                        { status: 'AVAILABLE' },
+                        { where: { id: order.tableId, businessId }, transaction }
                     );
                 }
             }
@@ -285,13 +263,10 @@ exports.updateOrder = async (req, res, next) => {
 
                 let subtotal = 0;
                 for (const item of items) {
-                    const product = await safeQuery(
-                        () => Product.findOne({
-                            where: { id: item.productId, businessId },
-                            transaction
-                        }),
-                        null
-                    );
+                    const product = await Product.findOne({
+                        where: { id: item.productId, businessId },
+                        transaction
+                    });
                     
                     if (!product) continue;
 
@@ -310,29 +285,26 @@ exports.updateOrder = async (req, res, next) => {
                     }, { transaction });
                 }
 
-                order.billing_subtotal = subtotal;
-                order.billing_discount = discount !== undefined ? discount : order.billing_discount;
-                order.billing_tax = tax !== undefined ? tax : order.billing_tax;
-                order.billing_total = order.billing_subtotal - order.billing_discount + order.billing_tax;
+                order.billingSubtotal = subtotal;
+                order.billingDiscount = discount !== undefined ? discount : order.billingDiscount;
+                order.billingTax = tax !== undefined ? tax : order.billingTax;
+                order.billingTotal = order.billingSubtotal - order.billingDiscount + order.billingTax;
             } else {
-                if (discount !== undefined) order.billing_discount = discount;
-                if (tax !== undefined) order.billing_tax = tax;
-                order.billing_total = (Number(order.billing_subtotal) || 0) - (Number(order.billing_discount) || 0) + (Number(order.billing_tax) || 0);
+                if (discount !== undefined) order.billingDiscount = discount;
+                if (tax !== undefined) order.billingTax = tax;
+                order.billingTotal = (Number(order.billingSubtotal) || 0) - (Number(order.billingDiscount) || 0) + (Number(order.billingTax) || 0);
             }
 
             if (notes) order.notes = notes;
             await order.save({ transaction });
 
-            return await safeQuery(
-                () => Order.findByPk(id, {
-                    include: [
-                        { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product' }] },
-                        { model: Table }
-                    ],
-                    transaction
-                }),
-                order
-            );
+            return await Order.findByPk(id, {
+                include: [
+                    { model: OrderItem, as: 'items', include: [{ model: Product, as: 'product' }] },
+                    { model: Table, as: 'table' }
+                ],
+                transaction
+            });
         });
 
         console.log('[ORDER CONTROLLER] updateOrder result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -370,36 +342,37 @@ exports.getArchivedOrders = async (req, res, next) => {
                 whereClause.createdAt = { [Op.between]: [new Date(startDate), new Date(endDate)] };
             }
 
-            return await safeQuery(
-                () => Order.findAndCountAll({
-                    where: whereClause,
-                    include: [
-                        { 
-                            model: OrderItem, 
-                            as: 'items', 
-                            include: [{ model: Product, attributes: ['id', 'name'] }] 
-                        },
-                        { model: Customer, attributes: ['id', 'name', 'phone'] },
-                        { model: Table, attributes: ['id', 'name', 'number'] }
-                    ],
-                    order: [['createdAt', 'DESC']],
-                    limit: parseInt(limit),
-                    offset: parseInt(offset)
-                }),
-                { rows: [], count: 0 }
-            );
+            return await Order.findAndCountAll({
+                where: whereClause,
+                include: [
+                    { 
+                        model: OrderItem, 
+                        as: 'items', 
+                        include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }] 
+                    },
+                    { model: Customer, as: 'customer', attributes: ['id', 'name', 'phone'] },
+                    { model: Table, as: 'table', attributes: ['id', 'name', 'tableNo'] }
+                ],
+                order: [['created_at', 'DESC']],
+                limit: parseInt(limit),
+                offset: parseInt(offset)
+            });
         });
 
         console.log("STEP 6 - Controller Received:", result);
         console.log("STEP 6.1 - Data:", result?.data);
         console.log("STEP 7 - Sending Response:", result?.data);
         
-        const responseData = result.data || result;
+        const responseData = result.data;
+        if (!responseData || !responseData.rows) {
+            throw createHttpError(500, "Critical archived orders data missing");
+        }
+        
         res.json({ 
             success: true, 
-            data: responseData?.rows || [], 
+            data: responseData.rows, 
             pagination: {
-                total: responseData?.count || 0,
+                total: responseData.count,
                 limit: parseInt(limit),
                 offset: parseInt(offset)
             }

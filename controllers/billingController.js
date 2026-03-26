@@ -3,7 +3,6 @@
  */
 
 const createHttpError = require("http-errors");
-const { safeQuery } = require("../utils/safeQuery");
 
 /**
  * Get billing configuration

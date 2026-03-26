@@ -1,7 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const createHttpError = require('http-errors');
-const { safeQuery } = require('../utils/safeQuery');
 
 /**
  * Staff Controller
@@ -13,26 +12,26 @@ const staffController = {
      */
     getUsers: async (req, res, next) => {
         try {
-            const user = req.user || req.auth;
-            const businessId = user.businessId;
+            const businessId = req.businessId;
+
+            if (!businessId) {
+                throw createHttpError(400, 'Business ID not found in request');
+            }
 
             const users = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { User } = models;
 
-                return await safeQuery(
-                    () => User.findAll({
-                        where: { businessId },
-                        attributes: ['id', 'name', 'email', 'phone', 'role', 'outletId', 'isActive', 'createdAt', 'lastLogin'],
-                        order: [['createdAt', 'DESC']]
-                    }),
-                    []
-                );
+                return await User.findAll({
+                    where: { businessId },
+                    attributes: ['id', 'name', 'email', 'phone', 'role', 'outletId', 'isActive', 'createdAt', 'lastLogin'],
+                    order: [['created_at', 'DESC']]
+                });
             });
 
             res.json({
                 success: true,
-                data: users || []
+                data: users
             });
         } catch (error) {
             next(error);

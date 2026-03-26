@@ -22,7 +22,10 @@ exports.getTimings = async (req, res, next) => {
             });
         });
 
-        res.json({ success: true, data: result });
+        console.log('[TIMING CONTROLLER] getTimings result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
     } catch (error) {
         next(error);
     }
@@ -54,7 +57,10 @@ exports.createTiming = async (req, res, next) => {
             }, { transaction });
         });
 
-        res.status(201).json({ success: true, data: result, message: "Timing created" });
+        console.log('[TIMING CONTROLLER] createTiming result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Timing created" });
     } catch (error) {
         next(error);
     }
@@ -83,7 +89,10 @@ exports.updateTiming = async (req, res, next) => {
             return timing;
         });
 
-        res.json({ success: true, data: result, message: "Timing updated" });
+        console.log('[TIMING CONTROLLER] updateTiming result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Timing updated" });
     } catch (error) {
         next(error);
     }

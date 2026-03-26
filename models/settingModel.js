@@ -8,36 +8,39 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
-        appName: { 
+        appName: {
+            field: 'app_name',
             type: DataTypes.STRING, 
             defaultValue: 'BrewwLabs POS',
             field: 'app_name'
         },
-        logoUrl: { 
+        logoUrl: {
             type: DataTypes.STRING,
             field: 'logo_url'
         },
-        supportEmail: { 
+        supportEmail: {
             type: DataTypes.STRING,
             field: 'support_email'
         },
-        supportPhone: { 
+        supportPhone: {
             type: DataTypes.STRING,
             field: 'support_phone'
         },
-        termsUrl: { 
+        termsUrl: {
             type: DataTypes.STRING,
             field: 'terms_url'
         },
-        privacyUrl: { 
+        privacyUrl: {
             type: DataTypes.STRING,
             field: 'privacy_url'
         },
-        maintenanceMode: { 
+        maintenanceMode: {
+            field: 'maintenance_mode',
             type: DataTypes.BOOLEAN, 
             defaultValue: false,
             field: 'maintenance_mode'
@@ -56,6 +59,7 @@ module.exports = (sequelize) => {
         tableName: 'settings',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [

@@ -12,6 +12,7 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false
         },
@@ -23,23 +24,29 @@ module.exports = (sequelize) => {
             }
         },
         openTime: {
+            field: 'open_time',
             type: DataTypes.TIME,
             allowNull: true
         },
         closeTime: {
+            field: 'close_time',
             type: DataTypes.TIME,
             allowNull: true
         },
         isOpen: {
+            field: 'is_open',
             type: DataTypes.BOOLEAN,
             defaultValue: true
         },
         specialHours: {
+            field: 'special_hours',
             type: DataTypes.JSON,
             allowNull: true
         }
     }, {
-        tableName: 'OperationTimings',
+        tableName: 'operation_timings',
+        underscored: true,
+        freezeTableName: true,
         timestamps: true
     });
 

@@ -8,11 +8,13 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         purchaseId: {
+            field: 'purchase_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'purchase_id'
         },
         productId: {
+            field: 'product_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'product_id'
@@ -22,6 +24,7 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         costPrice: {
+            field: 'cost_price',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false,
             field: 'cost_price'
@@ -34,11 +37,13 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'outlet_id'
@@ -47,6 +52,7 @@ module.exports = (sequelize) => {
         tableName: 'purchase_items',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [

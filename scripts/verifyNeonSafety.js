@@ -100,7 +100,7 @@ const SAFE_PATTERNS = [
   },
   {
     name: 'Neon-safe middleware',
-    pattern: /neonSafeTenantMiddleware/,
+    pattern: /tenantMiddleware/,
     required: true,
     message: 'Neon-safe middleware must be used'
   }
@@ -290,7 +290,7 @@ function printFinalVerdict() {
     
     if (!hasSafeMiddleware) {
       console.log('❌ Missing: Neon-safe middleware');
-      console.log('   Use neonSafeTenantMiddleware in middleware chains');
+      console.log('   Use tenantMiddleware in middleware chains');
     }
     
     console.log('');

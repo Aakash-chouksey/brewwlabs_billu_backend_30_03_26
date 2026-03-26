@@ -8,19 +8,19 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         orderId: {
+            field: 'order_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'order_id'
+            allowNull: false
         },
         productId: {
+            field: 'product_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'product_id'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,
@@ -57,6 +57,7 @@ module.exports = (sequelize) => {
         tableName: 'order_items',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -66,7 +67,7 @@ module.exports = (sequelize) => {
     });
 
     OrderItem.associate = function(models) {
-        OrderItem.belongsTo(models.Business, { foreignKey: 'business_id', as: 'business' });
+        // REMOVED cross-schema association to Business
         OrderItem.belongsTo(models.Order, { foreignKey: 'order_id', as: 'order' });
         OrderItem.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
     };

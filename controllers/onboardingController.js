@@ -1,5 +1,5 @@
-const onboardingService = require('../services/onboarding.service');
-const authService = require('../services/auth.service');
+const onboardingService = require('../services/onboardingService');
+const authService = require('../services/authService');
 const config = require('../config/config');
 
 /**
@@ -33,7 +33,7 @@ const onboardingController = {
             // Inject executors from request context (standardized pattern)
             const neonTransactionSafeExecutor = require('../services/neonTransactionSafeExecutor');
             const executors = {
-                executeInPublic: (fn) => neonTransactionSafeExecutor.executeWithTenant('public', fn, { minimal: true }),
+                executeInPublic: (fn) => neonTransactionSafeExecutor.executeInPublic(fn),
                 executeWithTenant: (tenantId, fn) => neonTransactionSafeExecutor.executeWithTenant(tenantId, fn),
                 executeWithoutTransaction: (tenantId, fn) => neonTransactionSafeExecutor.readWithTenant(tenantId, fn)
             };
@@ -49,11 +49,15 @@ const onboardingController = {
 
             console.log('[CONTROLLER DEBUG] onboarding result:', JSON.stringify(result, null, 2).substring(0, 500));
 
-            // Extract data from executor response structure
-            const data = result.data || result;
-            
-            const accessToken = authService.generateAccessToken(data.admin);
-            const refreshToken = authService.generateRefreshToken(data.admin);
+            // Service returns data nested under 'data' property
+            if (!result || !result.success || !result.data) {
+                console.error("🚨 INVALID EXECUTOR RESPONSE:", result);
+                throw new Error("Invalid onboarding response: onboarding failed");
+            }
+
+            const data = result.data;
+            const accessToken = authService.generateAccessToken(data.user);
+            const refreshToken = authService.generateRefreshToken(data.user);
 
             const cookieOptions = {
                 httpOnly: true,
@@ -76,7 +80,7 @@ const onboardingController = {
                 success: true,
                 hasBusiness: !!data.business,
                 hasOutlet: !!data.outlet,
-                hasUser: !!data.admin,
+                hasUser: !!data.user,
                 hasAccessToken: !!accessToken,
                 hasRefreshToken: !!refreshToken
             });
@@ -84,9 +88,9 @@ const onboardingController = {
             const responseData = {
                 success: true,
                 message: 'Business onboarded successfully.',
-                business: data.business ? data.business.get({ plain: true }) : null,
-                outlet: data.outlet ? data.outlet.get({ plain: true }) : null,
-                user: data.admin ? data.admin.get({ plain: true }) : null,
+                business: data.business && typeof data.business.get === 'function' ? data.business.get({ plain: true }) : data.business,
+                outlet: data.outlet && typeof data.outlet.get === 'function' ? data.outlet.get({ plain: true }) : data.outlet,
+                user: data.user && typeof data.user.get === 'function' ? data.user.get({ plain: true }) : data.user,
                 accessToken,
                 refreshToken
             };
@@ -96,7 +100,6 @@ const onboardingController = {
             return res.status(201).json(responseData);
 
         } catch (error) {
-            // Handle duplicate errors with 409 status
             if (error.message && (
                 error.message.includes('already exists') ||
                 error.message.includes('duplicate')

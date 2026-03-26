@@ -1,11 +1,164 @@
-const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-const inventoryService = require('../services/tenant/inventory.service');
 const createHttpError = require("http-errors");
-const inventoryService = require("../services/tenant/inventory.service");
 const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
-const { safeQuery } = require("../utils/safeQuery");
+const { Op } = require("sequelize");
 
-// ==================== INVENTORY ITEMS ====================
+// ==================== RAW MATERIALS (InventoryItem) ====================
+
+/**
+ * Get all raw materials
+ */
+exports.getRawMaterials = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
+
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models } = context;
+            const { InventoryItem, InventoryCategory, Supplier } = models;
+            
+            const { whereClause } = buildStrictWhereClause(req);
+            
+            return await InventoryItem.findAll({
+                where: whereClause,
+                include: [
+                    { model: InventoryCategory, as: 'category', attributes: ['id', 'name'] },
+                    { model: Supplier, as: 'supplier', attributes: ['id', 'name'] }
+                ],
+                order: [['created_at', 'DESC']]
+            });
+        });
+
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData || [] });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Add new raw material
+ */
+exports.addRawMaterial = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { businessId, outletId } = req;
+        const { name, inventoryCategoryId, unit, sku, currentStock, minimumStock, costPerUnit, supplierId, supplierName } = req.body;
+
+        if (!name || !inventoryCategoryId) {
+            throw createHttpError(400, "Name and category are required");
+        }
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { InventoryItem, InventoryTransaction } = models;
+            
+            const newItem = await InventoryItem.create({
+                businessId,
+                outletId,
+                name,
+                inventoryCategoryId,
+                unit: unit || 'piece',
+                sku,
+                currentStock: currentStock || 0,
+                minimumStock: minimumStock || 5,
+                costPerUnit: costPerUnit || 0,
+                supplierId,
+                supplierName
+            }, { transaction });
+
+            // Create initial transaction if stock is provided
+            if (Number(currentStock) > 0) {
+                await InventoryTransaction.create({
+                    businessId,
+                    outletId,
+                    inventoryItemId: newItem.id,
+                    type: 'INITIAL_STOCK',
+                    quantity: Number(currentStock),
+                    unitCost: Number(costPerUnit) || 0,
+                    totalCost: Number(currentStock) * (Number(costPerUnit) || 0),
+                    previousQuantity: 0,
+                    newQuantity: Number(currentStock),
+                    notes: 'Initial stock on creation',
+                    performedBy: req.auth?.id
+                }, { transaction });
+            }
+
+            return newItem;
+        });
+
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Raw material created" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Update raw material
+ */
+exports.updateRawMaterial = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { id } = req.params;
+        const { businessId } = req;
+        const updateData = req.body;
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { InventoryItem } = models;
+            
+            const item = await InventoryItem.findOne({
+                where: { id, businessId },
+                transaction
+            });
+            if (!item) throw createHttpError(404, "Raw material not found");
+
+            await item.update(updateData, { transaction });
+            return item;
+        });
+
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Raw material updated" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Delete raw material
+ */
+exports.deleteRawMaterial = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const { id } = req.params;
+        const { businessId } = req;
+
+        await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { InventoryItem, InventoryTransaction } = models;
+            
+            const item = await InventoryItem.findOne({
+                where: { id, businessId },
+                transaction
+            });
+            if (!item) throw createHttpError(404, "Raw material not found");
+
+            // Delete transactions first
+            await InventoryTransaction.destroy({
+                where: { inventoryItemId: id },
+                transaction
+            });
+
+            await item.destroy({ transaction });
+        });
+
+        res.json({ success: true, message: "Raw material deleted" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ==================== PRODUCT STOCK (Inventory - Linked to Product) ====================
 
 /**
  * Get all inventory items
@@ -14,28 +167,57 @@ exports.getItems = async (req, res, next) => {
     try {
         enforceOutletScope(req);
         const { businessId, outletId } = req;
+        const startTime = Date.now();
+        
+        console.log(`[INVENTORY getItems] START - businessId: ${businessId}, outletId: ${outletId}`);
 
         const result = await req.readWithTenant(async (context) => {
-            const { transactionModels: models } = context;
+            const { transactionModels: models, sequelize } = context;
             const { Inventory, Product } = models;
             
-            const { whereClause } = buildStrictWhereClause(req);
+            console.log(`[INVENTORY getItems] Models loaded in ${Date.now() - startTime}ms`);
             
-            return await safeQuery(
-                () => Inventory.findAll({
-                    where: whereClause,
-                    include: [{ model: Product, as: 'product' }],
-                    order: [['createdAt', 'DESC']]
-                }),
-                []
-            );
+            const { whereClause } = buildStrictWhereClause(req);
+            console.log(`[INVENTORY getItems] whereClause:`, JSON.stringify(whereClause));
+            
+            const queryStartTime = Date.now();
+            
+            const items = await Inventory.findAll({
+                where: whereClause,
+                include: [{ 
+                    model: Product, 
+                    as: 'product',
+                    attributes: ['id', 'name', 'sku', 'price', 'currentStock', 'isActive']
+                }],
+                attributes: {
+                    include: [
+                        [sequelize.literal('quantity <= reorder_level'), 'is_low_stock']
+                    ]
+                },
+                order: [['updated_at', 'DESC']],
+                limit: 1000 // Safety limit for performance
+            });
+            
+            const queryTime = Date.now() - queryStartTime;
+            console.log(`[INVENTORY getItems] Query executed in ${queryTime}ms, returned ${items.length} items`);
+
+            return items;
         });
 
-        console.log('[INVENTORY CONTROLLER] getItems result:', JSON.stringify(result, null, 2).substring(0, 500));
+        const totalTime = Date.now() - startTime;
+        console.log(`[INVENTORY getItems] SUCCESS - Total time: ${totalTime}ms`);
         
         const responseData = result.data || result;
-        res.json({ success: true, data: responseData || [] });
+        res.json({ 
+            success: true, 
+            data: responseData || [],
+            meta: {
+                executionTimeMs: totalTime,
+                count: responseData?.length || 0
+            }
+        });
     } catch (error) {
+        console.error(`[INVENTORY getItems] ERROR:`, error.message);
         next(error);
     }
 };
@@ -57,13 +239,10 @@ exports.adjustStock = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Inventory, InventoryTransaction, Product } = models;
             
-            const product = await safeQuery(
-                () => Product.findOne({
-                    where: { id: productId, businessId },
-                    transaction
-                }),
-                null
-            );
+            const product = await Product.findOne({
+                where: { id: productId, businessId },
+                transaction
+            });
             if (!product) throw createHttpError(404, "Product not found");
 
             // Use findOrCreate with proper defaults including outletId
@@ -134,14 +313,11 @@ exports.getItemTransactions = async (req, res, next) => {
             
             const { whereClause } = buildStrictWhereClause(req, { inventoryId: id });
 
-            return await safeQuery(
-                () => InventoryTransaction.findAll({
-                    where: whereClause,
-                    order: [['createdAt', 'DESC']],
-                    limit: 50
-                }),
-                []
-            );
+            return await InventoryTransaction.findAll({
+                where: whereClause,
+                order: [['created_at', 'DESC']],
+                limit: 50
+            });
         });
 
         console.log('[INVENTORY CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
@@ -191,7 +367,10 @@ exports.syncAllProducts = async (req, res, next) => {
             return { syncedCount: products.length, syncResults };
         });
 
-        res.json({ success: true, data: result, message: "Inventory sync complete" });
+        console.log('[INVENTORY CONTROLLER] syncProducts result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Inventory sync complete" });
     } catch (error) {
         next(error);
     }
@@ -494,7 +673,7 @@ exports.getWastage = async (req, res, next) => {
             return await InventoryTransaction.findAll({
                 where: whereClause,
                 include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
-                order: [['createdAt', 'DESC']]
+                order: [['created_at', 'DESC']]
             });
         });
 
@@ -592,7 +771,7 @@ exports.getTransactions = async (req, res, next) => {
             return await InventoryTransaction.findAll({
                 where: whereClause,
                 include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
-                order: [['createdAt', 'DESC']]
+                order: [['created_at', 'DESC']]
             });
         });
 
@@ -675,39 +854,76 @@ exports.deleteTransaction = async (req, res, next) => {
  */
 exports.getLowStock = async (req, res, next) => {
     enforceOutletScope(req);
+    const startTime = Date.now();
+    
     try {
         const { businessId } = req;
+        
+        console.log(`[INVENTORY getLowStock] START - businessId: ${businessId}, outletId: ${req.outletId}`);
 
         const result = await req.readWithTenant(async (context) => {
-            const { transactionModels: models } = context;
+            const { transactionModels: models, sequelize } = context;
             const { Inventory, Product } = models;
             
+            console.log(`[INVENTORY getLowStock] Models loaded:`, Object.keys(models));
+            
             const { whereClause } = buildStrictWhereClause(req);
+            console.log(`[INVENTORY getLowStock] whereClause:`, JSON.stringify(whereClause));
 
+            // Use database-level filtering for performance
             const items = await Inventory.findAll({
-                where: whereClause,
-                include: [{ model: Product, as: 'product' }]
+                where: {
+                    ...whereClause,
+                    quantity: { [Op.lte]: sequelize.col('reorder_level') }
+                },
+                include: [{ 
+                    model: Product, 
+                    as: 'product',
+                    attributes: ['id', 'name', 'sku', 'currentStock']
+                }],
+                order: [['quantity', 'ASC']]
             });
+            
+            console.log(`[INVENTORY getLowStock] Query executed, found ${items.length} items`);
 
-            return items.filter(item => 
-                Number(item.quantity || 0) <= (item.reorderLevel || item.product?.reorderLevel || 10)
+            // Additional client-side filter for safety (handles edge cases)
+            const lowStockItems = items.filter(item => 
+                Number(item.quantity || 0) <= Number(item.reorderLevel || 10)
             );
+            
+            console.log(`[INVENTORY getLowStock] Filtered to ${lowStockItems.length} low-stock items`);
+            
+            return lowStockItems;
         });
 
-        console.log('[INVENTORY CONTROLLER] getTransactions result:', JSON.stringify(result, null, 2).substring(0, 500));
+        const executionTime = Date.now() - startTime;
+        console.log(`[INVENTORY getLowStock] SUCCESS - ${result.length} items in ${executionTime}ms`);
         
         const responseData = result.data || result;
-        res.json({ success: true, data: responseData });
+        res.json({ 
+            success: true, 
+            data: responseData,
+            meta: {
+                executionTimeMs: executionTime,
+                count: responseData.length
+            }
+        });
     } catch (error) {
+        const executionTime = Date.now() - startTime;
+        console.error(`[INVENTORY getLowStock] ERROR after ${executionTime}ms:`, error.message);
+        console.error(`[INVENTORY getLowStock] Stack:`, error.stack);
         next(error);
     }
 };
 
 // ==================== ALIASES & COMPATIBILITY ====================
 
-exports.addStock = exports.addPurchase;
-exports.getInventory = exports.getItems;
-exports.getInventoryItems = exports.getItems;
+// Legacy compatibility & Route mapping
+exports.getInventoryItems = exports.getItems; // Standardized: Product Stock
 exports.addInventoryItem = exports.addItem;
 exports.updateInventoryItem = exports.updateItem;
 exports.deleteInventoryItem = exports.deleteItem;
+
+// Raw Materials (InventoryItem) aliases
+exports.getInventoryRawMaterials = exports.getRawMaterials;
+exports.addInventoryRawMaterial = exports.addRawMaterial;

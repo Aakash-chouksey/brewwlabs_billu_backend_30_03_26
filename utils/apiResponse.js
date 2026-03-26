@@ -13,11 +13,14 @@ const { safeObject } = require('./safeDb');
  * @param {string} message - Optional success message
  * @returns {Object} Standardized success response
  */
-function success(data = {}, message = 'Success') {
+function success(data, message = 'Success') {
+  if (data === null || data === undefined) {
+    throw new Error('API Success response requires data');
+  }
   return {
     success: true,
     message: message || 'Success',
-    data: safeObject(data, {})
+    data: data
   };
 }
 
@@ -27,11 +30,11 @@ function success(data = {}, message = 'Success') {
  * @param {any} details - Additional error details (optional)
  * @returns {Object} Standardized error response
  */
-function error(message = 'Handled safely', details = null) {
+function error(message = 'Operation failed', details = null) {
   return {
     success: false,
-    message: message || 'Handled safely',
-    data: safeObject(details, {})
+    message: message || 'Operation failed',
+    data: details
   };
 }
 
@@ -41,12 +44,7 @@ function error(message = 'Handled safely', details = null) {
  * @returns {Object} Safe empty response
  */
 function safeEmpty(resourceName = 'Data') {
-  console.warn(`⚠️ SAFE FALLBACK: ${resourceName} is null/undefined, returning safe empty response`);
-  return {
-    success: true,
-    message: `${resourceName} not found or empty`,
-    data: {}
-  };
+  throw new Error(`${resourceName} not found or empty`);
 }
 
 /**
@@ -57,11 +55,7 @@ function safeEmpty(resourceName = 'Data') {
  */
 function wrap(data, fallbackMessage = 'No data available') {
   if (data === null || data === undefined) {
-    return {
-      success: true,
-      message: fallbackMessage,
-      data: {}
-    };
+    throw new Error(fallbackMessage);
   }
   
   return {

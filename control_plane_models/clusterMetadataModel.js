@@ -40,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'cluster_metadata',
+        underscored: true,
     timestamps: true,
     indexes: [
       { fields: ['region'] },

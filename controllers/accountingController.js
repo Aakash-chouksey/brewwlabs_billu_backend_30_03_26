@@ -96,9 +96,9 @@ exports.addTransaction = async (req, res, next) => {
             let newBalance = Number(account.currentBalance || 0);
             const txAmount = parseFloat(amount);
 
-            if (type === 'CREDIT' || type === 'INCOME') {
+            if (type === 'CREDIT' || type === 'INCOME' || type === 'Revenue') {
                 newBalance += txAmount;
-            } else if (type === 'DEBIT' || type === 'EXPENSE') {
+            } else if (type === 'DEBIT' || type === 'EXPENSE' || type === 'Expense') {
                 newBalance -= txAmount;
             }
 
@@ -155,7 +155,7 @@ exports.getTransactions = async (req, res, next) => {
 
             return await AccountTransaction.findAll({
                 where: whereClause,
-                include: [{ model: Account, attributes: ['id', 'name', 'type'] }],
+                include: [{ model: Account, as: 'account', attributes: ['id', 'name', 'type'] }],
                 order: [['date', 'DESC'], ['createdAt', 'DESC']]
             });
         });

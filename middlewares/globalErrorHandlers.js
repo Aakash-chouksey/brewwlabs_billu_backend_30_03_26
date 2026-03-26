@@ -24,8 +24,10 @@ const requestTimeoutMiddleware = (timeoutMs = 30000) => {
             if (!res.headersSent) {
                 console.error(`⏱️ Request timeout: ${req.method} ${req.path} (${timeoutMs}ms)`);
                 res.status(408).json({
-                    error: 'Request Timeout',
-                    message: 'Request took too long to process'
+                    success: false,
+                    message: 'Request took too long to process',
+                    data: null,
+                    error: 'Request Timeout'
                 });
             }
         }, timeoutMs);
@@ -54,17 +56,20 @@ const responseValidationMiddleware = (req, res, next) => {
             return;
         }
 
-        // Global Response Safety (Phase 6)
+        // Global Response Safety - ONLY ensure data is an object, don't force empty
         if (!data || typeof data !== 'object') {
             console.warn('⚠️ Sanitize Response: Data was empty or not an object');
-            data = { success: true, data: {} };
+            return originalJson.call(this, {
+                success: false,
+                message: 'Invalid response format',
+                data: null
+            });
         }
 
-        // Ensure success field exists
-        if (data.success === undefined) data.success = true;
-        
-        // Ensure data field exists if success is true
-        if (data.success && data.data === undefined) data.data = {};
+        // Ensure success field exists while preserving original value
+        if (data.success === undefined) {
+            data.success = true;
+        }
 
         return originalJson.call(this, data);
     };
@@ -170,51 +175,58 @@ const globalErrorHandler = (error, req, res, next) => {
     // Handle specific error types
     if (error.name === 'SequelizeConnectionError') {
         return res.status(503).json({
-            error: 'Database Connection Error',
-            message: 'Unable to connect to database. Please try again later.'
+            success: false,
+            message: 'Unable to connect to database. Please try again later.',
+            data: null,
+            error: 'Database Connection Error'
         });
     }
     
     if (error.name === 'SequelizeConnectionRefusedError') {
         return res.status(503).json({
-            error: 'Database Unavailable',
-            message: 'Database is currently unavailable. Please try again later.'
+            success: false,
+            message: 'Database is currently unavailable. Please try again later.',
+            data: null,
+            error: 'Database Unavailable'
         });
     }
     
     if (error.name === 'SequelizeTimeoutError') {
         return res.status(408).json({
-            error: 'Database Timeout',
-            message: 'Database query timed out. Please try again.'
+            success: false,
+            message: 'Database query timed out. Please try again.',
+            data: null,
+            error: 'Database Timeout'
         });
     }
     
     if (error.name === 'ValidationError') {
         return res.status(400).json({
-            error: 'Validation Error',
+            success: false,
             message: error.message,
-            details: error.errors
+            data: error.errors || null,
+            error: 'Validation Error'
         });
     }
     
     if (error.message.includes('tenant') || error.message.includes('schema')) {
         return res.status(400).json({
-            error: 'Tenant Error',
-            message: 'Tenant configuration error. Please check your access credentials.'
+            success: false,
+            message: 'Tenant configuration error. Please check your access credentials.',
+            data: null,
+            error: 'Tenant Error'
         });
     }
     
-    // Default error response - PHASE 7: ALWAYS RETURN 200 FOR STABILITY
-    const statusCode = error.statusCode || error.status || 200; // Force 200 for "Handled Safely"
+    // Default error response - ALWAYS return proper error with correct status
+    const statusCode = error.statusCode || error.status || 500;
     const message = process.env.NODE_ENV === 'production' 
-        ? 'Internal Server Error (Handled Safely)' 
+        ? error.message || 'Internal Server Error'
         : error.message;
     
-    res.status(200).json({
+    res.status(statusCode).json({
         success: false,
-        error: 'Handled safely',
         message: message,
-        data: {},
         ...(process.env.NODE_ENV !== 'production' && { stack: error.stack })
     });
 };

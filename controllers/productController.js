@@ -4,7 +4,7 @@
 
 const createHttpError = require("http-errors");
 const { Op } = require("sequelize");
-const { safeQuery } = require("../utils/safeQuery");
+const { enforceOutletScope, buildStrictWhereClause } = require("../utils/outletGuard");
 
 /**
  * Get all products
@@ -40,14 +40,11 @@ exports.getProducts = async (req, res, next) => {
                 ];
             }
 
-            const products = await safeQuery(
-                () => Product.findAll({
-                    where: whereClause,
-                    include,
-                    order: [['name', 'ASC']]
-                }),
-                []
-            );
+            const products = await Product.findAll({
+                where: whereClause,
+                include,
+                order: [['name', 'ASC']]
+            });
             console.log("STEP 4 - DB RESULT (Products):", Array.isArray(products) ? products.length : 'not an array');
             console.log("DB DATA (Phase 3):", products ? products.slice(0, 2) : 'no data'); // Phase 3 log
             return products;
@@ -56,7 +53,15 @@ exports.getProducts = async (req, res, next) => {
         console.log("STEP 6 - Controller Received:", result);
         console.log("STEP 6.1 - Data:", result?.data);
         console.log("STEP 7 - Sending Response:", result?.data);
-        res.json({ success: true, data: result?.data ?? [] }); // Phase 7 Fix
+        const data = result.data;
+        
+        // Handle empty results gracefully (STEP 6)
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+            console.log("ℹ️ No products found for this query");
+            return res.json({ success: true, data: [] });
+        }
+        
+        return res.json({ success: true, data: data }); 
     } catch (error) {
         next(error);
     }
@@ -82,25 +87,19 @@ exports.addProduct = async (req, res, next) => {
             
             // Check if SKU is unique
             if (sku) {
-                const existing = await safeQuery(
-                    () => Product.findOne({
-                        where: { businessId, outletId, sku },
-                        transaction
-                    }),
-                    null
-                );
+                const existing = await Product.findOne({
+                    where: { businessId, outletId, sku },
+                    transaction
+                });
                 if (existing) throw createHttpError(400, "SKU already exists");
             }
 
             // Verify category exists if provided
             if (categoryId) {
-                const category = await safeQuery(
-                    () => Category.findOne({
-                        where: { id: categoryId, businessId, outletId },
-                        transaction
-                    }),
-                    null
-                );
+                const category = await Category.findOne({
+                    where: { id: categoryId, businessId, outletId },
+                    transaction
+                });
                 if (!category) throw createHttpError(404, "Category not found for this outlet");
             }
 
@@ -146,24 +145,15 @@ exports.updateProduct = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Product } = models;
             
-            const product = await safeQuery(
-                () => Product.findOne({
-                    where: { id, businessId, outletId },
-                    transaction
-                }),
-                null
-            );
+            const product = await Product.findOne({ where: { id, businessId, outletId }, transaction });
             if (!product) throw createHttpError(404, "Product not found");
 
             // Check SKU uniqueness if changing
             if (updateData.sku && updateData.sku !== product.sku) {
-                const existing = await safeQuery(
-                    () => Product.findOne({
-                        where: { businessId, outletId, sku: updateData.sku, id: { [Op.ne]: id } },
-                        transaction
-                    }),
-                    null
-                );
+                const existing = await Product.findOne({
+                    where: { businessId, outletId, sku: updateData.sku, id: { [Op.ne]: id } },
+                    transaction
+                });
                 if (existing) throw createHttpError(400, "SKU already exists");
             }
 
@@ -195,24 +185,15 @@ exports.deleteProduct = async (req, res, next) => {
             const { transaction, transactionModels: models } = context;
             const { Product, OrderItem, InventoryItem } = models;
             
-            const orderItemsCount = await safeQuery(
-                () => OrderItem.count({
-                    where: { productId: id, businessId },
-                    transaction
-                }),
-                0
-            );
+            const orderItemsCount = await OrderItem.count({
+                where: { productId: id, businessId },
+                transaction
+            });
             if (orderItemsCount > 0) {
                 throw createHttpError(400, `Cannot delete product with existing order items`);
             }
 
-            const product = await safeQuery(
-                () => Product.findOne({
-                    where: { id, businessId, outletId },
-                    transaction
-                }),
-                null
-            );
+            const product = await Product.findOne({ where: { id, businessId, outletId }, transaction });
             if (!product) throw createHttpError(404, "Product not found");
 
             await product.destroy({ transaction });

@@ -8,11 +8,13 @@ module.exports = (sequelize) => {
             primaryKey: true
         },
         businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
             field: 'business_id'
         },
         outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false, // 🚨 Phase 4: Enforce strict outlet isolation
             field: 'outlet_id'
@@ -35,11 +37,13 @@ module.exports = (sequelize) => {
             field: 'image'
         },
         isEnabled: {
+            field: 'is_enabled',
             type: DataTypes.BOOLEAN,
             defaultValue: true,
             field: 'is_enabled'
         },
         sortOrder: {
+            field: 'sort_order',
             type: DataTypes.INTEGER,
             defaultValue: 0,
             field: 'sort_order'
@@ -48,6 +52,7 @@ module.exports = (sequelize) => {
         tableName: 'categories',
         timestamps: true,
         underscored: true,
+        freezeTableName: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
         indexes: [
@@ -56,7 +61,7 @@ module.exports = (sequelize) => {
     });
 
     Category.associate = function(models) {
-        Category.belongsTo(models.Business, { foreignKey: 'business_id', as: 'business' });
+        // REMOVED cross-schema association to Business
         Category.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
         Category.hasMany(models.Product, { foreignKey: 'category_id', as: 'products' });
     };
