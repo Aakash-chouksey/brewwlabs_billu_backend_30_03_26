@@ -82,6 +82,7 @@ class AuthErrorHandler {
         // Build error response
         const errorResponse = {
             success: false,
+            data: null,
             message,
             timestamp: new Date().toISOString(),
             path
@@ -214,6 +215,7 @@ class AuthErrorHandler {
     static createErrorResponse(message, statusCode = 500, type = 'error', details = null) {
         return {
             success: false,
+            data: null,
             message,
             type,
             details,

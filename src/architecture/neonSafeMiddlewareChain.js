@@ -85,6 +85,9 @@ const applyNeonSafeMiddlewareChains = (app) => {
     // ACCOUNTING ROUTES
     app.use("/api/tenant/accounting", ...tenantChain, loadRoute('routes/accountingRoute.js'));
     
+    // REPORT ROUTES (CRITICAL: Added missing report routes with tenant middleware)
+    app.use("/api/reports", ...tenantChain, loadRoute('routes/reportRoute.js'));
+    
     // LEGACY & PUBLIC
     app.use("/api", ...publicChain, loadRoute('routes/legacyRoute.js'));
     app.use("/api/auth", ...publicChain, loadRoute('src/auth/auth.routes.js'));

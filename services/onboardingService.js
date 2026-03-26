@@ -31,12 +31,13 @@ class OnboardingService {
     async onboardBusiness(data, executors = null) {
         const {
             businessName, businessEmail, businessPhone, businessAddress, gstNumber,
-            adminName, adminEmail, adminPassword, cafeType
+            adminName, adminEmail, adminPassword, cafeType,
+            forcedBusinessId, forcedOutletId // NEW: For debug auto-provisioning
         } = data;
 
-        const businessId = uuidv4();
+        const businessId = forcedBusinessId || uuidv4();
         const schemaName = `tenant_${businessId}`;
-        const outletId = uuidv4();
+        const outletId = forcedOutletId || uuidv4();
         const adminId = uuidv4();
         
         const startTime = Date.now();

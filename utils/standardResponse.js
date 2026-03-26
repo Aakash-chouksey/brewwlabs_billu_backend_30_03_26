@@ -69,7 +69,9 @@ const responseValidationMiddleware = (req, res, next) => {
     // STRICT CHECK: Ensure required fields exist
     // Do NOT silently add success: true or data: {}
     if (data.success === undefined || data.data === undefined) {
-      console.error('🚨 [PHASE 8] Response missing required Fields (success or data):', JSON.stringify(data).substring(0, 100));
+      // Use a safer logging approach to avoid stringification issues on large objects
+      const preview = (typeof data === 'object') ? 'Object' : String(data).substring(0, 100);
+      console.error('🚨 [PHASE 8] Response missing required Fields (success or data):', preview);
       
       if (process.env.NODE_ENV === 'development') {
           // In development, throw to catch bugs early

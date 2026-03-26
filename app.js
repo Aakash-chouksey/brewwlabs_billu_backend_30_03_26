@@ -236,34 +236,16 @@ applyNeonSafeMiddlewareChains(app);
 // Prevents: schema leakage, cross-tenant contamination, login breaking after dashboard
 const { sequelize } = require('./config/unified_database');
 
-app.use(async (req, res, next) => {
-    // Store original end function
-    const originalEnd = res.end;
-    const originalJson = res.json;
-    
-    // Override res.end to reset schema before ending response
-    res.end = async function(chunk, encoding) {
-        // Reset search_path to public (fire and forget, don't block response)
+app.use((req, res, next) => {
+    // CRITICAL: Reset search_path to public for safety after every request
+    // We use res.on('finish') to ensure it happens after the response is sent
+    res.on('finish', async () => {
         try {
             await sequelize.query('SET search_path TO public');
         } catch (error) {
-            // Silent fail - don't block response for cleanup
+            // Silent fail - don't block for cleanup
         }
-        // Call original end
-        originalEnd.call(this, chunk, encoding);
-    };
-    
-    // Also wrap res.json for JSON responses
-    res.json = async function(body) {
-        // Reset search_path to public before sending JSON
-        try {
-            await sequelize.query('SET search_path TO public');
-        } catch (error) {
-            // Silent fail - don't block response for cleanup
-        }
-        // Call original json
-        return originalJson.call(this, body);
-    };
+    });
     
     next();
 });
@@ -341,6 +323,8 @@ app.use((err, req, res, next) => {
   }
 
   try {
+    const isDev = process.env.NODE_ENV === 'development';
+    
     // Handle specific error types
     if (error.name === 'SequelizeConnectionError' || error.name === 'SequelizeConnectionRefusedError') {
       return res.status(503).json({
@@ -382,13 +366,13 @@ app.use((err, req, res, next) => {
       return res.status(500).json({
         success: false,
         message: 'Database schema inconsistency. Please contact support.',
-        details: errorMessage
+        details: errorMessage,
+        stack: isDev ? error.stack : undefined
       });
     }
 
     // Default error response - ALWAYS return success: false with correct status code
     const statusCode = error.status || error.statusCode || 500;
-    const isDev = process.env.NODE_ENV === 'development';
     
     return res.status(statusCode).json({
       success: false,

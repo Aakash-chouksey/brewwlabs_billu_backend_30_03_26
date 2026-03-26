@@ -28,19 +28,20 @@ const MODEL_LOAD_ORDER = [
     ['Category', 'Area', 'ProductType', 'InventoryCategory', 'Customer', 'Supplier', 
      'ExpenseType', 'BillingConfig', 'Timing', 'MembershipPlan', 'PartnerType', 'Account'],
     
-    // Level 4: Base Transactional Nodes (depend on Level 3)
-    ['Product', 'Table', 'PartnerMembership', 'PartnerWallet', 'Expense', 'Income', 'Wastage', 'RollTracking'],
+    // Level 4: Base Entities (depend on Level 1-3)
+    ['Product', 'Table', 'PartnerMembership', 'PartnerWallet', 'RollTracking'],
     
-    // Level 5: Complex Transactional Nodes (depend on Level 4)
-    ['Order', 'Recipe', 'Purchase', 'Inventory', 'InventoryItem'],
+    // Level 5: Primary Transactional Roots (depend on Level 4)
+    // Inventory and InventoryItem MUST be created before Wastage/Purchase
+    ['Inventory', 'InventoryItem', 'Order', 'Recipe'],
     
-    // Level 6: Transactional Supporting Nodes (depend on Level 5)
-    ['Payment', 'StockTransaction', 'CustomerTransaction'],
+    // Level 6: Second-tier Transactional Nodes (depend on Level 5)
+    ['Wastage', 'Purchase', 'Expense', 'Income', 'Payment', 'StockTransaction', 'CustomerTransaction'],
     
-    // Level 7: Transactional Details (depend on Level 5/6)
+    // Level 7: Detailed Line Items (depend on Level 5/6)
     ['OrderItem', 'RecipeItem', 'PurchaseItem', 'InventoryTransaction'],
     
-    // Level 8: Transactional Ledgers & History (depend on Level 6/7)
+    // Level 8: Ledgers & History (depend on Level 6/7)
     ['CustomerLedger', 'InventorySale', 'AccountTransaction']
 ];
 

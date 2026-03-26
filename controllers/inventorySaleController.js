@@ -115,10 +115,15 @@ exports.getInventorySales = async (req, res, next) => {
             });
         });
 
-        console.log('[INVENTORY SALE CONTROLLER] getInventorySales result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
+        // Ensure results are plain objects to avoid circular reference or serialization issues
         const responseData = result.data || result;
-        res.json({ success: true, data: responseData });
+        const plainData = Array.isArray(responseData) 
+            ? responseData.map(s => typeof s.get === 'function' ? s.get({ plain: true }) : s)
+            : responseData;
+
+        console.log('[INVENTORY SALE CONTROLLER] getInventorySales result count:', Array.isArray(plainData) ? plainData.length : 'non-array');
+        
+        res.json({ success: true, data: plainData });
     } catch (error) {
         next(error);
     }
