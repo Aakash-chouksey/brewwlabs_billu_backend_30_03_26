@@ -57,5 +57,9 @@ module.exports = (sequelize) => {
         timestamps: true
     });
 
+    Wastage.associate = (models) => {
+        Wastage.belongsTo(models.Inventory, { foreignKey: 'inventoryItemId', as: 'inventory' });
+    };
+
     return Wastage;
 };

@@ -97,12 +97,10 @@ const neonSafeModelInjection = async (req, res, next) => {
         // PHASE 10: REMOVED unsafe global model getter. 
         // All business logic must use req.executeWithTenant or req.readWithTenant
         // which provides correctly bound transaction.models.
-        console.log("🛡️ [PHASE 10] Unsafe 'req.models' getter removed. Enforcing transaction-scoped access.");
+        console.log("🛡️ [PHASE 10] Enforcing transaction-scoped access.");
 
-        // Skip for Super Admin on admin routes
-        if (req.isSuperAdmin && req.path.includes('/admin/')) {
-            return next();
-        }
+        // CRITICAL: Inject methods before any role-based bypass
+        // This ensures req.executeRead is ALWAYS a function even if not authorized
 
         // CRITICAL: Provide only transaction-safe methods
         // NO direct model access allowed
@@ -167,7 +165,36 @@ const neonSafeModelInjection = async (req, res, next) => {
     }
 };
 
+/**
+ * ROLE-BASED AUTHORIZATION MIDDLEWARE
+ * 
+ * Flexible role check for tenant-scoped routes
+ * Supports: array of roles or single role
+ */
+const authorize = (roles = []) => {
+    return (req, res, next) => {
+        if (!req.auth || !req.auth.role) {
+            return next(createHttpError(401, "Authentication required"));
+        }
+
+        const allowedRoles = Array.isArray(roles) ? roles : [roles];
+        
+        // Super Admin bypass for all routes (optional - can be strict)
+        if (req.auth.role === 'SUPER_ADMIN') {
+            return next();
+        }
+
+        if (!allowedRoles.includes(req.auth.role)) {
+            console.error(`🚫 [AUTH] Access Denied: User role ${req.auth.role} not in allowed list [${allowedRoles}]`);
+            return next(createHttpError(403, `Access denied: ${allowedRoles.join('/')} access required`));
+        }
+
+        next();
+    };
+};
+
 module.exports = {
     neonSafeTenantMiddleware,
-    neonSafeModelInjection
+    neonSafeModelInjection,
+    authorize
 };

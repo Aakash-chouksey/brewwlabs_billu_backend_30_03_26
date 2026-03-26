@@ -295,6 +295,33 @@ class ModelRegistry {
                 }
             }
 
+            // Inventory Sale
+            if (models.InventorySale) {
+                if (models.Inventory) {
+                    if (!hasAssociation(models.InventorySale, 'inventory')) {
+                        models.InventorySale.belongsTo(models.Inventory, { foreignKey: 'inventoryId', as: 'inventory' });
+                    }
+                    if (!hasAssociation(models.Inventory, 'sales')) {
+                        models.Inventory.hasMany(models.InventorySale, { foreignKey: 'inventoryId', as: 'sales' });
+                    }
+                }
+                if (models.Product) {
+                    if (!hasAssociation(models.InventorySale, 'product')) {
+                        models.InventorySale.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
+                    }
+                }
+                if (models.Customer) {
+                    if (!hasAssociation(models.InventorySale, 'customer')) {
+                        models.InventorySale.belongsTo(models.Customer, { foreignKey: 'customerId', as: 'customer' });
+                    }
+                }
+                if (models.Outlet) {
+                    if (!hasAssociation(models.InventorySale, 'outlet')) {
+                        models.InventorySale.belongsTo(models.Outlet, { foreignKey: 'outletId', as: 'outlet' });
+                    }
+                }
+            }
+
             // Recipe System
             if (models.Recipe) {
                 if (models.Product) {

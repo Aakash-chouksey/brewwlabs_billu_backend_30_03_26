@@ -330,5 +330,6 @@ module.exports = {
     getCategorySales,
     getItemSales,
     getPaymentSales,
+    getPaymentSummary: getPaymentSales, // Alias for controller consistency
     getSalesDashboard: getDashboardMetrics
 };

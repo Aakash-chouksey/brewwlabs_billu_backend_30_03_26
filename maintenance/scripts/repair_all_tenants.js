@@ -1,81 +1,106 @@
 /**
- * GLOBAL SCHEMA REPAIR TOOL
+ * GLOBAL TENANT REPAIR SCRIPT
+ * ===========================
  * 
- * Scalable repair for all tenant schemas.
- * Injects missing tables and missing columns for every model.
+ * 1. Fetches all active tenants from public.tenant_registry
+ * 2. Runs deep integrity check for each schema
+ * 3. Automatically repairs missing tables/columns using alter:true
  */
 
+require('dotenv').config();
 const { sequelize } = require('../../config/unified_database');
 const tenantModelLoader = require('../../src/architecture/tenantModelLoader');
+const { ModelFactory } = require('../../src/architecture/modelFactory');
+const { CONTROL_PLANE, PUBLIC_SCHEMA } = require('../../src/utils/constants');
 
-async function repair() {
-    console.log('🛠️ STARTING GLOBAL SCHEMA REPAIR...');
+async function repairAllTenants() {
+    console.log('🧪 STARTING GLOBAL TENANT REPAIR...');
     const startTime = Date.now();
     
     try {
-        // 1. Get all tenants from registry
-        const [tenants] = await sequelize.query(`
-            SELECT business_id, schema_name 
-            FROM tenant_registry 
-            WHERE status = 'active'
-        `);
+        // 1. Initialize Control Plane
+        await ModelFactory.createModels(sequelize);
+        console.log('✅ Control plane models initialized.');
+
+        // 2. Fetch all tenants
+        const TenantRegistry = sequelize.models.TenantRegistry.schema(PUBLIC_SCHEMA);
+        const tenants = await TenantRegistry.findAll({
+            where: { status: 'active' },
+            logging: false
+        });
+
+        console.log(`📊 Found ${tenants.length} tenants in registry.`);
         
-        console.log(`Found ${tenants.length} active tenants to check/repair.`);
-        
-        const results = [];
-        let totalRepaired = 0;
-        
-        // 2. Repair each tenant
+        const stats = {
+            total: tenants.length,
+            healthy: 0,
+            repaired: 0,
+            failed: 0,
+            skipped: 0
+        };
+
+        // 3. Process each tenant
         for (const tenant of tenants) {
-            console.log(`\n--- REPAIRING: ${tenant.schema_name} ---`);
+            const { businessId, schemaName } = tenant;
+            console.log(`\n🔍 Checking Tenant: ${businessId} [${schemaName}]...`);
             
-            // First audit
-            const reportBefore = await tenantModelLoader.verifySchemaIntegrity(sequelize, tenant.schema_name);
-            
-            if (reportBefore.isValid) {
-                console.log(`   ✅ Healthy: Skipping ${tenant.schema_name}`);
-                results.push({
-                    business_id: tenant.business_id,
-                    schema: tenant.schema_name,
-                    status: 'SKIPPED',
-                    issues_before: 0,
-                    issues_after: 0
-                });
-                continue;
+            try {
+                // A. Check for schema existence
+                const [schemaExists] = await sequelize.query(`
+                    SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schema
+                `, { replacements: { schema: schemaName }, type: sequelize.QueryTypes.SELECT, logging: false });
+
+                if (!schemaExists) {
+                    console.error(`  ❌ SCHEMA MISSING: ${schemaName}. Attempting to create...`);
+                    await sequelize.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`, { logging: false });
+                }
+
+                // B. Run integrity check
+                const integrity = await tenantModelLoader.verifySchemaIntegrity(sequelize, schemaName);
+                
+                if (integrity.isValid) {
+                    console.log(`  ✅ ${schemaName} is HEALTHY (${integrity.issues} issues).`);
+                    stats.healthy++;
+                } else {
+                    console.warn(`  ⚠️  ${schemaName} has ${integrity.issues} ISSUES. Repairing...`);
+                    console.warn(`    Missing Tables: ${integrity.missingTables.join(', ')}`);
+                    console.warn(`    Missing Columns: ${integrity.missingColumns.join(', ')}`);
+                    
+                    // C. Run Repair
+                    const repairResult = await tenantModelLoader.repairTenantSchema(sequelize, schemaName);
+                    
+                    if (repairResult.isValid) {
+                        console.log(`  ✨ ${schemaName} REPAIRED SUCCESSFULLY.`);
+                        stats.repaired++;
+                    } else {
+                        console.error(`  ❌ RELAPSE: ${schemaName} still has ${repairResult.issues} issues after repair.`);
+                        stats.failed++;
+                    }
+                }
+            } catch (tenantError) {
+                console.error(`  🔥 ERROR processing ${schemaName}:`, tenantError.message);
+                stats.failed++;
             }
-            
-            console.log(`   🚨 Drift detected (${reportBefore.issues} issues): Ingesting changes...`);
-            
-            // Repair
-            const reportAfter = await tenantModelLoader.repairTenantSchema(sequelize, tenant.schema_name);
-            
-            results.push({
-                business_id: tenant.business_id,
-                schema: tenant.schema_name,
-                status: reportAfter.isValid ? 'REPAIRED' : 'FAILED',
-                issues_before: reportBefore.issues,
-                issues_after: reportAfter.issues
-            });
-            
-            if (reportAfter.isValid) totalRepaired++;
         }
-        
-        // 3. Output results
-        console.log('\n--- REPAIR COMPLETE ---');
-        console.table(results);
-        
-        console.log(`\n📊 SUMMARY:`);
-        console.log(`   - Total Tenants Processed: ${tenants.length}`);
-        console.log(`   - Repaired: ${totalRepaired}`);
-        console.log(`   - Skipped (already ok): ${results.filter(r => r.status === 'SKIPPED').length}`);
-        console.log(`   - Failed: ${results.filter(r => r.status === 'FAILED').length}`);
-        console.log(`   - Duration: ${Date.now() - startTime}ms`);
-        
+
+        // 4. Summary
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.log('\n' + '='.repeat(40));
+        console.log('🏁 REPAIR COMPLETE summary:');
+        console.log(`⏱️  Duration: ${duration}s`);
+        console.log(`📊 Total Tenants: ${stats.total}`);
+        console.log(`✅ Healthy:       ${stats.healthy}`);
+        console.log(`🛠️  Repaired:      ${stats.repaired}`);
+        console.log(`❌ Failed:        ${stats.failed}`);
+        console.log(`⏩ Skipped:       ${stats.skipped}`);
+        console.log('='.repeat(40));
+
     } catch (error) {
-        console.error('❌ Repair failed:', error.message);
+        console.error('🔥 FATAL REPAIR ERROR:', error);
     } finally {
-        process.exit();
+        await sequelize.close();
     }
 }
 
-repair();
+// Ensure database connection is established
+repairAllTenants();

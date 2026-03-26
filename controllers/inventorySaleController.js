@@ -107,9 +107,9 @@ exports.getInventorySales = async (req, res, next) => {
             return await InventorySale.findAll({
                 where: whereClause,
                 include: [
-                    { model: Inventory },
-                    { model: Product, attributes: ['id', 'name', 'sku'] },
-                    { model: Customer, attributes: ['id', 'name', 'phone'] }
+                    { model: Inventory, as: 'inventory' },
+                    { model: Product, as: 'product', attributes: ['id', 'name', 'sku'] },
+                    { model: Customer, as: 'customer', attributes: ['id', 'name', 'phone'] }
                 ],
                 order: [['created_at', 'DESC']]
             });

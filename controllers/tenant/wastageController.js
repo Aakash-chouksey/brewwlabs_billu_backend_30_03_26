@@ -68,7 +68,7 @@ const wastageController = {
                 const newWastage = await Wastage.create({
                     id: uuidv4(),
                     businessId,
-                    inventoryId: inventory.id,
+                    inventoryItemId: inventory.id,
                     quantity: Number(quantity),
                     reason,
                     wastageDate: wastageDate || new Date(),
@@ -122,7 +122,8 @@ const wastageController = {
 
             res.json({
                 success: true,
-                message: 'Wastage record deleted'
+                message: 'Wastage record deleted',
+                data: null
             });
 
         } catch (error) {

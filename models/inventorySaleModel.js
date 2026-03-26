@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 /**
  * Inventory Sale Model
  * For direct inventory item sales (not through recipes)
+ * Sychronized with inventorySaleController.js
  */
 module.exports = (sequelize) => {
     const InventorySale = sequelize.define('InventorySale', {
@@ -16,16 +17,31 @@ module.exports = (sequelize) => {
             type: DataTypes.UUID,
             allowNull: false
         },
-        inventoryItemId: {
+        outletId: {
+            field: 'outlet_id', // Note: This may be missing in some DB instances, but required for the model
+            type: DataTypes.UUID,
+            allowNull: true
+        },
+        inventoryId: {
             field: 'inventory_item_id',
             type: DataTypes.UUID,
             allowNull: false
+        },
+        productId: {
+            field: 'product_id',
+            type: DataTypes.UUID,
+            allowNull: true
+        },
+        customerId: {
+            field: 'customer_id',
+            type: DataTypes.UUID,
+            allowNull: true
         },
         quantity: {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
-        salePrice: {
+        unitPrice: {
             field: 'sale_price',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
@@ -35,38 +51,31 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
-        saleDate: {
-            field: 'sale_date',
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW
-        },
-        customerName: {
-            field: 'customer_name',
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        customerPhone: {
-            field: 'customer_phone',
-            type: DataTypes.STRING,
-            allowNull: true
-        },
         notes: {
             type: DataTypes.TEXT,
             allowNull: true
         },
-        recordedBy: {
+        soldBy: {
             field: 'recorded_by',
             type: DataTypes.UUID,
-            allowNull: true,
-            // Cross-schema FKs are tricky during sync, removing constraint for now
+            allowNull: true
         }
     }, {
         tableName: 'inventory_sales',
         underscored: true,
         freezeTableName: true,
-        timestamps: true
+        timestamps: true,
+        createdAt: 'created_at',
+        updatedAt: 'updated_at'
     });
+
+    InventorySale.associate = (models) => {
+        InventorySale.belongsTo(models.Inventory, { foreignKey: 'inventoryId', as: 'inventory' });
+        InventorySale.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
+        InventorySale.belongsTo(models.Customer, { foreignKey: 'customerId', as: 'customer' });
+        InventorySale.belongsTo(models.Outlet, { foreignKey: 'outletId', as: 'outlet' });
+    };
 
     return InventorySale;
 };
+
