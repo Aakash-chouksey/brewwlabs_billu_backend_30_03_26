@@ -1,9 +1,10 @@
 /**
- * Outlet Controller - Neon-Safe Version
- * Standardized for transaction-scoped model access
+ * OUTLET CONTROLLER - Neon-Safe Version
+ * Standardized for transaction-scoped model access and multitenant safety
  */
 
 const { v4: uuidv4 } = require('uuid');
+const { User } = require('../../control_plane_models');
 
 const outletController = {
     /**
@@ -11,27 +12,26 @@ const outletController = {
      */
     getOutlets: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
 
-            const result = await req.readWithTenant(async (context) => {
+            const cacheKey = 'outlets_list';
+            const result = await req.readWithCache(business_id, cacheKey, async (context) => {
                 const { transactionModels: models } = context;
                 const { Outlet } = models;
 
-                const outlets = await Outlet.findAll({
-                    where: { businessId },
+                return await Outlet.findAll({
+                    where: { businessId: business_id },
                     order: [['is_head_office', 'DESC'], ['created_at', 'DESC']]
                 });
-                
-                return outlets || [];
-            });
+            }, { ttl: 3600000 }); // 1 hour cache, as outlets change very rarely
 
-            // Handle safe response - ensure data is always an array
             const outlets = result.data || result || [];
             
             res.json({
                 success: true,
                 data: outlets,
-                count: outlets.length || 0
+                count: outlets.length,
+                message: "Outlets retrieved successfully"
             });
         } catch (error) {
             next(error);
@@ -43,16 +43,16 @@ const outletController = {
      */
     createOutlet: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
             const { name, address, phone, email, gstNumber } = req.body;
 
-            const outlet = await req.executeWithTenant(async (context) => {
+            const result = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { Outlet } = models;
 
-                return await Outlet.create({
+                const outlet = await Outlet.create({
                     id: uuidv4(),
-                    businessId,
+                    businessId: business_id,
                     name,
                     address,
                     phone,
@@ -61,11 +61,26 @@ const outletController = {
                     isActive: true,
                     isHeadOffice: false
                 }, { transaction });
+
+                // CRITICAL: Link this outlet to the user in the control plane (public schema)
+                // This ensures /api/tenant/status now returns hasOutlet: true
+                const userId = req.user?.id || req.auth?.id;
+                if (userId) {
+                    await User.update(
+                        { outletId: outlet.id },
+                        { where: { id: userId } }
+                    );
+                    console.log(`🔗 Linked user ${userId} to new outlet ${outlet.id}`);
+                }
+
+                return outlet;
             });
+
+            const outlet = result.data || result;
 
             res.status(201).json({
                 success: true,
-                message: 'Outlet created successfully',
+                message: 'Outlet created successfully and linked to your profile',
                 data: outlet
             });
         } catch (error) {
@@ -79,15 +94,15 @@ const outletController = {
     updateOutlet: async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { businessId } = req;
-            const { name, address, phone, email, gstNumber, isActive } = req.body;
+            const business_id = req.business_id || req.businessId;
+            const updateData = req.body;
 
-            const updated = await req.executeWithTenant(async (context) => {
+            const result = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { Outlet } = models;
 
                 const outlet = await Outlet.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     transaction
                 });
 
@@ -95,16 +110,14 @@ const outletController = {
                     throw new Error('Outlet not found');
                 }
 
-                const updateData = {};
-                if (name !== undefined) updateData.name = name;
-                if (address !== undefined) updateData.address = address;
-                if (phone !== undefined) updateData.phone = phone;
-                if (email !== undefined) updateData.email = email;
-                if (gstNumber !== undefined) updateData.gstNumber = gstNumber;
-                if (isActive !== undefined) updateData.isActive = isActive;
+                // Remove restricted fields
+                delete updateData.id;
+                delete updateData.businessId;
 
                 return await outlet.update(updateData, { transaction });
             });
+
+            const updated = result.data || result;
 
             res.json({
                 success: true,

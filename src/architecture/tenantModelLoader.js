@@ -18,30 +18,28 @@ Object.freeze(TENANT_MODELS);
 // Names must match the keys in TENANT_MODELS
 // 🚀 OPTIMIZED: 8 Granular levels to handle parallel sync foreign key dependencies correctly
 const MODEL_LOAD_ORDER = [
-    // Level 1: THE absolute root
-    ['Outlet'],
-
-    // Level 2: Root Configs & Metadata (depend on Outlet)
-    ['Setting', 'FeatureFlag', 'WebContent', 'OperationTiming', 'TenantAuditLog'],
+    // Level 1: THE absolute roots (No dependencies)
+    ['Outlet', 'SchemaVersion', 'Supplier', 'InventoryCategory', 'ExpenseType', 'FeatureFlag'],
     
-    // Level 3: Core Configs (depend mainly on Outlet/Metadata)
-    ['Category', 'Area', 'ProductType', 'InventoryCategory', 'Customer', 'Supplier', 
-     'ExpenseType', 'BillingConfig', 'Timing', 'MembershipPlan', 'PartnerType', 'Account'],
+    // Level 2: Second-tier roots (Depend on Outlet)
+    ['Category', 'Setting', 'WebContent', 'OperationTiming', 'TenantAuditLog', 'PartnerType'],
     
-    // Level 4: Base Entities (depend on Level 1-3)
+    // Level 3: Configs depending on Level 2 (e.g. ProductType depends on Category)
+    ['ProductType', 'Area', 'Customer', 'BillingConfig', 'Timing', 'MembershipPlan', 'Account'],
+    
+    // Level 4: Entities depending on Level 3
     ['Product', 'Table', 'PartnerMembership', 'PartnerWallet', 'RollTracking'],
     
-    // Level 5: Primary Transactional Roots (depend on Level 4)
-    // Inventory and InventoryItem MUST be created before Wastage/Purchase
+    // Level 5: Primary Transactional Roots
     ['Inventory', 'InventoryItem', 'Order', 'Recipe'],
     
-    // Level 6: Second-tier Transactional Nodes (depend on Level 5)
+    // Level 6: Second-tier Transactional Nodes
     ['Wastage', 'Purchase', 'Expense', 'Income', 'Payment', 'StockTransaction', 'CustomerTransaction'],
     
-    // Level 7: Detailed Line Items (depend on Level 5/6)
+    // Level 7: Detailed Line Items
     ['OrderItem', 'RecipeItem', 'PurchaseItem', 'InventoryTransaction'],
     
-    // Level 8: Ledgers & History (depend on Level 6/7)
+    // Level 8: Ledgers & History
     ['CustomerLedger', 'InventorySale', 'AccountTransaction']
 ];
 
@@ -88,7 +86,8 @@ const MODEL_FILES = {
     StockTransaction: 'stockTransactionModel',
     InventorySale: 'inventorySaleModel',
     Wastage: 'wastageModel',
-    OperationTiming: 'operationTimingModel'
+    OperationTiming: 'operationTimingModel',
+    SchemaVersion: 'schemaVersionModel'
 };
 
 // 🔒 GUARD: Control plane models (public schema ONLY) - DEPRECATED, use CONTROL_MODELS
@@ -133,122 +132,166 @@ class TenantModelLoader {
      * - Runs ONLY during onboarding, never during API requests
      */
     async initializeTenantSchema(sequelize, schemaName) {
-        const startTime = Date.now();
-        console.log(`[TenantModelLoader] 🚀 FAST SCHEMA INIT: ${schemaName}`);
+        const totalStartTime = Date.now();
+        console.log(`[TenantModelLoader] 🚀 SCHEMA-FIRST INITIALIZATION: ${schemaName}`);
 
-        // 1. Ensure models are initialized
+        // 1. Ensure models are initialized (Independent of schema)
+        console.time('⏱️ [Timing] ModelFactory.createModels');
         const { ModelFactory } = require('./modelFactory');
-        await ModelFactory.createModels(sequelize);
+        const allModels = await ModelFactory.createModels(sequelize);
+        console.timeEnd('⏱️ [Timing] ModelFactory.createModels');
 
-        // 2. Create schema and set timeout
+        // 2. CREATE SCHEMA
+        console.time('⏱️ [Timing] Create schema');
         await sequelize.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
-        await sequelize.query(`SET LOCAL statement_timeout = '3min'`);
-        console.log(`[TenantModelLoader] ✅ Schema created and timeout set: ${schemaName}`);
+        console.timeEnd('⏱️ [Timing] Create schema');
 
-        // 3. Get all tenant models - MUST wait for ModelFactory to create all models
-        const tenantModels = {};
-        const allModelNames = Object.keys(sequelize.models);
-        console.log(`[TenantModelLoader] 📊 Total models in sequelize: ${allModelNames.length}`);
-        
-        for (const modelName of allModelNames) {
-            const model = sequelize.models[modelName];
-            if (CONTROL_MODELS.includes(modelName)) {
-                continue; // Skip control models
-            }
-            // All non-control models are tenant models
-            tenantModels[modelName] = model.schema(schemaName);
-        }
-        
-        console.log(`[TenantModelLoader] 📊 Tenant models collected: ${Object.keys(tenantModels).length}`);
-        
-        // 🔒 VALIDATION: Ensure all models in MODEL_LOAD_ORDER exist in sequelize
-        const flatOrder = MODEL_LOAD_ORDER.flat();
-        const missingFromRegistry = flatOrder.filter(name => !tenantModels[name]);
-        if (missingFromRegistry.length > 0) {
-            console.error(`[TenantModelLoader] 🚨 CRITICAL: Models in MODEL_LOAD_ORDER missing from registry: ${missingFromRegistry.join(', ')}`);
-            throw new Error(`Incomplete Model Registry: ${missingFromRegistry.join(', ')}`);
-        }
-
-        // 4. PARALLEL TABLE CREATION
-        const createdTables = [];
-        const existingTables = [];
-        const failedTables = [];
-
-        // Get existing tables in ONE query
-        const existingResult = await sequelize.query(`
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = :schema AND table_type = 'BASE TABLE'
-        `, {
-            replacements: { schema: schemaName },
-            type: sequelize.QueryTypes.SELECT
+        // 3. VERIFY SCHEMA EXISTS
+        const schemaCheck = await sequelize.query(`
+            SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schema
+        `, { 
+            replacements: { schema: schemaName }, 
+            type: sequelize.QueryTypes.SELECT 
         });
-        const existingTableNames = new Set(existingResult.map(t => t.table_name));
 
-        // Process each level in parallel
+        if (!schemaCheck || schemaCheck.length === 0) {
+            throw new Error(`Schema ${schemaName} does not exist even after CREATE SCHEMA command.`);
+        }
+        console.log(`[TenantModelLoader] ✅ Schema verified: ${schemaName}`);
+
+        // 4. SYNC MODELS SEQUENTIALLY (Schema-First Approach)
+        // This ensures FK dependencies are created in the right order
+        console.time('⏱️ [Timing] Sync all tables');
+        console.log(`[TenantModelLoader] 🛠️  Syncing tables for schema: "${schemaName}"`);
+        
+        let syncedCount = 0;
         for (const level of MODEL_LOAD_ORDER) {
-            const modelsToSync = level
-                .map(name => tenantModels[name])
-                .filter(model => {
-                    if (!model) return false;
-                    const tableName = model.getTableName();
-                    return !existingTableNames.has(tableName);
-                });
-
-            if (modelsToSync.length === 0) continue;
-
-            // 🔥 PARALLEL SYNC
-            const syncResults = await Promise.all(
-                modelsToSync.map(async (model) => {
-                    const tableName = model.getTableName();
-                    try {
-                        await model.sync({ force: false, alter: false, schema: schemaName });
-                        return { success: true, tableName };
-                    } catch (error) {
-                        if (error.message?.includes('already exists')) {
-                            return { success: true, tableName, existing: true };
-                        }
-                        return { success: false, tableName, error: error.message };
-                    }
-                })
-            );
-            syncResults.forEach(result => {
-                if (result.success) {
-                    if (result.existing) existingTables.push(result.tableName);
-                    else createdTables.push(result.tableName);
-                } else {
-                    failedTables.push({ name: result.tableName, error: result.error });
+            console.log(`[TenantModelLoader]   - Level Sync Starting: ${level.join(', ')}`);
+            const syncPromises = level.map(async (modelName) => {
+                const model = allModels[modelName];
+                if (!model) {
+                    console.warn(`[TenantModelLoader]     [SKIP] Model ${modelName} not found in allModels registry`);
+                    return;
+                }
+                
+                try {
+                    // Use model.schema(schemaName) to bind to the tenant schema
+                    // force: false ensures we don't drop existing data if re-run
+                    const schemaBoundModel = model.schema(schemaName);
+                    await schemaBoundModel.sync({ force: false, alter: false });
+                    syncedCount++;
+                    // console.log(`[TenantModelLoader]     ✅ Synced: ${modelName}`);
+                } catch (error) {
+                    console.error(`[TenantModelLoader]     ❌ SYNC FAILED for ${modelName}:`, error.message);
+                    throw new Error(`Sync failed for ${modelName}: ${error.message}`);
                 }
             });
-
-            // 🚨 FAIL-FAST: Stop immediately if any table in this level failed
-            if (failedTables.length > 0) {
-                const failedInThisLevel = syncResults
-                    .filter(r => !r.success)
-                    .map(r => typeof r.tableName === 'string' ? r.tableName : (r.tableName.tableName || 'unknown'));
-                
-                if (failedInThisLevel.length > 0) {
-                    const error = new Error(`SCHEMA SYNC FAILED at level nodes: ${failedInThisLevel.join(', ')}. First error: ${failedTables[0].error}`);
-                    console.error(`[TenantModelLoader] 🚨 ${error.message}`);
-                    throw error;
-                }
-            }
-            
-            console.log(`[TenantModelLoader]   ✅ Level verified: ${level.join(', ')}`);
+            await Promise.all(syncPromises);
+            console.log(`[TenantModelLoader]   - Level Sync Complete`);
         }
         
-        const duration = Date.now() - startTime;
-        console.log(`[TenantModelLoader] ✅ SCHEMA INIT COMPLETE: ${schemaName} in ${duration}ms`);
-        console.log(`   - Created: ${createdTables.length} tables`);
-        console.log(`   - Existing: ${existingTables.length} tables`);
+        // 4b. Sync any remaining TENANT_MODELS that were not in MODEL_LOAD_ORDER
+        const syncedModelNames = MODEL_LOAD_ORDER.flat();
+        const remainingModels = TENANT_MODELS.filter(m => !syncedModelNames.includes(m));
+        
+        if (remainingModels.length > 0) {
+            console.log(`[TenantModelLoader]   - Syncing Remaining models: ${remainingModels.join(', ')}`);
+            const remainingPromises = remainingModels.map(async (modelName) => {
+                const model = allModels[modelName];
+                if (!model) return;
+                try {
+                    await model.schema(schemaName).sync({ force: false, alter: false });
+                    syncedCount++;
+                } catch (error) {
+                    console.warn(`[TenantModelLoader]     ⚠️ SYNC FAILED for remaining model ${modelName} (might be expected dependency):`, error.message);
+                }
+            });
+            await Promise.all(remainingPromises);
+        }
+        
+        console.timeEnd('⏱️ [Timing] Sync all tables');
+        console.log(`[TenantModelLoader] ✅ Total models synced: ${syncedCount}`);
+
+        // 5. Initialize schema_versions table tracking
+        console.time('⏱️ [Timing] Initialize schema_versions');
+        
+        const latestVersion = 9;
+        const SchemaVersion = allModels.SchemaVersion;
+        
+        if (SchemaVersion) {
+            console.log(`[TenantModelLoader] 🔢 Initializing version tracking at v${latestVersion} for ${schemaName}`);
+            try {
+                const schemaBoundSchemaVersion = SchemaVersion.schema(schemaName);
+                await schemaBoundSchemaVersion.bulkCreate([
+                    {
+                        version: 0,
+                        migrationName: 'init',
+                        description: 'Initial version',
+                        appliedBy: 'system',
+                        appliedAt: new Date()
+                    },
+                    {
+                        version: latestVersion,
+                        migrationName: 'baseline',
+                        description: 'Baseline schema-first init',
+                        appliedBy: 'system',
+                        appliedAt: new Date()
+                    }
+                ], { 
+                    ignoreDuplicates: true,
+                    returning: false
+                });
+            } catch (error) {
+                console.warn(`[TenantModelLoader] ⚠️ Failed to insert schema versions:`, error.message);
+                // Fallback to raw SQL if model fails (just in case of model issues)
+                try {
+                    await sequelize.query(`
+                        INSERT INTO "${schemaName}"."schema_versions" 
+                        (id, version, migration_name, description, applied_by, applied_at, created_at, updated_at) 
+                        VALUES 
+                            (gen_random_uuid(), 0, 'init', 'Initial version', 'system', NOW(), NOW(), NOW()),
+                            (gen_random_uuid(), :latestVersion, 'baseline', 'Baseline schema-first init', 'system', NOW(), NOW(), NOW())
+                        ON CONFLICT (version) DO NOTHING
+                    `, { replacements: { latestVersion } });
+                } catch (rawError) {
+                    console.error(`[TenantModelLoader] 🚨 CRITICAL: Raw SQL version init failed:`, rawError.message);
+                }
+            }
+        } else {
+            console.warn('[TenantModelLoader] ⚠️ SchemaVersion model not found. Version tracking not initialized.');
+        }
+        
+        console.timeEnd('⏱️ [Timing] Initialize schema_versions');
+
+        const duration = Date.now() - totalStartTime;
+        console.log(`[TenantModelLoader] ✅ SCHEMA-FIRST INIT COMPLETE: ${schemaName} in ${duration}ms`);
+
+        // Get list of tables that were created
+        const tablesResult = await sequelize.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = :schema
+            AND table_type = 'BASE TABLE'
+        `, {
+            replacements: { schema: schemaName },
+            type: Sequelize.QueryTypes.SELECT
+        });
+        
+        const createdTables = (tablesResult || []).map(t => t.table_name);
+
+        // Bind models to the new schema for return
+        const models = {};
+        for (const modelName of TENANT_MODELS) {
+            if (allModels[modelName]) {
+                models[modelName] = allModels[modelName].schema(schemaName);
+            }
+        }
 
         return {
             schemaName,
-            models: tenantModels,
-            created: createdTables,
-            existing: existingTables,
-            failed: failedTables,
-            duration
+            models,
+            duration,
+            created: createdTables
         };
     }
 
@@ -314,91 +357,6 @@ class TenantModelLoader {
                 }
             }
         }
-    }
-
-/**
-     * Sync models to create tables in tenant schema
-     * CRITICAL: NO search_path manipulation - uses explicit schema binding only
-     */
-    async syncModels(models, sequelize, schemaName) {
-        const results = {
-            created: [],
-            existing: [],
-            failed: []
-        };
-
-        // Get existing tables in schema - MANUAL QUERY for accuracy
-        const tables = await sequelize.query(`
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = :schema
-            AND table_type = 'BASE TABLE'
-        `, {
-            replacements: { schema: schemaName },
-            type: sequelize.QueryTypes.SELECT
-        });
-        
-        const existingTables = tables.map(t => t.table_name);
-        console.log(`[TenantModelLoader] 📊 [SYNC] Found ${existingTables.length} existing tables in '${schemaName}'`);
-        
-        const startTime = Date.now();
-
-        // Process models in order
-        for (const level of MODEL_LOAD_ORDER) {
-            for (const modelName of level) {
-                const model = models[modelName];
-                if (!model) continue;
-
-                const rawTableName = model.getTableName();
-                const tableName = typeof rawTableName === 'string' ? rawTableName : rawTableName.tableName;
-                
-                try {
-                    if (existingTables.includes(tableName)) {
-                        console.log(`[TenantModelLoader]   ⏭️  Table exists: ${tableName}`);
-                        results.existing.push(tableName);
-                        continue;
-                    }
-
-                    // CRITICAL: Use model.sync with explicit schema - NO search_path
-                    await model.sync({ 
-                        force: false, 
-                        alter: false,
-                        schema: schemaName
-                    });
-                    
-                    console.log(`[TenantModelLoader]   ✅ Created: ${tableName}`);
-                    results.created.push(tableName);
-                    
-                    // Verify table was created - MANUAL QUERY
-                    const vTables = await sequelize.query(`
-                        SELECT table_name FROM information_schema.tables 
-                        WHERE table_schema = :schema AND table_name = :table
-                    `, {
-                        replacements: { schema: schemaName, table: tableName },
-                        type: sequelize.QueryTypes.SELECT
-                    });
-                    
-                    if (!vTables.length) {
-                        console.warn(`[TenantModelLoader]   ⚠️  Table creation unverified: ${tableName}`);
-                    }
-
-                } catch (error) {
-                    // Check if error is "table already exists"
-                    if (error.message?.includes('already exists') || 
-                        error.original?.message?.includes('already exists')) {
-                        console.log(`[TenantModelLoader]   ⏭️  Table exists (from error): ${tableName}`);
-                        results.existing.push(tableName);
-                    } else {
-                        console.error(`[TenantModelLoader]   ❌ Failed: ${tableName}:`, error.message);
-                        results.failed.push({ name: tableName, error: error.message });
-                    }
-                }
-            }
-        }
-
-        const duration = Date.now() - startTime;
-        console.log(`[TenantModelLoader] ✅ [SYNC COMPLETE] ${schemaName} in ${duration}ms`);
-        return results;
     }
 
     /**
@@ -512,41 +470,6 @@ class TenantModelLoader {
         return report;
     }
 
-    /**
-     * REPAIR SCHEMA: Force-sync with 'alter: true'
-     * 🛡️ Use specifically for onboarding recovery or maintenance
-     */
-    async repairTenantSchema(sequelize, schemaName) {
-        console.log(`[TenantModelLoader] 🛠️ REPAIRING SCHEMA: ${schemaName}`);
-        
-        // Ensure models are bound to this schema
-        const tenantModels = await this.getTenantModels(sequelize, schemaName);
-        
-        // Sync with 'alter: true' for ALL tenant models
-        // Using the MODEL_LOAD_ORDER to respect foreign keys
-        for (const level of MODEL_LOAD_ORDER) {
-            await Promise.all(level.map(async (modelName) => {
-                const model = tenantModels[modelName];
-                if (!model) return;
-                
-                try {
-                    await model.sync({ force: false, alter: true, schema: schemaName });
-                } catch (error) {
-                    console.error(`[TenantModelLoader] ❌ Repair failed for ${modelName}:`, error.message);
-                }
-            }));
-        }
-
-        // Final verification after repair
-        return await this.verifySchemaIntegrity(sequelize, schemaName);
-    }
-
-    /**
-     * DEPRECATED: Use verifySchemaIntegrity for better accuracy
-     */
-    async verifyTablesExist(sequelize, schemaName, requiredTables) {
-        return this.verifySchemaIntegrity(sequelize, schemaName);
-    }
 }
 
 // Export singleton
@@ -554,5 +477,8 @@ const tenantModelLoader = new TenantModelLoader();
 
 // 🔒 FREEZE: Lock the model cache to prevent modification
 Object.freeze(tenantModelLoader.modelCache);
+
+// Attach metadata for migrations
+tenantModelLoader.MODEL_LOAD_ORDER = MODEL_LOAD_ORDER;
 
 module.exports = tenantModelLoader;

@@ -1,89 +1,71 @@
 const { DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize) => {
   const Business = sequelize.define('Business', {
     id: {
+      field: 'id',
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
-    name: { 
-      type: DataTypes.STRING, 
-      allowNull: false,
-      validate: { notEmpty: true }
+    name: {
+      field: 'name',
+      type: DataTypes.STRING,
+      allowNull: false
     },
-    email: { 
-      type: DataTypes.STRING, 
-      allowNull: false, 
-      unique: true,
-      validate: { isEmail: true, notEmpty: true }
+    email: {
+      field: 'email',
+      type: DataTypes.STRING,
+      allowNull: false
     },
-    phone: { 
-      type: DataTypes.STRING 
+    phone: {
+      field: 'phone',
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    address: {
+      field: 'address',
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     gstNumber: {
-            type: DataTypes.STRING,
       field: 'gst_number',
+      type: DataTypes.STRING,
+      allowNull: true,
       comment: 'GST Number for tax compliance'
     },
-    address: { 
-      type: DataTypes.TEXT 
-    },
     type: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'SOLO',
-      comment: 'SOLO = single cafe, FRANCHISE = multiple outlets'
+      field: 'type',
+      type: DataTypes.STRING(50),
+      defaultValue: 'SOLO'
+    },
+    status: {
+      field: 'status',
+      type: DataTypes.STRING(20),
+      defaultValue: 'PENDING',
+      set(value) {
+        // ENFORCE: Always store status as UPPERCASE
+        this.setDataValue('status', value ? value.toUpperCase() : 'PENDING');
+      }
     },
     ownerId: {
-            type: DataTypes.UUID,
       field: 'owner_id',
-      comment: 'Primary owner of the business'
+      type: DataTypes.UUID,
+      allowNull: true
     },
     isActive: {
-        field: 'is_active',
-            type: DataTypes.BOOLEAN, 
-      allowNull: false,
-      defaultValue: true,
-      field: 'is_active'
-    },
-    status: { 
-      type: DataTypes.STRING, 
-      allowNull: false,
-      defaultValue: 'active' 
-    },
-    subscription_plan: {
-      type: DataTypes.STRING,
-      defaultValue: 'free'
-    },
-    businessId: {
-            type: DataTypes.UUID,
-      allowNull: true,
-      field: 'business_id',
-      comment: 'Self-reference for business hierarchy'
-    },
-    settings: { 
-      type: DataTypes.JSON, 
-      defaultValue: {},
-      field: 'settings'
+      field: 'is_active',
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
     }
   }, {
     tableName: 'businesses',
     timestamps: true,
     underscored: true,
+    freezeTableName: true,
     createdAt: 'created_at',
-    updatedAt: 'updated_at',
-    indexes: [
-      { fields: ['email'], unique: true },
-      { fields: ['status'] },
-      { fields: ['type'] },
-      { fields: ['owner_id'] }
-    ]
+    updatedAt: 'updated_at'
   });
-
-  Business.associate = function(models) {
-    Business.hasOne(models.TenantConnection, { foreignKey: 'business_id', as: 'connection' });
-  };
 
   return Business;
 };

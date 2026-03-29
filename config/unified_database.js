@@ -1,6 +1,6 @@
 const { Sequelize } = require('sequelize');
 const cls = require('cls-hooked');
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 // Initialize CLS namespace for automatic transaction passing
 const namespace = cls.createNamespace('neon-safe-namespace');
@@ -44,14 +44,14 @@ const isCloudDb = processedUrl.includes('neon.tech') ||
                   processedUrl.includes('rds') ||
                   processedUrl.includes('amazon');
 
-if (isCloudDb) {
-  console.log('☁️  Cloud database detected - enabling SSL');
-  // Add sslmode=require for cloud databases if not present
-  if (!processedUrl.includes('sslmode=')) {
-    processedUrl += processedUrl.includes('?') ? '&sslmode=require' : '?sslmode=require';
+// Track if we've already logged connection info (prevent duplicate logs)
+if (!global.__dbConnectionLogged) {
+  if (isCloudDb) {
+    console.log('☁️  Cloud database detected - enabling SSL');
+  } else {
+    console.log('💻 Local database detected - SSL disabled');
   }
-} else {
-  console.log('💻 Local database detected - SSL disabled');
+  global.__dbConnectionLogged = true;
 }
 
 // SSL config only for cloud databases
@@ -59,6 +59,11 @@ const sslConfig = isCloudDb ? {
   require: true,
   rejectUnauthorized: false
 } : false;
+
+// Add sslmode for cloud databases if not present
+if (isCloudDb && !processedUrl.includes('sslmode=')) {
+  processedUrl += processedUrl.includes('?') ? '&sslmode=require' : '?sslmode=require';
+}
 
 const globalSequelize = new Sequelize(processedUrl, {
   dialect: 'postgres',
@@ -342,7 +347,13 @@ const connectUnifiedDB = async (retries = 3, delay = 3000) => {
         delay = Math.min(delay * 1.5, 10000);
       } else {
         console.error('❌ Max retries reached. Unified database unavailable.');
-        process.exit(1);
+        // Don't exit in development - allow server to start for testing
+        if (process.env.NODE_ENV === 'production') {
+          process.exit(1);
+        } else {
+          console.warn('⚠️  Running without database connection - some features will be unavailable');
+          return;
+        }
       }
     }
   }

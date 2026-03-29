@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Inventory = sequelize.define('Inventory', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -28,9 +29,9 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         quantity: {
+            field: 'quantity',
             type: DataTypes.DECIMAL(10, 3),
-            defaultValue: 0,
-            field: 'quantity'
+            defaultValue: 0
         },
         unitCost: {
             field: 'unit_cost',
@@ -38,6 +39,7 @@ module.exports = (sequelize) => {
             defaultValue: 0
         },
         location: {
+            field: 'location',
             type: DataTypes.STRING,
             allowNull: true
         },
@@ -47,8 +49,8 @@ module.exports = (sequelize) => {
             defaultValue: 10
         },
         lastRestockedAt: {
-            type: DataTypes.DATE,
-            field: 'last_restocked_at'
+            field: 'last_restocked_at',
+            type: DataTypes.DATE
         }
     }, {
         tableName: 'inventory',
@@ -71,9 +73,9 @@ module.exports = (sequelize) => {
 
     Inventory.associate = function(models) {
         // REMOVED cross-schema association to Business
-        Inventory.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
-        Inventory.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
-        Inventory.hasMany(models.InventoryTransaction, { foreignKey: 'inventory_id', as: 'transactions' });
+        Inventory.belongsTo(models.Outlet, { foreignKey: 'outletId', as: 'outlet' });
+        Inventory.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
+        Inventory.hasMany(models.InventoryTransaction, { foreignKey: 'inventoryId', as: 'transactions' });
     };
 
     return Inventory;

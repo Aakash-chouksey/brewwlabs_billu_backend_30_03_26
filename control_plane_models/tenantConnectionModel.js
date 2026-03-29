@@ -39,8 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       field: 'encrypted_password'
     },
     encryptionVersion: {
-        field: 'encryption_version',
-            type: DataTypes.STRING(10),
+      type: DataTypes.STRING(10),
       defaultValue: 'v2',
       field: 'encryption_version'
     },

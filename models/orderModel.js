@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Order = sequelize.define('Order', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -32,34 +33,45 @@ module.exports = (sequelize) => {
             type: DataTypes.UUID,
             allowNull: true
         },
+        customerId: {
+            field: 'customer_id',
+            type: DataTypes.UUID,
+            allowNull: true
+        },
+        staffId: {
+            field: 'staff_id',
+            type: DataTypes.UUID,
+            allowNull: true
+        },
         status: {
+            field: 'status',
             type: DataTypes.STRING(50),
             allowNull: false,
             defaultValue: 'CREATED'
         },
         billingSubtotal: {
+            field: 'billing_subtotal',
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
-            defaultValue: 0.00,
-            field: 'billing_subtotal'
+            defaultValue: 0.00
         },
         billingTax: {
+            field: 'billing_tax',
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
-            defaultValue: 0.00,
-            field: 'billing_tax'
+            defaultValue: 0.00
         },
         billingDiscount: {
+            field: 'billing_discount',
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
-            defaultValue: 0.00,
-            field: 'billing_discount'
+            defaultValue: 0.00
         },
         billingTotal: {
+            field: 'billing_total',
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
-            defaultValue: 0.00,
-            field: 'billing_total'
+            defaultValue: 0.00
         },
         paymentMethod: {
             field: 'payment_method',
@@ -69,6 +81,17 @@ module.exports = (sequelize) => {
         paymentStatus: {
             field: 'payment_status',
             type: DataTypes.STRING(50),
+            allowNull: true
+        },
+        type: {
+            field: 'type',
+            type: DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: 'DINE_IN'
+        },
+        notes: {
+            field: 'notes',
+            type: DataTypes.TEXT,
             allowNull: true
         },
         createdAt: {
@@ -94,8 +117,8 @@ module.exports = (sequelize) => {
     });
 
     Order.associate = function(models) {
-        Order.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
-        Order.hasMany(models.OrderItem, { foreignKey: 'order_id', as: 'items' });
+        Order.belongsTo(models.Outlet, { foreignKey: 'outletId', as: 'outlet' });
+        Order.hasMany(models.OrderItem, { foreignKey: 'orderId', as: 'items' });
         Order.hasMany(models.Payment, { foreignKey: 'internalOrderId', as: 'payments' });
         Order.belongsTo(models.Table, { foreignKey: 'tableId', as: 'table' });
         Order.belongsTo(models.Customer, { foreignKey: 'customerId', as: 'customer' });

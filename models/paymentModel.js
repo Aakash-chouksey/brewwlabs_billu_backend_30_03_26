@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Payment = sequelize.define('Payment', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -10,33 +11,50 @@ module.exports = (sequelize) => {
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
             field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'outlet_id'
+            allowNull: true
         },
-        
         paymentId: {
-        
             field: 'payment_id',
-            type: DataTypes.STRING },
+            type: DataTypes.STRING 
+        },
         orderId: {
             field: 'order_id',
-            type: DataTypes.STRING }, // Razorpay Order ID
+            type: DataTypes.STRING 
+        }, // Razorpay Order ID
         internalOrderId: {
             field: 'internal_order_id',
-            type: DataTypes.UUID, allowNull: true },
-        
-        amount: { type: DataTypes.DECIMAL(10, 2) },
-        currency: { type: DataTypes.STRING },
-        status: { type: DataTypes.STRING },
-        method: { type: DataTypes.STRING },
-        email: { type: DataTypes.STRING },
-        contact: { type: DataTypes.STRING }
+            type: DataTypes.UUID, 
+            allowNull: true 
+        },
+        amount: { 
+            field: 'amount',
+            type: DataTypes.DECIMAL(10, 2) 
+        },
+        currency: { 
+            field: 'currency',
+            type: DataTypes.STRING 
+        },
+        status: { 
+            field: 'status',
+            type: DataTypes.STRING 
+        },
+        method: { 
+            field: 'method',
+            type: DataTypes.STRING 
+        },
+        email: { 
+            field: 'email',
+            type: DataTypes.STRING 
+        },
+        contact: { 
+            field: 'contact',
+            type: DataTypes.STRING 
+        }
     }, {
         tableName: 'payments',
         timestamps: true,

@@ -1,0 +1,4805 @@
+{
+  "AuditLog": {
+    "hash": "210eb6adca20de5b",
+    "attributes": {
+      "actionDescription": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "action_description",
+        "references": null
+      },
+      "actionType": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "action_type",
+        "references": null
+      },
+      "brandId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "brand_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "created_at",
+        "references": null
+      },
+      "entityId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "entity_id",
+        "references": null
+      },
+      "entityType": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "entity_type",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "ipAddress": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "ip_address",
+        "references": null
+      },
+      "metadata": {
+        "type": "JSONB",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "metadata",
+        "references": null
+      },
+      "newValues": {
+        "type": "JSONB",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "new_values",
+        "references": null
+      },
+      "oldValues": {
+        "type": "JSONB",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "old_values",
+        "references": null
+      },
+      "outcome": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "outcome",
+        "references": null
+      },
+      "requestMethod": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "request_method",
+        "references": null
+      },
+      "requestPath": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "request_path",
+        "references": null
+      },
+      "severityLevel": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "severity_level",
+        "references": null
+      },
+      "tenantId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "tenant_id",
+        "references": null
+      },
+      "userAgent": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "user_agent",
+        "references": null
+      },
+      "userEmail": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "user_email",
+        "references": null
+      },
+      "userId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "user_id",
+        "references": null
+      },
+      "userRole": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "user_role",
+        "references": null
+      }
+    },
+    "tableName": "audit_logs"
+  },
+  "Business": {
+    "hash": "9d9e20fffea34620",
+    "attributes": {
+      "address": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "address",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "email",
+        "references": null
+      },
+      "gstNumber": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "gst_number",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "ownerId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "owner_id",
+        "references": null
+      },
+      "phone": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "phone",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "type": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "type",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "businesses"
+  },
+  "User": {
+    "hash": "9bc58b38c6cb5197",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "business_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": "businesses.id"
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "email",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "isVerified": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_verified",
+        "references": null
+      },
+      "lastLogin": {
+        "type": "DATE",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "last_login",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outletIds": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "outlet_ids",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "panelType": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "panel_type",
+        "references": null
+      },
+      "password": {
+        "type": "TEXT",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "password_hash",
+        "references": null
+      },
+      "phone": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "phone",
+        "references": null
+      },
+      "role": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "role",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "tokenVersion": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "token_version",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "users"
+  },
+  "TenantRegistry": {
+    "hash": "cc18fc424dc3e89d",
+    "attributes": {
+      "activatedAt": {
+        "type": "DATE",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "activated_at",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "business_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": "businesses.id"
+      },
+      "createdAt": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "lastError": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "last_error",
+        "references": null
+      },
+      "retryCount": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "retry_count",
+        "references": null
+      },
+      "schemaName": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "schema_name",
+        "unique": true,
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "tenant_registry"
+  },
+  "ClusterMetadata": {
+    "hash": "4c2be7b88ec10516",
+    "attributes": {
+      "cluster_name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "cluster_name",
+        "unique": true,
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "current_tenants": {
+        "type": "INTEGER",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "current_tenants",
+        "references": null
+      },
+      "db_host": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "db_host",
+        "references": null
+      },
+      "db_port": {
+        "type": "INTEGER",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "db_port",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "max_tenants": {
+        "type": "INTEGER",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "max_tenants",
+        "references": null
+      },
+      "region": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "region",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "cluster_metadata"
+  },
+  "Plan": {
+    "hash": "a28e11596ae89427",
+    "attributes": {
+      "billingCycle": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "billing_cycle",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "features": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "features",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "isPublic": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_public",
+        "references": null
+      },
+      "limits": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "limits",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "price": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "price",
+        "references": null
+      },
+      "slug": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "slug",
+        "unique": true,
+        "references": null
+      },
+      "sortOrder": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "sort_order",
+        "references": null
+      },
+      "trialDays": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "trial_days",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "plans"
+  },
+  "Subscription": {
+    "hash": "816ea89c1ec198ce",
+    "attributes": {
+      "billingCycle": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "billing_cycle",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "currentPeriodEnd": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "current_period_end",
+        "references": null
+      },
+      "currentPeriodStart": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "current_period_start",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "planId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "plan_id",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "subscriptions"
+  },
+  "SuperAdminUser": {
+    "hash": "f2f5810e07b3a587",
+    "attributes": {
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "email",
+        "unique": true,
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "passwordHash": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "password_hash",
+        "references": null
+      },
+      "role": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "role",
+        "references": null
+      },
+      "tokenVersion": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "token_version",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "super_admin_users"
+  },
+  "TenantConnection": {
+    "hash": "35db653eb9b3005d",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "unique": true,
+        "references": "businesses.id"
+      },
+      "business_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": "businesses.id"
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "dbHost": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "db_host",
+        "references": null
+      },
+      "dbName": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "db_name",
+        "references": null
+      },
+      "dbPort": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "db_port",
+        "references": null
+      },
+      "dbRegion": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "db_region",
+        "references": null
+      },
+      "dbUser": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "db_user",
+        "references": null
+      },
+      "encryptedPassword": {
+        "type": "TEXT",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "encrypted_password",
+        "references": null
+      },
+      "encryptionVersion": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "encryption_version",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "poolMaxConnections": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "pool_max_connections",
+        "references": null
+      },
+      "poolMinConnections": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "pool_min_connections",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "tenant_connections"
+  },
+  "TenantMigrationLog": {
+    "hash": "8d5b637d3ca20536",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "error_message": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "error_message",
+        "references": null
+      },
+      "executed_at": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "executed_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "migration_version": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "migration_version",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "tenant_migration_log"
+  },
+  "SystemMetrics": {
+    "hash": "e5c182b018c4c44d",
+    "attributes": {
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "lastUpdated": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "last_updated",
+        "references": null
+      },
+      "metricName": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "metric_name",
+        "unique": true,
+        "references": null
+      },
+      "metricValue": {
+        "type": "JSONB",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "metric_value",
+        "references": null
+      }
+    },
+    "tableName": "system_metrics"
+  },
+  "Account": {
+    "hash": "2910aba66e14d7c5",
+    "attributes": {
+      "balance": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "balance",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "type": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "type",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "accounts"
+  },
+  "Area": {
+    "hash": "0edbeb192306c0a6",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "capacity": {
+        "type": "INTEGER",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "capacity",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "layout": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "layout",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "status": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "table_areas"
+  },
+  "BillingConfig": {
+    "hash": "79b05e9c5ee5fe4f",
+    "attributes": {
+      "businessAddress": {
+        "type": "TEXT",
+        "defaultValue": true,
+        "field": "business_address",
+        "references": null
+      },
+      "businessEmail": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "business_email",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "unique": true,
+        "references": null
+      },
+      "businessName": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "business_name",
+        "references": null
+      },
+      "businessPhone": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "business_phone",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "footerText": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "footer_text",
+        "references": null
+      },
+      "gstNumber": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "gst_number",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "logoUrl": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "logo_url",
+        "references": null
+      },
+      "paperSize": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "paper_size",
+        "references": null
+      },
+      "serviceChargeRate": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "service_charge_rate",
+        "references": null
+      },
+      "showLogo": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "show_logo",
+        "references": null
+      },
+      "taxInclusive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "tax_inclusive",
+        "references": null
+      },
+      "taxRate": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "tax_rate",
+        "references": null
+      },
+      "themeColor": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "theme_color",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "billing_configs"
+  },
+  "Category": {
+    "hash": "31033a619ddf72b9",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "color": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "color",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "image": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "image",
+        "references": null
+      },
+      "isEnabled": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_enabled",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "sortOrder": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "sort_order",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "categories"
+  },
+  "Customer": {
+    "hash": "9d25b58d764f03f4",
+    "attributes": {
+      "address": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "address",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "email",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "lastVisitAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "last_visit_at",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "phone": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "phone",
+        "references": null
+      },
+      "totalDue": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "total_due",
+        "references": null
+      },
+      "totalPaid": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "total_paid",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      },
+      "visitCount": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "visit_count",
+        "references": null
+      }
+    },
+    "tableName": "customers"
+  },
+  "CustomerLedger": {
+    "hash": "4a3af99c5a2751b7",
+    "attributes": {
+      "amount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "amount",
+        "references": null
+      },
+      "balanceAfter": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "balance_after",
+        "references": null
+      },
+      "balanceBefore": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "balance_before",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "customerId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "customer_id",
+        "references": "customers.id"
+      },
+      "customer_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "customer_id",
+        "references": "customers.id"
+      },
+      "description": {
+        "type": "TEXT",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "entryDate": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "entry_date",
+        "references": null
+      },
+      "entryType": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "entry_type",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "orderId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "order_id",
+        "references": null
+      },
+      "order_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "order_id",
+        "references": "orders.id"
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "transactionId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "transaction_id",
+        "references": null
+      },
+      "transaction_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "transaction_id",
+        "references": "customer_transactions.id"
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "customer_ledger"
+  },
+  "CustomerTransaction": {
+    "hash": "96cf3ffff04bcb7e",
+    "attributes": {
+      "amount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "amount",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdBy": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "created_by",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "customerId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "customer_id",
+        "references": "customers.id"
+      },
+      "customer_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "customer_id",
+        "references": "customers.id"
+      },
+      "description": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "orderId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "order_id",
+        "references": null
+      },
+      "order_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "order_id",
+        "references": "orders.id"
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "paymentMethod": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "payment_method",
+        "references": null
+      },
+      "transactionDate": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "transaction_date",
+        "references": null
+      },
+      "transactionType": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "transaction_type",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "customer_transactions"
+  },
+  "Expense": {
+    "hash": "afa3ad8c795b3b95",
+    "attributes": {
+      "amount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "amount",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "date": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "date",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "expenseTypeId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "expense_type_id",
+        "references": "expense_types.id"
+      },
+      "expense_type_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "expense_type_id",
+        "references": "expense_types.id"
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "paymentMethod": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "payment_method",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "expenses"
+  },
+  "ExpenseType": {
+    "hash": "f8d37f00b25ad26b",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isEnabled": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_enabled",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "expense_types"
+  },
+  "FeatureFlag": {
+    "hash": "2bc0a571a7317800",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isEnabled": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_enabled",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "unique": true,
+        "references": null
+      },
+      "rolloutPercentage": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "rollout_percentage",
+        "references": null
+      },
+      "targetPlan": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "target_plan",
+        "references": null
+      },
+      "targetUsers": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "target_users",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "feature_flags"
+  },
+  "Income": {
+    "hash": "502e06efbee4a6a9",
+    "attributes": {
+      "amount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "amount",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "date": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "date",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "paymentMethod": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "payment_method",
+        "references": null
+      },
+      "source": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "source",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "incomes"
+  },
+  "Inventory": {
+    "hash": "8c2d9421eb2bdfc8",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "itemName": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "item_name",
+        "references": null
+      },
+      "lastRestockedAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "last_restocked_at",
+        "references": null
+      },
+      "location": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "location",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "productId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "quantity": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "quantity",
+        "references": null
+      },
+      "reorderLevel": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "reorder_level",
+        "references": null
+      },
+      "unitCost": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "unit_cost",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "inventory"
+  },
+  "InventoryCategory": {
+    "hash": "de43b21e0f7d2d61",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "inventory_categories"
+  },
+  "InventoryItem": {
+    "hash": "a70fa55a0beba4dc",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "costPerUnit": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "cost_per_unit",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "currentStock": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "current_stock",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "inventoryCategoryId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "inventory_category_id",
+        "references": "inventory_categories.id"
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "lastRestockedAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "last_restocked_at",
+        "references": null
+      },
+      "minimumStock": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "minimum_stock",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "sku": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "sku",
+        "references": null
+      },
+      "supplierId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "supplier_id",
+        "references": "suppliers.id"
+      },
+      "supplierName": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "supplier_name",
+        "references": null
+      },
+      "unit": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "unit",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "inventory_items"
+  },
+  "InventorySale": {
+    "hash": "c7c45b6cc058e31a",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "customerId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "customer_id",
+        "references": "customers.id"
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "inventoryId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "inventory_item_id",
+        "references": "inventory.id"
+      },
+      "notes": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "productId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "quantity": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "quantity",
+        "references": null
+      },
+      "soldBy": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "recorded_by",
+        "references": null
+      },
+      "totalAmount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "total_amount",
+        "references": null
+      },
+      "unitPrice": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "sale_price",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "inventory_sales"
+  },
+  "InventoryTransaction": {
+    "hash": "7f20f8d14135f01b",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "costPerUnit": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "cost_per_unit",
+        "references": null
+      },
+      "createdBy": {
+        "type": "UUID",
+        "defaultValue": false,
+        "field": "created_by",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "inventoryId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "inventory_id",
+        "references": "inventory.id"
+      },
+      "inventoryItemId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "inventory_item_id",
+        "references": "inventory_items.id"
+      },
+      "invoiceNumber": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "invoice_number",
+        "references": null
+      },
+      "newQuantity": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "new_quantity",
+        "references": null
+      },
+      "newStock": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "new_stock",
+        "references": null
+      },
+      "notes": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "performedBy": {
+        "type": "UUID",
+        "defaultValue": false,
+        "field": "performed_by",
+        "references": null
+      },
+      "previousQuantity": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "previous_quantity",
+        "references": null
+      },
+      "previousStock": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "previous_stock",
+        "references": null
+      },
+      "productId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "quantity": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "quantity",
+        "references": null
+      },
+      "reason": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "reason",
+        "references": null
+      },
+      "reference": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "reference",
+        "references": null
+      },
+      "supplierId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "supplier_id",
+        "references": "suppliers.id"
+      },
+      "totalCost": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "total_cost",
+        "references": null
+      },
+      "transactionType": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "transaction_type",
+        "references": null
+      },
+      "type": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "type",
+        "references": null
+      },
+      "unitCost": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "unit_cost",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "inventory_transactions"
+  },
+  "MembershipPlan": {
+    "hash": "5dee2861ad2db432",
+    "attributes": {
+      "apiRateLimit": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "api_rate_limit",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "durationDays": {
+        "type": "INTEGER",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "duration_days",
+        "references": null
+      },
+      "features": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "features",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "maxInvoices": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "max_invoices",
+        "references": null
+      },
+      "maxProducts": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "max_products",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletsLimit": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "outlets_limit",
+        "references": null
+      },
+      "price": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "price",
+        "references": null
+      },
+      "staffLimit": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "staff_limit",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "membership_plans"
+  },
+  "OperationTiming": {
+    "hash": "45a1f9d61000d4cc",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "closeTime": {
+        "type": "TIME",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "close_time",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "day": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "day",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isOpen": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_open",
+        "references": null
+      },
+      "openTime": {
+        "type": "TIME",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "open_time",
+        "references": null
+      },
+      "specialHours": {
+        "type": "JSON",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "special_hours",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "operation_timings"
+  },
+  "Order": {
+    "hash": "fad98fdad2cd93ab",
+    "attributes": {
+      "billingDiscount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "billing_discount",
+        "references": null
+      },
+      "billingSubtotal": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "billing_subtotal",
+        "references": null
+      },
+      "billingTax": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "billing_tax",
+        "references": null
+      },
+      "billingTotal": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "billing_total",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "customerDetails": {
+        "type": "JSONB",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "customer_details",
+        "references": null
+      },
+      "customerId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "customer_id",
+        "references": "customers.id"
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "notes": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "orderNumber": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "order_number",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "paymentMethod": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "payment_method",
+        "references": null
+      },
+      "paymentStatus": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "payment_status",
+        "references": null
+      },
+      "staffId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "staff_id",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "tableId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "table_id",
+        "references": "tables.id"
+      },
+      "type": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "type",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "orders"
+  },
+  "OrderItem": {
+    "hash": "86ec878ab01ad5ef",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "notes": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "orderId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "order_id",
+        "references": "orders.id"
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "price": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "price",
+        "references": null
+      },
+      "productId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "product_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "quantity": {
+        "type": "INTEGER",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "quantity",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "subtotal": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "subtotal",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "order_items"
+  },
+  "Outlet": {
+    "hash": "25464a1940f429c4",
+    "attributes": {
+      "address": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "address",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "email",
+        "references": null
+      },
+      "gstNumber": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "gst_number",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "isHeadOffice": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_head_office",
+        "references": null
+      },
+      "managerUserId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "manager_user_id",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "parentOutletId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "parent_outlet_id",
+        "references": "outlets.id"
+      },
+      "phone": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "phone",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "outlets"
+  },
+  "PartnerMembership": {
+    "hash": "97d9037381130f69",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "endDate": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "end_date",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "partnerTypeId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "partner_type_id",
+        "references": "partner_types.id"
+      },
+      "paymentId": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "payment_id",
+        "references": null
+      },
+      "planId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "plan_id",
+        "references": null
+      },
+      "startDate": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "start_date",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "partner_memberships"
+  },
+  "PartnerType": {
+    "hash": "e69d6c23e6913090",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "commissionPercentage": {
+        "type": "FLOAT",
+        "defaultValue": true,
+        "field": "commission_percentage",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "partner_types"
+  },
+  "PartnerWallet": {
+    "hash": "1b5deffbda113173",
+    "attributes": {
+      "balance": {
+        "type": "DECIMAL",
+        "defaultValue": true,
+        "field": "balance",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "unique": true,
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "transactions": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "transactions",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "partner_wallets"
+  },
+  "Payment": {
+    "hash": "58bdfee1e17aeb3f",
+    "attributes": {
+      "amount": {
+        "type": "DECIMAL",
+        "defaultValue": false,
+        "field": "amount",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "contact": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "contact",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "currency": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "currency",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "email",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "internalOrderId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "internal_order_id",
+        "references": "orders.id"
+      },
+      "method": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "method",
+        "references": null
+      },
+      "orderId": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "order_id",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "paymentId": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "payment_id",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "status",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "payments"
+  },
+  "Product": {
+    "hash": "82dba89e90b90f6f",
+    "attributes": {
+      "barcode": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "barcode",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "categoryId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "category_id",
+        "references": "categories.id"
+      },
+      "cost": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "cost",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "image": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "image",
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "price": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "price",
+        "references": null
+      },
+      "productTypeId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_type_id",
+        "references": "product_types.id"
+      },
+      "sku": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "sku",
+        "references": null
+      },
+      "taxRate": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "tax_rate",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "products"
+  },
+  "ProductType": {
+    "hash": "5b9550932e95102e",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "categoryId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "category_id",
+        "references": "categories.id"
+      },
+      "color": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "color",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "icon": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "icon",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "product_types"
+  },
+  "Purchase": {
+    "hash": "c035051e545d1a54",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "date": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "date",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "items": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "items",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "supplierId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "supplier_id",
+        "references": null
+      },
+      "supplierName": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "supplier_name",
+        "references": null
+      },
+      "supplier_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "supplier_id",
+        "references": "suppliers.id"
+      },
+      "totalAmount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "total_amount",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "purchases"
+  },
+  "PurchaseItem": {
+    "hash": "37553db472fe7444",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "costPrice": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "cost_price",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "productId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": null
+      },
+      "product_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "purchaseId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "purchase_id",
+        "references": null
+      },
+      "purchase_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "purchase_id",
+        "references": "purchases.id"
+      },
+      "quantity": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "quantity",
+        "references": null
+      },
+      "unit": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "unit",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "purchase_items"
+  },
+  "Recipe": {
+    "hash": "2e925beff0e8a067",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "instructions": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "instructions",
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "prepTime": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "prep_time",
+        "references": null
+      },
+      "productId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": null
+      },
+      "product_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "product_id",
+        "references": "products.id"
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      },
+      "version": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "version",
+        "references": null
+      }
+    },
+    "tableName": "recipes"
+  },
+  "RecipeItem": {
+    "hash": "fd557acd6820f350",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "inventoryItemId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "inventory_item_id",
+        "references": null
+      },
+      "inventory_item_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "inventory_item_id",
+        "references": "inventory_items.id"
+      },
+      "isOptional": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_optional",
+        "references": null
+      },
+      "notes": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "quantityRequired": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "quantity_required",
+        "references": null
+      },
+      "recipeId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "recipe_id",
+        "references": null
+      },
+      "recipe_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "recipe_id",
+        "references": "recipes.id"
+      },
+      "unit": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "unit",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "recipe_items"
+  },
+  "RollTracking": {
+    "hash": "bdf745bc6c30763b",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "endedAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "ended_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "length": {
+        "type": "FLOAT",
+        "defaultValue": true,
+        "field": "length",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "printedLength": {
+        "type": "FLOAT",
+        "defaultValue": true,
+        "field": "printed_length",
+        "references": null
+      },
+      "replacedBy": {
+        "type": "UUID",
+        "defaultValue": false,
+        "field": "replaced_by",
+        "references": null
+      },
+      "rollName": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "roll_name",
+        "references": null
+      },
+      "startedAt": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "started_at",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "roll_trackings"
+  },
+  "SchemaVersion": {
+    "hash": "283e098ddfab38d1",
+    "attributes": {
+      "appliedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "applied_at",
+        "references": null
+      },
+      "appliedBy": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "applied_by",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "checksum": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "checksum",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "description": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "migrationName": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "migration_name",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      },
+      "version": {
+        "type": "INTEGER",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "version",
+        "unique": true,
+        "references": null
+      }
+    },
+    "tableName": "schema_versions"
+  },
+  "Setting": {
+    "hash": "bcefe54d8d4e1383",
+    "attributes": {
+      "appName": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "app_name",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "created_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "currency": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "currency",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "logoUrl": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "logo_url",
+        "references": null
+      },
+      "maintenanceMode": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "maintenance_mode",
+        "references": null
+      },
+      "privacyUrl": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "privacy_url",
+        "references": null
+      },
+      "supportEmail": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "support_email",
+        "references": null
+      },
+      "supportPhone": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "support_phone",
+        "references": null
+      },
+      "termsUrl": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "terms_url",
+        "references": null
+      },
+      "timezone": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "timezone",
+        "references": null
+      },
+      "updated_at": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "settings"
+  },
+  "StockTransaction": {
+    "hash": "458706e3c8d80e24",
+    "attributes": {
+      "adjustmentType": {
+        "type": "ENUM",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "adjustment_type",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "inventoryItemId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "inventory_item_id",
+        "references": null
+      },
+      "invoiceNumber": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "invoice_number",
+        "references": null
+      },
+      "newStock": {
+        "type": "DECIMAL",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "new_stock",
+        "references": null
+      },
+      "previousStock": {
+        "type": "DECIMAL",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "previous_stock",
+        "references": null
+      },
+      "quantity": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "quantity",
+        "references": null
+      },
+      "reason": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "reason",
+        "references": null
+      },
+      "recipeId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "recipe_id",
+        "references": null
+      },
+      "recordedBy": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "recorded_by",
+        "references": null
+      },
+      "supplierId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "supplier_id",
+        "references": null
+      },
+      "totalCost": {
+        "type": "DECIMAL",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "total_cost",
+        "references": null
+      },
+      "transactionDate": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "transaction_date",
+        "references": null
+      },
+      "type": {
+        "type": "ENUM",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "type",
+        "references": null
+      },
+      "unitCost": {
+        "type": "DECIMAL",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "unit_cost",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "stock_transactions"
+  },
+  "Supplier": {
+    "hash": "48b5b215e7d2491e",
+    "attributes": {
+      "address": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "address",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "contactPerson": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "contact_person",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "email": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "email",
+        "references": null
+      },
+      "gstNumber": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "gst_number",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_active",
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "notes": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "paymentTerms": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "payment_terms",
+        "references": null
+      },
+      "phone": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "phone",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "suppliers"
+  },
+  "Table": {
+    "hash": "65f774072ac81807",
+    "attributes": {
+      "areaId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "area_id",
+        "references": "table_areas.id"
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "capacity": {
+        "type": "INTEGER",
+        "defaultValue": true,
+        "field": "capacity",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "currentOccupancy": {
+        "type": "INTEGER",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "current_occupancy",
+        "references": null
+      },
+      "currentOrderId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "current_order_id",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "name": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "name",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "qrCode": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "qr_code",
+        "references": null
+      },
+      "shape": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": true,
+        "field": "shape",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "defaultValue": true,
+        "field": "status",
+        "references": null
+      },
+      "tableNo": {
+        "type": "STRING",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "table_no",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "tables"
+  },
+  "TenantAuditLog": {
+    "hash": "c7036956e2703c54",
+    "attributes": {
+      "action": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "action",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "details": {
+        "type": "JSONB",
+        "defaultValue": false,
+        "field": "details",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "ipAddress": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "ip_address",
+        "references": null
+      },
+      "module": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "module",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "targetId": {
+        "type": "UUID",
+        "defaultValue": false,
+        "field": "target_id",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      },
+      "userAgent": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "user_agent",
+        "references": null
+      },
+      "userId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "user_id",
+        "references": null
+      },
+      "userName": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "user_name",
+        "references": null
+      },
+      "userRole": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "user_role",
+        "references": null
+      }
+    },
+    "tableName": "audit_logs"
+  },
+  "Timing": {
+    "hash": "cd31bddbe71dfc57",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "closeTime": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "close_time",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "day": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "day",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "isClosed": {
+        "type": "BOOLEAN",
+        "defaultValue": true,
+        "field": "is_closed",
+        "references": null
+      },
+      "openTime": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "open_time",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "timings"
+  },
+  "AccountTransaction": {
+    "hash": "2588af5c89b43652",
+    "attributes": {
+      "accountId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "account_id",
+        "references": null
+      },
+      "account_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "account_id",
+        "references": "accounts.id"
+      },
+      "amount": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "amount",
+        "references": null
+      },
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "category": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "category",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "date": {
+        "type": "DATE",
+        "defaultValue": true,
+        "field": "date",
+        "references": null
+      },
+      "description": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "description",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "performedBy": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "performed_by",
+        "references": null
+      },
+      "type": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "type",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "account_transactions"
+  },
+  "Wastage": {
+    "hash": "552543c5de4de6e2",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "costValue": {
+        "type": "DECIMAL",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "cost_value",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "inventoryId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "inventory_id",
+        "references": "inventory.id"
+      },
+      "inventoryItemId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "inventory_item_id",
+        "references": "inventory_items.id"
+      },
+      "notes": {
+        "type": "TEXT",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "notes",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "quantity": {
+        "type": "DECIMAL",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "quantity",
+        "references": null
+      },
+      "reason": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "reason",
+        "references": null
+      },
+      "recordedBy": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "recorded_by",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      },
+      "wastageDate": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "wastage_date",
+        "references": null
+      }
+    },
+    "tableName": "wastages"
+  },
+  "WebContent": {
+    "hash": "292c7d7687d4a773",
+    "attributes": {
+      "businessId": {
+        "type": "UUID",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "business_id",
+        "references": null
+      },
+      "content": {
+        "type": "TEXT",
+        "defaultValue": false,
+        "field": "content",
+        "references": null
+      },
+      "createdAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "created_at",
+        "references": null
+      },
+      "id": {
+        "type": "UUID",
+        "defaultValue": true,
+        "field": "id",
+        "primaryKey": true,
+        "references": null
+      },
+      "images": {
+        "type": "JSONB",
+        "defaultValue": true,
+        "field": "images",
+        "references": null
+      },
+      "metaDescription": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "meta_description",
+        "references": null
+      },
+      "outletId": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": null
+      },
+      "outlet_id": {
+        "type": "UUID",
+        "allowNull": true,
+        "defaultValue": false,
+        "field": "outlet_id",
+        "references": "outlets.id"
+      },
+      "page": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "page",
+        "references": null
+      },
+      "title": {
+        "type": "STRING",
+        "defaultValue": false,
+        "field": "title",
+        "references": null
+      },
+      "updatedAt": {
+        "type": "DATE",
+        "allowNull": false,
+        "defaultValue": false,
+        "field": "updated_at",
+        "references": null
+      }
+    },
+    "tableName": "web_contents"
+  }
+}

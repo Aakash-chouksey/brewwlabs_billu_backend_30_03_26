@@ -10,43 +10,41 @@ module.exports = (sequelize) => {
         purchaseId: {
             field: 'purchase_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'purchase_id'
+            allowNull: false
         },
         productId: {
             field: 'product_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'product_id'
+            allowNull: false
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false
         },
         costPrice: {
             field: 'cost_price',
             type: DataTypes.DECIMAL(10, 2),
-            allowNull: false,
-            field: 'cost_price'
+            allowNull: false
         },
         quantity: {
+            field: 'quantity',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         unit: {
+            field: 'unit',
             type: DataTypes.STRING
         },
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
             field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         }
     }, {
         tableName: 'purchase_items',

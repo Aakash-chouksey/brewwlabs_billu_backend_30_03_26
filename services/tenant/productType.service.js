@@ -9,14 +9,15 @@ const createHttpError = require('http-errors');
  * Get all product types
  */
 const getProductTypes = async (req) => {
-    const { businessId } = req;
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
     
     return await req.readWithTenant(async (context) => {
         const { transactionModels: models } = context;
         const { ProductType } = models;
         
         const types = await ProductType.findAll({
-            where: { businessId },
+            where: { businessId: business_id, outletId: outlet_id },
             order: [['name', 'ASC']]
         });
         
@@ -27,19 +28,23 @@ const getProductTypes = async (req) => {
 /**
  * Create a new product type
  */
-const createProductType = async (req) => {
-    const { businessId } = req;
-    const { name, description, categoryId } = req.body;
+const createProductType = async (req, data) => {
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
+    const { name, description, categoryId, icon, color } = data || req.body;
     
     return await req.executeWithTenant(async (context) => {
         const { transaction, transactionModels: models } = context;
         const { ProductType } = models;
 
         const type = await ProductType.create({
-            businessId,
+            businessId: business_id,
+            outletId: outlet_id,
             name,
             description,
-            categoryId
+            categoryId,
+            icon,
+            color
         }, { transaction });
         
         return type;
@@ -49,17 +54,16 @@ const createProductType = async (req) => {
 /**
  * Update a product type
  */
-const updateProductType = async (req) => {
-    const { businessId } = req;
-    const { id } = req.params;
-    const { name, description, categoryId } = req.body;
+const updateProductType = async (req, id, data) => {
+    const business_id = req.business_id || req.businessId;
+    const { name, description, categoryId, icon, color } = data || req.body;
     
     return await req.executeWithTenant(async (context) => {
         const { transaction, transactionModels: models } = context;
         const { ProductType } = models;
 
         const type = await ProductType.findOne({
-            where: { id, businessId },
+            where: { id, businessId: business_id },
             transaction
         });
 
@@ -67,11 +71,14 @@ const updateProductType = async (req) => {
             throw createHttpError(404, 'Product type not found');
         }
         
-        await type.update({
-            name,
-            description,
-            categoryId
-        }, { transaction });
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (categoryId !== undefined) updateData.categoryId = categoryId;
+        if (icon !== undefined) updateData.icon = icon;
+        if (color !== undefined) updateData.color = color;
+
+        await type.update(updateData, { transaction });
         
         return type;
     });
@@ -80,16 +87,15 @@ const updateProductType = async (req) => {
 /**
  * Delete a product type
  */
-const deleteProductType = async (req) => {
-    const { businessId } = req;
-    const { id } = req.params;
+const deleteProductType = async (req, id) => {
+    const business_id = req.business_id || req.businessId;
     
     return await req.executeWithTenant(async (context) => {
         const { transaction, transactionModels: models } = context;
         const { ProductType } = models;
 
         const type = await ProductType.findOne({
-            where: { id, businessId },
+            where: { id, businessId: business_id },
             transaction
         });
 

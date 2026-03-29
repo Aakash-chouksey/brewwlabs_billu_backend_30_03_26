@@ -1,163 +1,126 @@
 /**
- * Timing Controller - Neon-Safe Version
- * Standardized for transaction-scoped model access
+ * TIMING CONTROLLER - Neon-Safe Transaction Pattern
  */
 
-const { v4: uuidv4 } = require('uuid');
+const createHttpError = require("http-errors");
 
-const timingController = {
-    /**
-     * Get all operation timings
-     */
-    getTimings: async (req, res, next) => {
-        try {
-            const { businessId } = req;
+/**
+ * Get all timings
+ */
+exports.getTimings = async (req, res, next) => {
+    try {
+        const { businessId } = req;
 
-            const timings = await req.readWithTenant(async (context) => {
-                const { transactionModels: models } = context;
-                const { OperationTiming } = models;
-
-                return await OperationTiming.findAll({
-                    where: { businessId },
-                    order: [['day', 'ASC']]
-                });
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models, transaction } = context;
+            const { Timing } = models;
+            
+            return await Timing.findAll({
+                where: { businessId },
+                order: [['dayOfWeek', 'ASC'], ['openTime', 'ASC']],
+                transaction
             });
+        });
 
-            res.json({
-                success: true,
-                data: timings
-            });
-
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    /**
-     * Create operation timing
-     */
-    createTiming: async (req, res, next) => {
-        try {
-            const { businessId } = req;
-            const { day, openTime, closeTime, isOpen } = req.body;
-
-            if (!day) {
-                return res.status(400).json({ success: false, message: 'Day is required' });
-            }
-
-            // Normalize day to uppercase
-            const normalizedDay = day.toUpperCase();
-
-            const timing = await req.executeWithTenant(async (context) => {
-                const { transaction, transactionModels: models } = context;
-                const { OperationTiming } = models;
-
-                // Check if timing already exists for this day
-                const existing = await OperationTiming.findOne({
-                    where: { businessId, day: normalizedDay },
-                    transaction
-                });
-
-                if (existing) {
-                    throw new Error(`Timing already exists for ${normalizedDay}. Use PUT to update.`);
-                }
-
-                return await OperationTiming.create({
-                    id: uuidv4(),
-                    businessId,
-                    day: normalizedDay,
-                    openTime,
-                    closeTime,
-                    isOpen: isOpen !== undefined ? isOpen : true
-                }, { transaction });
-            });
-
-            res.status(201).json({
-                success: true,
-                message: 'Operation timing created',
-                data: timing
-            });
-
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    /**
-     * Update operation timing
-     */
-    updateTiming: async (req, res, next) => {
-        try {
-            const { id } = req.params;
-            const { businessId } = req;
-            const { day, openTime, closeTime, isOpen } = req.body;
-
-            const updated = await req.executeWithTenant(async (context) => {
-                const { transaction, transactionModels: models } = context;
-                const { OperationTiming } = models;
-
-                const timing = await OperationTiming.findOne({
-                    where: { id, businessId },
-                    transaction
-                });
-
-                if (!timing) {
-                    throw new Error('Timing not found');
-                }
-
-                const updateData = {};
-                if (day !== undefined) updateData.day = day.toUpperCase();
-                if (openTime !== undefined) updateData.openTime = openTime;
-                if (closeTime !== undefined) updateData.closeTime = closeTime;
-                if (isOpen !== undefined) updateData.isOpen = isOpen;
-
-                return await timing.update(updateData, { transaction });
-            });
-
-            res.json({
-                success: true,
-                message: 'Operation timing updated',
-                data: updated
-            });
-
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    /**
-     * Delete operation timing
-     */
-    deleteTiming: async (req, res, next) => {
-        try {
-            const { id } = req.params;
-            const { businessId } = req;
-
-            await req.executeWithTenant(async (context) => {
-                const { transaction, transactionModels: models } = context;
-                const { OperationTiming } = models;
-
-                const timing = await OperationTiming.findOne({
-                    where: { id, businessId },
-                    transaction
-                });
-
-                if (!timing) {
-                    throw new Error('Timing not found');
-                }
-
-                await timing.destroy({ transaction });
-            });
-
-            res.json({
-                success: true,
-                message: 'Operation timing deleted'
-            });
-
-        } catch (error) {
-            next(error);
-        }
+        console.log('[TIMING CONTROLLER] getTimings result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData });
+    } catch (error) {
+        next(error);
     }
 };
 
-module.exports = timingController;
+/**
+ * Create timing
+ */
+exports.createTiming = async (req, res, next) => {
+    try {
+        const { businessId } = req;
+        const { dayOfWeek, openTime, closeTime, isOpen, outletId } = req.body;
+
+        if (dayOfWeek === undefined || !openTime || !closeTime) {
+            throw createHttpError(400, "Day of week, open time, and close time are required");
+        }
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Timing } = models;
+            
+            return await Timing.create({
+                businessId,
+                outletId,
+                dayOfWeek,
+                openTime,
+                closeTime,
+                isOpen: isOpen !== undefined ? isOpen : true
+            }, { transaction });
+        });
+
+        console.log('[TIMING CONTROLLER] createTiming result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.status(201).json({ success: true, data: responseData, message: "Timing created" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Update timing
+ */
+exports.updateTiming = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { businessId } = req;
+        const updateData = req.body;
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Timing } = models;
+            
+            const timing = await Timing.findOne({
+                where: { id, businessId },
+                transaction
+            });
+            if (!timing) throw createHttpError(404, "Timing not found");
+
+            await timing.update(updateData, { transaction });
+            return timing;
+        });
+
+        console.log('[TIMING CONTROLLER] updateTiming result:', JSON.stringify(result, null, 2).substring(0, 500));
+        
+        const responseData = result.data || result;
+        res.json({ success: true, data: responseData, message: "Timing updated" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Delete timing
+ */
+exports.deleteTiming = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { businessId } = req;
+
+        await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Timing } = models;
+            
+            const timing = await Timing.findOne({
+                where: { id, businessId },
+                transaction
+            });
+            if (!timing) throw createHttpError(404, "Timing not found");
+
+            await timing.destroy({ transaction });
+        });
+
+        res.json({ success: true, message: "Timing deleted" });
+    } catch (error) {
+        next(error);
+    }
+};

@@ -116,16 +116,37 @@ const neonSafeModelInjection = async (req, res, next) => {
          * Use for: dashboard, products, lists, analytics
          * NO transaction overhead - direct query with search_path
          */
-        req.executeRead = (operation) => {
+        req.readWithTenant = (operation, options = {}) => {
             if (!req.tenantId) {
                 throw new Error('🚨 BLOCKED: Tenant ID required for database operations');
             }
-            return neonTransactionSafeExecutor.executeRead(req.tenantId, operation);
+            return neonTransactionSafeExecutor.readWithTenant(req.tenantId, operation, options);
         };
 
-        // Alias for backward compatibility
-        req.readWithTenant = req.executeRead;
-        req.executeFastRead = req.executeRead;
+        /**
+         * PHASE 1.1: CACHED READ-ONLY execution
+         * Use for high-traffic GET APIs like dashboard
+         */
+        req.readWithCache = (tenantId, key, operation, options = {}) => {
+            // Support passing just key + operation for current tenant
+            if (typeof tenantId === 'string' && tenantId !== req.tenantId && !key) {
+               // key = tenantId;
+               // tenantId = req.tenantId;
+            }
+            
+            const targetTenantId = (typeof key === 'string') ? tenantId : req.tenantId;
+            const targetKey = (typeof key === 'string') ? key : tenantId;
+            const targetOperation = (typeof key === 'string') ? operation : key;
+            const targetOptions = (typeof key === 'string') ? options : operation;
+
+            if (!targetTenantId) {
+                throw new Error('🚨 BLOCKED: Tenant ID required for cached database operations');
+            }
+            return neonTransactionSafeExecutor.readWithCache(targetTenantId, targetKey, targetOperation, targetOptions);
+        };
+
+        req.executeRead = req.readWithTenant;
+        req.executeFastRead = req.readWithTenant;
 
         /**
          * PHASE 2: WRITE OPERATIONS (POST/PUT/DELETE APIs)

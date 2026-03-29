@@ -7,6 +7,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Wastage = sequelize.define('Wastage', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -16,16 +17,28 @@ module.exports = (sequelize) => {
             type: DataTypes.UUID,
             allowNull: false
         },
-        inventoryItemId: {
-            field: 'inventory_item_id',
+        outletId: {
+            field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false
         },
+        inventoryId: {
+            field: 'inventory_id',
+            type: DataTypes.UUID,
+            allowNull: true
+        },
+        inventoryItemId: {
+            field: 'inventory_item_id',
+            type: DataTypes.UUID,
+            allowNull: true
+        },
         quantity: {
+            field: 'quantity',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         reason: {
+            field: 'reason',
             type: DataTypes.STRING,
             allowNull: false
         },
@@ -36,14 +49,14 @@ module.exports = (sequelize) => {
             defaultValue: DataTypes.NOW
         },
         notes: {
+            field: 'notes',
             type: DataTypes.TEXT,
             allowNull: true
         },
         recordedBy: {
             field: 'recorded_by',
             type: DataTypes.UUID,
-            allowNull: true,
-            // Cross-schema FKs are tricky during sync, removing constraint for now
+            allowNull: true
         },
         costValue: {
             field: 'cost_value',
@@ -54,11 +67,18 @@ module.exports = (sequelize) => {
         tableName: 'wastages',
         underscored: true,
         freezeTableName: true,
-        timestamps: true
+        timestamps: true,
+        indexes: [
+            { fields: ['business_id'] },
+            { fields: ['business_id', 'outlet_id'] },
+            { fields: ['inventory_id'] },
+            { fields: ['wastage_date'] }
+        ]
     });
 
     Wastage.associate = (models) => {
-        Wastage.belongsTo(models.Inventory, { foreignKey: 'inventoryItemId', as: 'inventory' });
+        Wastage.belongsTo(models.Inventory, { foreignKey: 'inventoryId', as: 'inventory' });
+        Wastage.belongsTo(models.InventoryItem, { foreignKey: 'inventoryItemId', as: 'inventoryItem' });
     };
 
     return Wastage;

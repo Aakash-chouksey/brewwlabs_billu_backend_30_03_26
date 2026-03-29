@@ -34,6 +34,7 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         amount: {
+            field: 'amount',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
@@ -43,6 +44,7 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         description: {
+            field: 'description',
             type: DataTypes.TEXT
         },
         transactionDate: {

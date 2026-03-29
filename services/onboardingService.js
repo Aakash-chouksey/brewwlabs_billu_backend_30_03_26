@@ -6,6 +6,16 @@ const tenantModelLoader = require('../src/architecture/tenantModelLoader');
 const neonTransactionSafeExecutor = require('./neonTransactionSafeExecutor');
 const { PUBLIC_SCHEMA } = require('../src/utils/constants');
 
+// Production logging guard - reduces console overhead in production
+const isProd = process.env.NODE_ENV === 'production';
+const log = {
+    info: (msg, ...args) => !isProd && console.log(msg, ...args),
+    warn: (msg, ...args) => console.warn(msg, ...args),
+    error: (msg, ...args) => console.error(msg, ...args),
+    time: (label) => !isProd && console.time(label),
+    timeEnd: (label) => !isProd && console.timeEnd(label)
+};
+
 /**
  * PRODUCTION-GRADE ONBOARDING SERVICE
  * 
@@ -14,118 +24,59 @@ const { PUBLIC_SCHEMA } = require('../src/utils/constants');
  * - PgBouncer-safe operations (no search_path dependency)
  * - Comprehensive table verification
  * - Atomic cleanup on failure
+ * - Schema-First initialization using Sequelize models
  */
 
 class OnboardingService {
     
     // CONTROL MODELS (should NEVER be in tenant schema)
-    // Centralized from constants.js
     static get CONTROL_MODELS() {
         const { CONTROL_MODELS } = require('../src/utils/constants');
         return CONTROL_MODELS;
     }
 
     /**
-     * Main onboarding method - FULLY ATOMIC
+     * Main onboarding method
+     * Synchronously creates schema, all tables, seeds default data and validates everything.
      */
     async onboardBusiness(data, executors = null) {
         const {
             businessName, businessEmail, businessPhone, businessAddress, gstNumber,
-            adminName, adminEmail, adminPassword, cafeType,
-            forcedBusinessId, forcedOutletId // NEW: For debug auto-provisioning
+            adminName, adminEmail, adminPassword, cafeType
         } = data;
 
-        const businessId = forcedBusinessId || uuidv4();
+        const businessId = uuidv4();
+        const tenantId = uuidv4();
         const schemaName = `tenant_${businessId}`;
-        const outletId = forcedOutletId || uuidv4();
+        const outletId = uuidv4();
         const adminId = uuidv4();
         
         const startTime = Date.now();
-        const logs = [];
-        
-        const logStep = (step, details = '') => {
-            const elapsed = Date.now() - startTime;
-            const message = `[ONBOARDING] ${step} | +${elapsed}ms ${details}`;
-            logs.push(message);
-            console.log(message);
-        };
+        console.log(`🚀 [ONBOARDING] Starting: ${schemaName}`);
 
-        // CRITICAL: Force public schema at the very beginning
-        // This ensures tenant_registry and other control plane tables are accessible
-        try {
-            await sequelize.query(`SET search_path TO "${PUBLIC_SCHEMA}"`);
-            logStep('SCHEMA_LOCK', `search_path forced to: ${PUBLIC_SCHEMA}`);
-        } catch (error) {
-            console.error('[ONBOARDING] ❌ Failed to set public schema:', error.message);
-            throw new Error('Failed to initialize public schema context');
-        }
-
-        // Track created resources for cleanup on failure
+        // Track resources for cleanup on failure
         const createdResources = {
             schemaCreated: false,
-            tablesCreated: [],
-            defaultDataCreated: [],
             businessCreated: false,
             userCreated: false,
-            verificationPassed: false
+            registryCreated: false
         };
 
         try {
-            logStep('INIT', `businessId=${businessId}, schema=${schemaName}`);
-
-            // PHASE 1: PRE-VALIDATION
+            // 1. PRE-VALIDATION (Fast direct queries)
             await this._validatePrerequisites(businessEmail, adminEmail);
-            logStep('PHASE 1', 'Pre-validation complete');
 
-            // PHASE 2: CREATE SCHEMA (DDL - No Transaction)
-            await this._createSchema(schemaName);
-            createdResources.schemaCreated = true;
-            logStep('PHASE 2', `Schema created: ${schemaName}`);
-
-            // PHASE 3: CREATE ALL TABLES using FAST PARALLEL initialization
-            // 🔥 OPTIMIZED: Parallel table creation instead of sequential sync
-            const schemaInit = await tenantModelLoader.initializeTenantSchema(sequelize, schemaName);
-            createdResources.tablesCreated = Object.keys(schemaInit.models);
-            logStep('PHASE 3', `${schemaInit.created.length} tables created, ${schemaInit.existing.length} existing in ${schemaInit.duration}ms`);
-
-            // PHASE 4: VERIFY SCHEMA INTEGRITY (Table + Column Level)
-            const verification = await tenantModelLoader.verifySchemaIntegrity(sequelize, schemaName);
-            if (!verification.isValid) {
-                console.error(`[ONBOARDING] ❌ SCHEMA INTEGRITY FAILED in ${schemaName}:`, {
-                    missingTables: verification.missingTables,
-                    missingColumns: verification.missingColumns
-                });
-                
-                // Try one-time repair if columns are missing
-                if (verification.missingColumns.length > 0) {
-                    console.log(`[ONBOARDING] 🛡️ Attempting auto-repair for missing columns in ${schemaName}...`);
-                    const repairResult = await tenantModelLoader.repairTenantSchema(sequelize, schemaName);
-                    if (!repairResult.isValid) {
-                        throw new Error(`Schema integrity repair failed. Missing: ${repairResult.missingColumns.join(', ')}`);
-                    }
-                    console.log(`[ONBOARDING] ✅ Auto-repair successful for ${schemaName}`);
-                } else {
-                    throw new Error(`Table verification failed. Missing tables: ${verification.missingTables.join(', ')}`);
-                }
-            }
-            createdResources.verificationPassed = true;
-            logStep('PHASE 4', `Verified schema integrity for ${schemaName}`);
-
-            // PHASE 5: INSERT DEFAULT DATA
-            // Always use .schema(schemaName) for safety
-            const defaultData = await this._insertDefaultData(schemaInit.models, schemaName, outletId, businessId, adminId);
-            createdResources.defaultDataCreated = defaultData.records;
-            logStep('PHASE 5', `${defaultData.records.length} default records inserted into ${schemaName}`);
-
-            // PHASE 6: TRANSACTIONAL DATA INSERT (Control Plane only)
+            // 2. CONTROL PLANE SETUP FIRST (Transactional)
             const executeInPublic = executors?.executeInPublic || 
                 ((fn) => neonTransactionSafeExecutor.executeInPublic(fn));
 
-            const transactionResultWrapper = await executeInPublic(async (context) => {
-                const { transaction, transactionModels: models } = context;
-                const { Business, User, TenantRegistry } = models;
+            const hashedPass = await bcrypt.hash(adminPassword, 10);
 
-                logStep('PHASE 6', 'Starting control plane transaction...');
+            console.log('🏢 [ONBOARDING] Step 1: Creating control plane records...');
+            
+            await executeInPublic(async (context) => {
+                const { transaction, transactionModels: models } = context;
+                const { Business, User } = models;
 
                 // Create Business
                 const business = await Business.create({
@@ -140,10 +91,10 @@ class OnboardingService {
                     ownerId: adminId,
                     isActive: true
                 }, { transaction });
+                createdResources.businessCreated = true;
 
                 // Create Admin User
-                const hashedPass = await bcrypt.hash(adminPassword, 10);
-                const admin = await User.create({
+                await User.create({
                     id: adminId,
                     businessId: businessId,
                     outletId: outletId,
@@ -157,142 +108,141 @@ class OnboardingService {
                     isVerified: true,
                     tokenVersion: 1
                 }, { transaction });
+                createdResources.userCreated = true;
 
-                // Create Tenant Registry
-                await TenantRegistry.create({
-                    id: uuidv4(),
-                    businessId: businessId,
-                    schemaName: schemaName,
-                    status: 'active'
-                }, { transaction });
-
-                return { business: business.toJSON(), admin: admin.toJSON() };
+                // Create Tenant Registry with status 'CREATING'
+                await sequelize.query(
+                    `INSERT INTO "public"."tenant_registry" ("id", "business_id", "schema_name", "status", "created_at") 
+                     VALUES (:id, :businessId, :schemaName, 'CREATING', NOW())`,
+                    { 
+                        replacements: { 
+                            id: tenantId, 
+                            businessId: businessId, 
+                            schemaName: schemaName 
+                        },
+                        transaction 
+                    }
+                );
+                createdResources.registryCreated = true;
             });
+            
+            console.log(`✅ [ONBOARDING] Control plane setup complete`);
 
-            const transactionResult = transactionResultWrapper.data;
+            // 3. INITIALIZE TENANT SCHEMA (Schema-First Approach)
+            console.log('🏗️  [ONBOARDING] Step 4: Initializing tenant schema (Schema-First)...');
+            const { models: tenantModels, created: createdTables } = await tenantModelLoader.initializeTenantSchema(sequelize, schemaName);
+            createdResources.schemaCreated = true;
+            console.log(`✅ [ONBOARDING] Schema and ${createdTables.length} tables created: ${schemaName}`);
 
-            createdResources.businessCreated = true;
-            createdResources.userCreated = true;
-            logStep('PHASE 6', 'Control plane data created successfully');
+            // 4. SEED DEFAULT DATA
+            console.log('🌱 [ONBOARDING] Step 5: Seeding default data...');
+            await this._insertDefaultData(tenantModels, schemaName, outletId, businessId, adminId);
 
-            // PHASE 7: FINAL VALIDATION
-            await this._finalValidation(schemaName, transactionResult.business, transactionResult.admin);
-            logStep('PHASE 7', 'Final validation passed');
+            // 5. COMPREHENSIVE SCHEMA VALIDATION (Step 4 of requirements)
+            console.log('🔍 [ONBOARDING] Step 6: Running comprehensive schema validation...');
+            const { validateTenantSchemaComplete } = require('../utils/schemaValidator');
+            const validation = await validateTenantSchemaComplete(sequelize, businessId);
+            
+            if (!validation.complete) {
+                const errors = [];
+                if (validation.missingTables.length > 0) {
+                    errors.push(`Missing tables: ${validation.missingTables.join(', ')}`);
+                }
+                if (validation.columnIssues.length > 0) {
+                    errors.push(`Missing columns: ${validation.columnIssues.map(c => `${c.table}(${c.missingColumns.join(', ')})`).join('; ')}`);
+                }
+                throw new Error(`Schema validation failed: ${errors.join('; ')}`);
+            }
+            console.log(`✅ [ONBOARDING] Schema validation passed - all tables and columns present`);
 
-            // SUCCESS: Build response
-            const totalDuration = Date.now() - startTime;
-            logStep('COMPLETE', `Successfully onboarded ${businessName} in ${totalDuration}ms`);
+            // 6. ACTIVATE TENANT
+            console.log('✅ [ONBOARDING] Step 7: Activating tenant...');
+            await sequelize.query(
+                `UPDATE "public"."tenant_registry" 
+                 SET "status" = 'ACTIVE', "activated_at" = NOW(), "updated_at" = NOW()
+                 WHERE "business_id" = :businessId`,
+                { replacements: { businessId } }
+            );
+            console.log(`✅ [ONBOARDING] Tenant activated: ${businessId}`);
+
+            const duration = Date.now() - startTime;
+            console.log(`🎉 [ONBOARDING] Onboarding complete in ${duration}ms.`);
 
             return {
                 success: true,
-                message: 'Business onboarded successfully',
+                message: 'Tenant onboarded successfully.',
                 data: {
-                    business: transactionResult.business,
-                    user: transactionResult.admin,
-                    outlet: defaultData.outlet,
+                    tenantId: businessId,
                     businessId,
                     outletId,
                     schemaName,
-                    tablesCreated: verification.count,
-                    duration: `${totalDuration}ms`
+                    status: 'ACTIVE',
+                    duration: `${duration}ms`,
+                    user: { id: adminId, email: adminEmail, name: adminName }
                 }
             };
 
         } catch (error) {
-            console.error('[ONBOARDING] 🚨 FAILED:', error.message);
-            
-            // Cleanup on failure
-            await this._cleanupOnFailure(createdResources, schemaName);
-            
-            throw new Error(`Onboarding failed: ${error.message}`);
-        }
-    }
-
-    async _validatePrerequisites(businessEmail, adminEmail) {
-        await neonTransactionSafeExecutor.executeInPublic(async (context) => {
-            const { transactionModels: models } = context;
-            const { Business, User } = models;
-            const [eb, eu] = await Promise.all([
-                Business.findOne({ where: { email: businessEmail } }),
-                User.findOne({ where: { email: adminEmail } })
-            ]);
-            if (eb) throw new Error(`Business email '${businessEmail}' already exists`);
-            if (eu) throw new Error(`Admin email '${adminEmail}' already exists`);
-        });
-    }
-
-    async _createSchema(schemaName) {
-        try {
-            await sequelize.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
-            console.log(`[OnboardingService] ✅ Schema created: ${schemaName}`);
-        } catch (error) {
-            console.error(`[OnboardingService] ❌ Schema creation failed:`, error.message);
-            throw new Error(`Failed to create schema: ${error.message}`);
+            console.error('🚨 [ONBOARDING] Failed:', error.message);
+            await this._rollbackOnFailure(createdResources, schemaName);
+            throw error;
         }
     }
 
     /**
-     * Verify all required tables and columns exist using TenantModelLoader
+     * Rollback safety: Drop schema and cleanup if any step failed
      */
-    async _verifyAllTablesExist(schemaName) {
-        // 🔒 1. Table + Column Level Integrity check
-        console.log(`[OnboardingService] 🔍 Verifying schema integrity: ${schemaName}`);
-        const verification = await tenantModelLoader.verifySchemaIntegrity(sequelize, schemaName);
-
-        // 🔒 2. CONSISTENCY CHECK: Ensure NO control tables in tenant schema
-        const { CONTROL_MODELS } = require('../src/utils/constants');
-        
-        const allTablesQuery = await sequelize.query(`
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = :schema
-            AND table_type = 'BASE TABLE'
-        `, {
-            replacements: { schema: schemaName },
-            type: Sequelize.QueryTypes.SELECT
-        });
-
-        const tableNames = allTablesQuery.map(t => t.table_name.toLowerCase());
-        
-        // Map control model names to likely table names (underscored)
-        const controlTableNames = CONTROL_MODELS.map(m => {
-            if (m === 'User') return 'users';
-            if (m === 'Business') return 'businesses';
-            if (m === 'TenantRegistry') return 'tenant_registry';
-            return m.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-        });
-
-        const wrongTables = tableNames.filter(table => controlTableNames.includes(table));
-
-        if (wrongTables.length > 0) {
-            console.error(`[OnboardingService] 🚨 CONTROL TABLES FOUND in ${schemaName}:`, wrongTables);
-            throw new Error(`Schema consistency violation: Control tables found in tenant: ${wrongTables.join(', ')}`);
+    async _rollbackOnFailure(createdResources, schemaName) {
+        console.log('[OnboardingService] 🧹 Starting rollback cleanup...');
+        if (createdResources.schemaCreated) {
+            try {
+                await sequelize.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
+                console.log(`[OnboardingService] ✅ ROLLBACK: Dropped schema ${schemaName}`);
+            } catch (err) {
+                console.error(`[OnboardingService] ⚠️ ROLLBACK: Failed to drop schema:`, err.message);
+            }
         }
+        tenantModelLoader.clearCache(schemaName);
+        console.log('[OnboardingService] 🧹 Rollback cleanup complete');
+    }
 
-        console.log(`[OnboardingService] Integrity check for ${schemaName}: ${verification.isValid ? '✅ VALID' : '❌ INVALID'}`);
-        if (!verification.isValid) {
-            console.log(`   ❌ Missing Tables: ${verification.missingTables.join(', ')}`);
-            console.log(`   ❌ Missing Columns: ${verification.missingColumns.join(', ')}`);
-        }
-
-        return {
-            ...verification,
-            wrongTables,
-            isConsistent: wrongTables.length === 0 && verification.isValid
-        };
+    async _validatePrerequisites(businessEmail, adminEmail) {
+        const { ModelFactory } = require('../src/architecture/modelFactory');
+        await ModelFactory.createModels(sequelize);
+        
+        const { Business, User } = sequelize.models;
+        
+        const businessExists = await Business.schema('public').findOne({
+            where: { email: businessEmail },
+            attributes: ['id']
+        });
+        
+        const userExists = await User.schema('public').findOne({
+            where: { email: adminEmail },
+            attributes: ['id']
+        });
+        
+        if (businessExists) throw new Error(`Business email '${businessEmail}' already exists`);
+        if (userExists) throw new Error(`Admin email '${adminEmail}' already exists`);
     }
 
     /**
      * Insert default data using tenant models
      */
     async _insertDefaultData(models, schemaName, outletId, businessId, adminId) {
+        const startTime = Date.now();
         const records = [];
         let outlet = null;
 
+        if (!models || typeof models !== 'object') {
+            console.error('[OnboardingService] 🚨 CRITICAL: Models object is invalid');
+            return { records: [], outlet: null };
+        }
+
         try {
-            // 1. Create default outlet
+            // Create Outlet first
             if (models.Outlet) {
-                const o = await models.Outlet.schema(schemaName).create({
+                outlet = await models.Outlet.schema(schemaName).create({
                     id: outletId,
                     businessId: businessId,
                     name: 'Main Outlet',
@@ -300,48 +250,49 @@ class OnboardingService {
                     status: 'active',
                     isActive: true
                 });
-                outlet = o.toJSON();
-                records.push({ type: 'outlet', id: o.id });
-                console.log('[OnboardingService]   ✅ Default outlet created');
+                records.push({ type: 'outlet', id: outlet.id });
             }
 
-            // 2. Create default category
+            // Create remaining records
+            const otherPromises = [];
+
             if (models.Category) {
-                const c = await models.Category.schema(schemaName).create({
-                    id: uuidv4(),
-                    businessId: businessId,
-                    outletId: outletId,
-                    name: 'Default Category',
-                    status: 'active'
-                });
-                records.push({ type: 'category', id: c.id });
-                console.log('[OnboardingService]   ✅ Default category created');
+                otherPromises.push(
+                    models.Category.schema(schemaName).create({
+                        id: uuidv4(),
+                        businessId: businessId,
+                        outletId: outletId,
+                        name: 'Default Category',
+                        isEnabled: true
+                    }).then(c => records.push({ type: 'category', id: c.id }))
+                );
             }
 
-            // 3. Create default area
             if (models.Area) {
-                const a = await models.Area.schema(schemaName).create({
-                    id: uuidv4(),
-                    businessId: businessId,
-                    outletId: outletId,
-                    name: 'Main Area',
-                    status: 'active'
-                });
-                records.push({ type: 'area', id: a.id });
-                console.log('[OnboardingService]   ✅ Default area created');
+                otherPromises.push(
+                    models.Area.schema(schemaName).create({
+                        id: uuidv4(),
+                        businessId: businessId,
+                        outletId: outletId,
+                        name: 'Main Area',
+                        status: 'active'
+                    }).then(a => records.push({ type: 'area', id: a.id }))
+                );
             }
 
-            // 4. Create default inventory category
             if (models.InventoryCategory) {
-                const ic = await models.InventoryCategory.schema(schemaName).create({
-                    id: uuidv4(),
-                    businessId: businessId,
-                    outletId: outletId,
-                    name: 'Default Inventory Category'
-                });
-                records.push({ type: 'inventory_category', id: ic.id });
-                console.log('[OnboardingService]   ✅ Default inventory category created');
+                otherPromises.push(
+                    models.InventoryCategory.schema(schemaName).create({
+                        id: uuidv4(),
+                        businessId: businessId,
+                        outletId: outletId,
+                        name: 'Default Inventory Category'
+                    }).then(ic => records.push({ type: 'inventory_category', id: ic.id }))
+                );
             }
+
+            await Promise.all(otherPromises);
+            console.log(`[OnboardingService] ✅ Default data inserted in ${Date.now() - startTime}ms`);
 
         } catch (error) {
             console.error('[OnboardingService] ⚠️ Default data insertion error:', error.message);
@@ -350,101 +301,14 @@ class OnboardingService {
         return { records, outlet };
     }
 
-    /**
-     * Final validation - ensure system is 100% usable
-     */
-    async _finalValidation(schemaName, business, admin) {
-        const errors = [];
-
-        if (!business?.id || !business?.name) errors.push('Business not properly created');
-        if (!admin?.id || !admin?.email) errors.push('Admin user not properly created');
-
-        const schemaResult = await sequelize.query(`
-            SELECT schema_name FROM information_schema.schemata WHERE schema_name = :schema
-        `, { 
-            replacements: { schema: schemaName }, 
-            type: Sequelize.QueryTypes.SELECT 
-        });
-
-        if (!schemaResult?.length) errors.push(`Schema ${schemaName} does not exist`);
-
-        if (errors.length > 0) throw new Error(`Final validation failed: ${errors.join('; ')}`);
-        console.log('[OnboardingService] ✅ Final validation passed');
-    }
-
-    /**
-     * Cleanup resources on onboarding failure
-     */
-    async _cleanupOnFailure(createdResources, schemaName) {
-        console.log('[OnboardingService] 🧹 Starting cleanup...');
-
-        // Only drop schema if table creation failed OR verification failed
-        const tableCreationSuccess = createdResources.tablesCreated.length > 0 && createdResources.verificationPassed;
-
-        if (createdResources.schemaCreated && !tableCreationSuccess) {
-            try {
-                await sequelize.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
-                console.log(`[OnboardingService]   ✅ CLEANUP: Dropped incomplete schema: ${schemaName}`);
-            } catch (error) {
-                console.error(`[OnboardingService]   ⚠️ CLEANUP: Failed to drop schema:`, error.message);
-            }
-        } else if (tableCreationSuccess) {
-            console.log(`[OnboardingService]   ℹ️ CLEANUP: Tables were created successfully; keeping schema ${schemaName} for recovery/manual fix.`);
-        }
-
-        // Clear model cache for this schema
-        tenantModelLoader.clearCache(schemaName);
-        console.log('[OnboardingService] 🧹 Cleanup complete');
-    }
-
-    /**
-     * Get onboarding status (for debugging)
-     */
     async getOnboardingStatus(businessId) {
         const schemaName = `tenant_${businessId}`;
         try {
-            // Dynamic identification
-            const allModels = Object.values(sequelize.models);
-            const { CONTROL_MODELS: CONTROL_PLANE_MODEL_NAMES } = require('../src/utils/constants');
-            const requiredTenantTables = allModels
-                .filter(model => !CONTROL_PLANE_MODEL_NAMES.includes(model.name))
-                .map(model => {
-                    const raw = model.getTableName();
-                    return typeof raw === 'string' ? raw : raw.tableName;
-                });
-
-            const verification = await tenantModelLoader.verifyTablesExist(
-                sequelize,
-                schemaName,
-                requiredTenantTables
-            );
-
-            // Check for control tables
-            const allTables = await sequelize.query(`
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = :schema
-                AND table_type = 'BASE TABLE'
-            `, {
-                replacements: { schema: schemaName },
-                type: Sequelize.QueryTypes.SELECT
-            });
-
-            const tableNames = allTables.map(t => t.table_name);
-            const wrongTables = tableNames.filter(table => 
-                OnboardingService.CONTROL_MODELS.includes(table)
-            );
-
+            const { validateTenantSchemaComplete } = require('../utils/schemaValidator');
+            const validation = await validateTenantSchemaComplete(sequelize, businessId);
             return {
                 success: true,
-                data: {
-                    schemaName,
-                    tablesExist: verification.exists,
-                    tableCount: verification.count,
-                    missingTables: verification.missing,
-                    wrongTables: wrongTables,
-                    isConsistent: wrongTables.length === 0 && verification.missing.length === 0
-                }
+                data: validation
             };
         } catch (error) {
             return {

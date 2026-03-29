@@ -1,5 +1,5 @@
 /**
- * Billing Config Controller - Neon-Safe Version
+ * BILLING CONFIG CONTROLLER - Neon-Safe Version
  * Standardized for transaction-scoped model access
  */
 
@@ -11,34 +11,34 @@ const billingConfigController = {
      */
     getConfig: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
 
             const result = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { BillingConfig, Business } = models;
 
                 let config = await BillingConfig.findOne({
-                    where: { businessId },
+                    where: { businessId: business_id },
                     transaction
                 });
 
                 // Create default config if not exists
                 if (!config) {
                     const business = await Business.findOne({
-                        where: { id: businessId },
+                        where: { id: business_id },
                         transaction
                     });
 
                     config = await BillingConfig.create({
                         id: uuidv4(),
-                        businessId,
+                        businessId: business_id,
                         businessName: business?.name || '',
-                        address: business?.address || '',
-                        phone: business?.phone || '',
-                        email: business?.email || '',
+                        businessAddress: business?.address || '',
+                        businessPhone: business?.phone || '',
+                        businessEmail: business?.email || '',
                         gstNumber: business?.gstNumber || '',
-                        taxPercent: 5,
-                        receiptFooter: 'Thank you for your business!',
+                        taxRate: 0.05,
+                        footerText: 'Thank you for your business!',
                         isActive: true
                     }, { transaction });
                 }
@@ -46,9 +46,12 @@ const billingConfigController = {
                 return config;
             });
 
+            const data = result.data || result;
+            
             res.json({
                 success: true,
-                data: result
+                data: data,
+                message: "Billing configuration retrieved successfully"
             });
 
         } catch (error) {
@@ -61,15 +64,15 @@ const billingConfigController = {
      */
     updateConfig: async (req, res, next) => {
         try {
-            const { businessId } = req;
-            const { businessName, address, phone, email, gstNumber, taxPercent, receiptFooter } = req.body;
+            const business_id = req.business_id || req.businessId;
+            const updateData = req.body;
 
             const result = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { BillingConfig } = models;
 
                 let config = await BillingConfig.findOne({
-                    where: { businessId },
+                    where: { businessId: business_id },
                     transaction
                 });
 
@@ -77,36 +80,23 @@ const billingConfigController = {
                     // Create new config
                     return await BillingConfig.create({
                         id: uuidv4(),
-                        businessId,
-                        businessName,
-                        address,
-                        phone,
-                        email,
-                        gstNumber,
-                        taxPercent,
-                        receiptFooter,
+                        businessId: business_id,
+                        ...updateData,
                         isActive: true
                     }, { transaction });
                 }
 
                 // Update existing
-                const updateData = {};
-                if (businessName !== undefined) updateData.businessName = businessName;
-                if (address !== undefined) updateData.address = address;
-                if (phone !== undefined) updateData.phone = phone;
-                if (email !== undefined) updateData.email = email;
-                if (gstNumber !== undefined) updateData.gstNumber = gstNumber;
-                if (taxPercent !== undefined) updateData.taxPercent = taxPercent;
-                if (receiptFooter !== undefined) updateData.receiptFooter = receiptFooter;
-
                 await config.update(updateData, { transaction });
                 return config;
             });
 
+            const data = result.data || result;
+
             res.json({
                 success: true,
-                message: 'Billing config updated',
-                data: result
+                data: data,
+                message: 'Billing configuration updated successfully'
             });
 
         } catch (error) {

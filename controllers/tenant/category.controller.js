@@ -4,29 +4,33 @@
 
 const createHttpError = require("http-errors");
 const { Op } = require("sequelize");
-const cache = require("../../utils/cache");
+const { uploadImageToCloudinary } = require("../../src/utils/imageUpload");
 
 /**
  * Get all categories
  */
 exports.getCategories = async (req, res, next) => {
     try {
-        const { businessId, outletId } = req;
+        const business_id = req.business_id || req.businessId;
+        const outlet_id = req.outlet_id || req.outletId;
 
-        const result = await req.readWithTenant(async (context) => {
+        const cacheKey = `categories_${outlet_id || 'all'}`;
+        const result = await req.readWithCache(business_id, cacheKey, async (context) => {
             const { transactionModels: models } = context;
             const { Category } = models;
             
             return await Category.findAll({
-                where: { businessId, outletId },
+                where: { businessId: business_id, outletId: outlet_id },
                 order: [['sortOrder', 'ASC'], ['name', 'ASC']]
             });
-        });
+        }, { ttl: 600000 }); // 10 minute cache
 
-        console.log('[CATEGORY CONTROLLER] getCategories result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        const responseData = result.data || result;
-        res.json({ success: true, data: responseData || [] });
+        const responseData = result.data || result || [];
+        res.json({ 
+            success: true, 
+            data: responseData,
+            message: "Categories retrieved successfully"
+        });
     } catch (error) {
         next(error);
     }
@@ -37,7 +41,8 @@ exports.getCategories = async (req, res, next) => {
  */
 exports.addCategory = async (req, res, next) => {
     try {
-        const { businessId, outletId } = req;
+        const business_id = req.business_id || req.businessId;
+        const outlet_id = req.outlet_id || req.outletId;
         const { name, description, color, image, isEnabled, sortOrder } = req.body;
 
         if (!name) {
@@ -50,31 +55,36 @@ exports.addCategory = async (req, res, next) => {
             
             // Check for duplicate name in same outlet
             const existing = await Category.findOne({
-                where: { businessId, outletId, name: { [Op.iLike]: name } },
+                where: { businessId: business_id, outletId: outlet_id, name: { [Op.iLike]: name } },
                 transaction
             });
             if (existing) throw createHttpError(400, "Category with this name already exists in this outlet");
 
+            // Handle image upload if present
+            let finalImageUrl = image;
+            if (req.file) {
+                const uploadResult = await uploadImageToCloudinary(req.file.buffer, 'categories');
+                finalImageUrl = uploadResult.url;
+            }
+
             return await Category.create({
-                businessId,
-                outletId,
+                businessId: business_id,
+                outletId: outlet_id,
                 name,
                 description,
                 color: color || '#3B82F6',
-                image,
+                image: finalImageUrl,
                 isEnabled: isEnabled !== undefined ? isEnabled : true,
                 sortOrder: sortOrder || 0
             }, { transaction });
         });
 
-        // Invalidate cache
-        const cacheKey = cache.generateKey(req, 'categories');
-        await cache.del(cacheKey);
-
-        console.log('[CATEGORY CONTROLLER] addCategory result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
         const responseData = result.data || result;
-        res.status(201).json({ success: true, data: responseData, message: "Category created" });
+        res.status(201).json({ 
+            success: true, 
+            data: responseData, 
+            message: "Category created successfully" 
+        });
     } catch (error) {
         next(error);
     }
@@ -86,7 +96,8 @@ exports.addCategory = async (req, res, next) => {
 exports.updateCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { businessId, outletId } = req;
+        const business_id = req.business_id || req.businessId;
+        const outlet_id = req.outlet_id || req.outletId;
         const updateData = req.body;
 
         const result = await req.executeWithTenant(async (context) => {
@@ -94,7 +105,7 @@ exports.updateCategory = async (req, res, next) => {
             const { Category } = models;
             
             const category = await Category.findOne({
-                where: { id, businessId, outletId },
+                where: { id, businessId: business_id, outletId: outlet_id },
                 transaction
             });
             if (!category) throw createHttpError(404, "Category not found");
@@ -102,24 +113,28 @@ exports.updateCategory = async (req, res, next) => {
             // Check name uniqueness if changing
             if (updateData.name && updateData.name.toLowerCase() !== category.name.toLowerCase()) {
                 const existing = await Category.findOne({
-                    where: { businessId, outletId, name: { [Op.iLike]: updateData.name }, id: { [Op.ne]: id } },
+                    where: { businessId: business_id, outletId: outlet_id, name: { [Op.iLike]: updateData.name }, id: { [Op.ne]: id } },
                     transaction
                 });
                 if (existing) throw createHttpError(400, "Another category already has this name");
+            }
+
+            // Handle image upload if present
+            if (req.file) {
+                const uploadResult = await uploadImageToCloudinary(req.file.buffer, 'categories');
+                updateData.image = uploadResult.url;
             }
 
             await category.update(updateData, { transaction });
             return category;
         });
 
-        // Invalidate cache
-        const cacheKey = cache.generateKey(req, 'categories');
-        await cache.del(cacheKey);
-
-        console.log('[CATEGORY CONTROLLER] updateCategory result:', JSON.stringify(result, null, 2).substring(0, 500));
-        
         const responseData = result.data || result;
-        res.json({ success: true, data: responseData, message: "Category updated" });
+        res.json({ 
+            success: true, 
+            data: responseData, 
+            message: "Category updated successfully" 
+        });
     } catch (error) {
         next(error);
     }
@@ -131,7 +146,8 @@ exports.updateCategory = async (req, res, next) => {
 exports.deleteCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { businessId, outletId } = req;
+        const business_id = req.business_id || req.businessId;
+        const outlet_id = req.outlet_id || req.outletId;
 
         await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
@@ -139,7 +155,7 @@ exports.deleteCategory = async (req, res, next) => {
             
             // Check for dependencies
             const productsCount = await Product.count({
-                where: { categoryId: id, businessId },
+                where: { categoryId: id, businessId: business_id },
                 transaction
             });
             if (productsCount > 0) {
@@ -147,7 +163,7 @@ exports.deleteCategory = async (req, res, next) => {
             }
 
             const category = await Category.findOne({
-                where: { id, businessId, outletId },
+                where: { id, businessId: business_id, outletId: outlet_id },
                 transaction
             });
             if (!category) throw createHttpError(404, "Category not found");
@@ -155,11 +171,10 @@ exports.deleteCategory = async (req, res, next) => {
             await category.destroy({ transaction });
         });
 
-        // Invalidate cache
-        const cacheKey = cache.generateKey(req, 'categories');
-        await cache.del(cacheKey);
-
-        res.json({ success: true, message: "Category deleted" });
+        res.json({ 
+            success: true, 
+            message: "Category deleted successfully" 
+        });
     } catch (error) {
         next(error);
     }

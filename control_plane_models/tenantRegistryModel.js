@@ -5,36 +5,66 @@ module.exports = (sequelize) => {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
-            primaryKey: true
+            primaryKey: true,
+            field: 'id'
         },
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
             allowNull: false,
-            field: 'business_id',
-            unique: true
+            comment: 'Link to business record'
         },
         schemaName: {
             field: 'schema_name',
             type: DataTypes.STRING,
             allowNull: false,
-            field: 'schema_name',
             unique: true
         },
         status: {
-            type: DataTypes.ENUM('active', 'suspended', 'onboarding', 'deleted', 'pending_approval', 'pending', 'pending_schema_init', 'init_failed'),
-            defaultValue: 'pending_schema_init'
+            field: 'status',
+            type: DataTypes.STRING(50),
+            defaultValue: 'CREATING',
+            set(value) {
+                // ENFORCE: Always store status as UPPERCASE
+                this.setDataValue('status', value ? value.toUpperCase() : 'CREATING');
+            },
+            validate: {
+                isIn: [['ACTIVE', 'READY', 'PENDING', 'CREATING', 'ONBOARDING', 'SUSPENDED', 'INACTIVE', 'INIT_FAILED', 'INIT_IN_PROGRESS', 'TRIAL']]
+            }
+        },
+        retryCount: {
+            field: 'retry_count',
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+            comment: 'Number of onboarding retry attempts'
+        },
+        lastError: {
+            field: 'last_error',
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: 'Last error message during onboarding'
+        },
+        activatedAt: {
+            field: 'activated_at',
+            type: DataTypes.DATE,
+            allowNull: true,
+            comment: 'When tenant was activated'
         },
         createdAt: {
             field: 'created_at',
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW,
-            field: 'created_at'
+            defaultValue: DataTypes.NOW
+        },
+        updatedAt: {
+            field: 'updated_at',
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
         }
     }, {
         tableName: 'tenant_registry',
-        timestamps: false,
-        underscored: true
+        timestamps: true,
+        underscored: true,
+        freezeTableName: true
     });
 
     return TenantRegistry;

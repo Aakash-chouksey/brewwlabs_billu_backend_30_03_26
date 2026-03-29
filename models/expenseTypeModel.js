@@ -18,10 +18,12 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false
         },
         description: {
+            field: 'description',
             type: DataTypes.STRING
         },
         isEnabled: {

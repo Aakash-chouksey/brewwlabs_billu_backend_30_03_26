@@ -4,6 +4,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Customer = sequelize.define('Customer', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -19,10 +20,12 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false
         },
         phone: {
+            field: 'phone',
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
@@ -30,12 +33,14 @@ module.exports = (sequelize) => {
             }
         },
         email: {
+            field: 'email',
             type: DataTypes.STRING,
             validate: {
                 isEmail: true
             }
         },
         address: {
+            field: 'address',
             type: DataTypes.TEXT
         },
         totalDue: {

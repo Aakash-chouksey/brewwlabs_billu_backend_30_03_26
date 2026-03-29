@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-03-27T22:51:05.040Z",
+  "duration": 23416,
+  "summary": {
+    "controlPlane": {
+      "status": "VALID",
+      "businessCount": 6,
+      "userCount": 6,
+      "registryCount": 6,
+      "orphanedUsers": 0,
+      "orphanedRegistries": 0
+    },
+    "tenantSchemas": {
+      "status": "COMPLETE",
+      "schemas": [
+        {
+          "name": "tenant_de5e558b-cccd-46b6-ba5e-8052dd801f2a",
+          "tableCount": 42,
+          "missingTables": [],
+          "wrongTables": [],
+          "isComplete": true
+        },
+        {
+          "name": "tenant_94506804-3b0c-4d70-aa36-5a6450c5a4d7",
+          "tableCount": 42,
+          "missingTables": [],
+          "wrongTables": [],
+          "isComplete": true
+        },
+        {
+          "name": "tenant_b412b832-af3f-4a18-b47c-cc5726b79ee2",
+          "tableCount": 42,
+          "missingTables": [],
+          "wrongTables": [],
+          "isComplete": true
+        },
+        {
+          "name": "tenant_35c78122-58f5-461c-b917-de4b2b285497",
+          "tableCount": 42,
+          "missingTables": [],
+          "wrongTables": [],
+          "isComplete": true
+        },
+        {
+          "name": "tenant_c4c12ddd-a76c-4611-976d-f479a7a0e473",
+          "tableCount": 42,
+          "missingTables": [],
+          "wrongTables": [],
+          "isComplete": true
+        },
+        {
+          "name": "tenant_0da6eaf5-3c1a-4ee0-bd6a-a9716c8801f8",
+          "tableCount": 42,
+          "missingTables": [],
+          "wrongTables": [],
+          "isComplete": true
+        }
+      ],
+      "total": 6,
+      "complete": 6
+    },
+    "apiReadiness": {
+      "modelsAvailable": 53,
+      "missingModels": 0,
+      "status": "READY"
+    }
+  },
+  "issues": [],
+  "warnings": [],
+  "status": "FULLY_STABLE"
+}

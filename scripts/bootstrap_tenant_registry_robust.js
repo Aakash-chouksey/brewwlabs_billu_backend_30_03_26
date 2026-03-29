@@ -21,9 +21,16 @@ async function run() {
             schema: 'public'
         });
 
-        // 2. Sync
-        await TenantRegistry.sync({ force: true });
-        console.log('✅ Table tenant_registry ready in public');
+        // 2. Sync - DEPRECATED: Use migrations instead
+        console.log('⚠️  DEPRECATED: Using migration-based approach');
+        
+        // Run migrations instead of sync
+        const migrationRunner = require('../src/architecture/migrationRunner');
+        const SchemaVersion = require('../models/schemaVersionModel')(controlPlaneSequelize);
+        const tenantModels = { SchemaVersion: SchemaVersion.schema('public') };
+        
+        await migrationRunner.runPendingMigrations(controlPlaneSequelize, 'public', tenantModels);
+        console.log('✅ TenantRegistry table ready via migrations');
 
         // 3. Get existing businesses
         const [businesses] = await controlPlaneSequelize.query('SELECT id, status FROM public.businesses');

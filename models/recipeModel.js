@@ -23,28 +23,29 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false
         },
         instructions: {
+            field: 'instructions',
             type: DataTypes.TEXT
         },
         prepTime: {
             field: 'prep_time',
             type: DataTypes.INTEGER,
             defaultValue: 0,
-            field: 'prep_time',
             comment: 'Preparation time in minutes'
+        },
+        version: {
+            field: 'version',
+            type: DataTypes.INTEGER,
+            defaultValue: 1
         },
         isActive: {
             field: 'is_active',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_active'
-        },
-        version: {
-            type: DataTypes.INTEGER,
-            defaultValue: 1
+            defaultValue: true
         }
     }, {
         tableName: 'recipes',

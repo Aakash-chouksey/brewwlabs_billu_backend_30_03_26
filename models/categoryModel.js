@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Category = sequelize.define('Category', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -10,43 +11,40 @@ module.exports = (sequelize) => {
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
             field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false, // 🚨 Phase 4: Enforce strict outlet isolation
-            field: 'outlet_id'
+            allowNull: false
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false
         },
         description: {
-            type: DataTypes.TEXT,
-            field: 'description'
+            field: 'description',
+            type: DataTypes.TEXT
         },
         color: {
+            field: 'color',
             type: DataTypes.STRING,
-            defaultValue: '#3B82F6',
-            field: 'color'
+            defaultValue: '#3B82F6'
         },
         image: {
-            type: DataTypes.STRING,
-            field: 'image'
+            field: 'image',
+            type: DataTypes.STRING
         },
         isEnabled: {
             field: 'is_enabled',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_enabled'
+            defaultValue: true
         },
         sortOrder: {
             field: 'sort_order',
             type: DataTypes.INTEGER,
-            defaultValue: 0,
-            field: 'sort_order'
+            defaultValue: 0
         }
     }, {
         tableName: 'categories',
@@ -62,8 +60,8 @@ module.exports = (sequelize) => {
 
     Category.associate = function(models) {
         // REMOVED cross-schema association to Business
-        Category.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet' });
-        Category.hasMany(models.Product, { foreignKey: 'category_id', as: 'products' });
+        Category.belongsTo(models.Outlet, { foreignKey: 'outletId', as: 'outlet' });
+        Category.hasMany(models.Product, { foreignKey: 'categoryId', as: 'products' });
     };
 
     return Category;

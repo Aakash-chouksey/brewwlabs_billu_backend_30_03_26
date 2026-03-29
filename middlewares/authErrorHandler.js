@@ -53,25 +53,19 @@ class AuthErrorHandler {
             message = 'Authentication token not yet active';
             shouldLog = true;
             includeDetails = false;
-        } else if (error.status >= 400 && error.status < 500) {
-            // Client errors
+        } else if (error.status >= 400 && error.status < 600) {
+            // Client errors and intentional server errors (like 503)
             statusCode = error.status;
-            message = error.message || 'Request failed';
-            shouldLog = error.status >= 401; // Log auth-related errors
-            includeDetails = false;
+            message = error.message || (statusCode >= 500 ? 'Internal server error' : 'Request failed');
+            shouldLog = true;
+            includeDetails = process.env.NODE_ENV === 'development';
         }
 
-        // Log error if required
         if (shouldLog) {
             try {
                 await logAuthEvent({
                     action: 'AUTH_ERROR',
                     error: error.message,
-                    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-                    ip: clientIP,
-                    userAgent,
-                    path,
-                    method,
                     statusCode
                 });
             } catch (logError) {

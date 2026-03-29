@@ -12,21 +12,22 @@ const supplierController = {
      */
     getSuppliers: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
 
             const suppliers = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Supplier } = models;
 
                 return await Supplier.findAll({
-                    where: { businessId },
+                    where: { businessId: business_id },
                     order: [['name', 'ASC']]
                 });
             });
 
             res.json({
                 success: true,
-                data: suppliers
+                data: suppliers,
+                message: "Suppliers retrieved successfully"
             });
 
         } catch (error) {
@@ -39,7 +40,7 @@ const supplierController = {
      */
     addSupplier: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
             const { name, contactPerson, email, phone, address, gstNumber, paymentTerms } = req.body;
 
             const supplier = await req.executeWithTenant(async (context) => {
@@ -49,7 +50,7 @@ const supplierController = {
                 // Check if supplier with email already exists within this business
                 if (email) {
                     const existing = await Supplier.findOne({
-                        where: { email, businessId },
+                        where: { email, businessId: business_id },
                         transaction
                     });
                     if (existing) {
@@ -59,7 +60,7 @@ const supplierController = {
 
                 return await Supplier.create({
                     id: uuidv4(),
-                    businessId,
+                    businessId: business_id,
                     name,
                     contactPerson,
                     email,
@@ -88,7 +89,7 @@ const supplierController = {
     updateSupplier: async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
             const { name, contactPerson, email, phone, address, gstNumber, paymentTerms, isActive } = req.body;
 
             const updated = await req.executeWithTenant(async (context) => {
@@ -96,7 +97,7 @@ const supplierController = {
                 const { Supplier } = models;
 
                 const supplier = await Supplier.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     transaction
                 });
 
@@ -134,14 +135,14 @@ const supplierController = {
     deleteSupplier: async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
 
             await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { Supplier } = models;
 
                 const supplier = await Supplier.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     transaction
                 });
 

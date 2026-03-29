@@ -12,14 +12,15 @@ const tableManagementController = {
      */
     getTables: async (req, res, next) => {
         try {
-            const { businessId, outletId } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
 
             const tables = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Table, Area } = models;
 
-                const whereClause = { businessId };
-                if (outletId) whereClause.outletId = outletId;
+                const whereClause = { businessId: business_id };
+                if (outlet_id) whereClause.outletId = outlet_id;
 
                 return await Table.findAll({
                     where: whereClause,
@@ -31,7 +32,8 @@ const tableManagementController = {
             res.json({
                 success: true,
                 data: tables,
-                count: tables.length
+                count: tables.length,
+                message: "Tables retrieved successfully"
             });
         } catch (error) {
             next(error);
@@ -43,7 +45,8 @@ const tableManagementController = {
      */
     createTable: async (req, res, next) => {
         try {
-            const { businessId, outletId } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
             const { tableNo, name, capacity, areaId, status, positionX, positionY } = req.body;
 
             if (!tableNo) {
@@ -56,7 +59,7 @@ const tableManagementController = {
 
                 // Check if table number already exists within this outlet
                 const existing = await Table.findOne({
-                    where: { businessId, outletId: outletId || null, tableNo },
+                    where: { businessId: business_id, outletId: outlet_id || null, tableNo },
                     transaction
                 });
 
@@ -66,8 +69,8 @@ const tableManagementController = {
 
                 return await Table.create({
                     id: uuidv4(),
-                    businessId,
-                    outletId: outletId || null,
+                    businessId: business_id,
+                    outletId: outlet_id || null,
                     tableNo,
                     name: name || `Table ${tableNo}`,
                     capacity: capacity || 4,
@@ -93,7 +96,7 @@ const tableManagementController = {
      */
     updateTable: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
             const { id } = req.params;
 
             const updated = await req.executeWithTenant(async (context) => {
@@ -101,7 +104,7 @@ const tableManagementController = {
                 const { Table, Area } = models;
 
                 const table = await Table.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     transaction
                 });
 
@@ -118,7 +121,7 @@ const tableManagementController = {
                 await table.update(updateData, { transaction });
 
                 return await Table.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     include: [{ model: Area, as: 'area' }],
                     transaction
                 });
@@ -139,7 +142,7 @@ const tableManagementController = {
      */
     deleteTable: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
             const { id } = req.params;
 
             await req.executeWithTenant(async (context) => {
@@ -147,7 +150,7 @@ const tableManagementController = {
                 const { Table } = models;
 
                 const table = await Table.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     transaction
                 });
 

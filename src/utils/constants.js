@@ -36,8 +36,7 @@ module.exports = {
         'TenantConnection',
         'TenantMigrationLog',
         'SystemMetrics',
-        'AuditLog', // Platform Audit Log
-        'Auth'
+        'AuditLog' // Platform Audit Log
     ],
 
     /**
@@ -52,7 +51,7 @@ module.exports = {
         'MembershipPlan', 'OperationTiming', 'Order', 'OrderItem',
         'Outlet', 'PartnerMembership', 'PartnerType', 'PartnerWallet',
         'Payment', 'Product', 'ProductType', 'Purchase', 'PurchaseItem',
-        'Recipe', 'RecipeItem', 'RollTracking', 'Setting', 'StockTransaction',
+        'Recipe', 'RecipeItem', 'RollTracking', 'SchemaVersion', 'Setting', 'StockTransaction',
         'Supplier', 'Table', 'TenantAuditLog', 'Timing', 'AccountTransaction',
         'Wastage', 'WebContent'
     ]

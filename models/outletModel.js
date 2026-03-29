@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Outlet = sequelize.define('Outlet', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -10,48 +11,57 @@ module.exports = (sequelize) => {
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false,
             validate: { notEmpty: true }
         },
         address: {
+            field: 'address',
             type: DataTypes.TEXT
         },
         managerUserId: {
             field: 'manager_user_id',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'manager_user_id'
-        },
-        parentOutletId: {
-            field: 'parent_outlet_id',
-            type: DataTypes.UUID,
-            allowNull: true,
-            field: 'parent_outlet_id'
+            allowNull: true
         },
         isHeadOffice: {
             field: 'is_head_office',
             type: DataTypes.BOOLEAN,
-            defaultValue: false,
-            field: 'is_head_office'
+            defaultValue: false
         },
         email: {
+            field: 'email',
             type: DataTypes.STRING,
             allowNull: true
         },
         status: {
+            field: 'status',
             type: DataTypes.STRING,
             defaultValue: 'active'
+        },
+        phone: {
+            field: 'phone',
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        gstNumber: {
+            field: 'gst_number',
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        parentOutletId: {
+            field: 'parent_outlet_id',
+            type: DataTypes.UUID,
+            allowNull: true
         },
         isActive: {
             field: 'is_active',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_active'
+            defaultValue: true
         }
     }, {
         tableName: 'outlets',
@@ -67,11 +77,18 @@ module.exports = (sequelize) => {
     });
 
     Outlet.associate = function(models) {
-        // REMOVED cross-schema association to Business
         // Self-referencing for franchise hierarchy
-        Outlet.belongsTo(models.Outlet, { foreignKey: 'parent_outlet_id', as: 'parentOutlet' });
-        Outlet.hasMany(models.Outlet, { foreignKey: 'parent_outlet_id', as: 'childOutlets' });
-        // REMOVED cross-schema association to User
+        Outlet.belongsTo(models.Outlet, { foreignKey: 'parentOutletId', as: 'parentOutlet' });
+        Outlet.hasMany(models.Outlet, { foreignKey: 'parentOutletId', as: 'childOutlets' });
+        
+        // Outlet has many Users (cross-schema but necessary)
+        if (models.User) {
+            Outlet.hasMany(models.User, { 
+                foreignKey: 'outlet_id', 
+                as: 'users',
+                constraints: false // Cross-schema, no FK constraint
+            });
+        }
     };
 
     return Outlet;

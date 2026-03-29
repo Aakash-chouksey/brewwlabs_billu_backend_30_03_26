@@ -93,20 +93,16 @@ class SchemaMigrationService {
             await sequelize.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
             this.log(`Created schema: ${schemaName}`, 'success');
 
-            // Initialize models and create tables
+            // Initialize models and run migrations (Data-First approach)
             await ModelFactory.createModels(sequelize);
             
-            // Set search path and sync tables
-            await sequelize.query(`SET search_path TO "${schemaName}"`);
+            // Run migrations instead of sync
+            const migrationRunner = require('../src/architecture/migrationRunner');
+            const SchemaVersion = require('../models/schemaVersionModel')(sequelize);
+            const tenantModels = { SchemaVersion: SchemaVersion.schema(schemaName) };
             
-            // Sync all models to create tables
-            for (const modelName of Object.keys(sequelize.models)) {
-                const model = sequelize.models[modelName];
-                if (model && typeof model.sync === 'function') {
-                    await model.sync({ force: false, alter: false });
-                    this.log(`Created table: ${schemaName}.${modelName.toLowerCase()}`, 'success');
-                }
-            }
+            await migrationRunner.runPendingMigrations(sequelize, schemaName, tenantModels);
+            this.log(`Migrations complete for: ${schemaName}`, 'success');
 
             return schemaName;
         } catch (error) {

@@ -15,6 +15,7 @@ const Sequelize = require('sequelize');
 const { CONTROL_PLANE, PUBLIC_SCHEMA, TENANT_SCHEMA_PREFIX, CONTROL_MODELS, TENANT_MODELS } = require('../src/utils/constants');
 const { ModelFactory } = require('../src/architecture/modelFactory');
 const { enforceSchema, securityCheck, validateTenantSchema, assertSchemaContext } = require('../src/utils/schemaEnforcement');
+const tenantCacheService = require('./tenant/tenantCacheService');
 
 // Lazy load database to prevent require-time connection
 let sequelize;
@@ -201,6 +202,12 @@ class NeonTransactionSafeExecutor {
             });
 
             await transaction.commit();
+
+            // 🧹 CACHE INVALIDATION: Clear tenant cache on write if requested
+            if (options.invalidateCache !== false) {
+                tenantCacheService.invalidate(tenantId);
+            }
+
             return { 
                 success: true, 
                 data: result, 
@@ -264,29 +271,87 @@ class NeonTransactionSafeExecutor {
     }
 
     /**
+     * CACHED READ FLOW: High Performance (STEP 10)
+     * Checks in-memory cache before hitting database.
+     */
+    async readWithCache(tenantId, key, operation, options = {}) {
+        // Try cache first
+        const cachedData = tenantCacheService.get(tenantId, key);
+        if (cachedData && !options.bypassCache) {
+            return { 
+                success: true, 
+                data: cachedData, 
+                message: "Success (from cache)"
+            };
+        }
+
+        // Cache miss: Execute regular read and store result
+        const result = await this.readWithTenant(tenantId, operation, options);
+        
+        if (result.success && result.data) {
+            tenantCacheService.set(tenantId, key, result.data, options.ttl);
+        }
+        
+        return result;
+    }
+
+    /**
      * PUBLIC SCHEMA EXECUTOR
-     * Explicitly sets search_path to public before operation and resets after
+     * Uses transaction-scoped SET LOCAL for zero leakage
+     * All control plane operations wrapped in transaction with public schema
      */
     async executeInPublic(operation) {
         const sequelize = getSequelize();
         
-        // CRITICAL: Force public schema before control plane operation
-        try {
-            await sequelize.query(`SET search_path TO "${PUBLIC_SCHEMA}"`);
-        } catch (error) {
-            console.warn('[Executor] ⚠️ Failed to set public schema:', error.message);
+        // DEBUG: Clear model cache to ensure fresh models (prevents stale cache issues)
+        const cacheKey = PUBLIC_SCHEMA;
+        if (tenantModelCache.has(cacheKey)) {
+            console.log('[Executor] 🧹 Clearing stale model cache for public schema');
+            tenantModelCache.delete(cacheKey);
         }
         
+        const transaction = await sequelize.transaction();
+        
         try {
-            const result = await this.executeWithTenant(CONTROL_PLANE, operation);
-            return result;
-        } finally {
-            // Always reset to public after (even though it's already public)
-            try {
-                await sequelize.query(`SET search_path TO "${PUBLIC_SCHEMA}"`);
-            } catch (error) {
-                // Silent fail for cleanup
+            // CRITICAL: Use SET LOCAL inside transaction (not global)
+            // SET LOCAL only affects current transaction, zero leakage risk
+            await sequelize.query(
+                `SET LOCAL search_path TO "${PUBLIC_SCHEMA}"`,
+                { transaction }
+            );
+            
+            // Get models with transaction bound
+            const { models } = await this.getTenantModels(CONTROL_PLANE, { transaction });
+            
+            // DEBUG: Verify TenantRegistry has all attributes
+            if (models.TenantRegistry) {
+                const rawAttrs = Object.keys(models.TenantRegistry.rawAttributes || {});
+                console.log('[Executor] ℹ️  TenantRegistry attributes:', rawAttrs.join(', '));
+                if (!rawAttrs.includes('businessId')) {
+                    console.error('[Executor] ❌ CRITICAL: businessId missing in cached TenantRegistry');
+                }
             }
+            
+            // Execute operation within transaction context
+            const result = await operation({
+                models,
+                transactionModels: models,
+                schemaName: PUBLIC_SCHEMA,
+                sequelize,
+                transaction
+            });
+            
+            await transaction.commit();
+            
+            return { 
+                success: true, 
+                data: result, 
+                message: "Success"
+            };
+        } catch (error) {
+            await transaction.rollback().catch(() => {});
+            console.error(`🚨 Public Executor Error: ${error.message}`);
+            throw error;
         }
     }
 

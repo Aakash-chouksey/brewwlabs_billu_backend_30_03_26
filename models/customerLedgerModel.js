@@ -39,10 +39,12 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         amount: {
+            field: 'amount',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         description: {
+            field: 'description',
             type: DataTypes.TEXT,
             allowNull: false
         },

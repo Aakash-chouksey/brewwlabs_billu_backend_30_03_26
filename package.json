@@ -21,7 +21,22 @@
     "migrate:tenant": "node scripts/migrateTenant.js",
     "seed:control-plane": "node scripts/seedControlPlane.js",
     "lint": "eslint src/ tests/",
-    "lint:fix": "eslint src/ tests/ --fix"
+    "lint:fix": "eslint src/ tests/ --fix",
+    "df:init": "node scripts/data-first-cli.js init",
+    "df:status": "node scripts/data-first-cli.js status",
+    "df:health": "node scripts/data-first-cli.js health",
+    "df:validate-schema": "node scripts/data-first-cli.js validate-schema",
+    "df:validate-deploy": "node scripts/data-first-cli.js validate-deploy",
+    "df:check-migrations": "node scripts/data-first-cli.js check-migrations",
+    "test:automation": "node tests/automation/runTests.js",
+    "test:automation:fix": "AUTO_FIX=true node tests/automation/runTests.js",
+    "test:reset": "node scripts/reset-system.js --force",
+    "test:reset:dry": "node scripts/reset-system.js",
+    "test:onboarding": "SKIP_RESET=true SKIP_API=true node tests/automation/runTests.js",
+    "test:db": "SKIP_RESET=true SKIP_ONBOARDING=true SKIP_API=true node tests/automation/runTests.js",
+    "clear-model-cache": "node scripts/clear-model-cache.js",
+    "validate:system": "node scripts/validate-system.js",
+    "validate:fix": "AUTO_FIX=true node scripts/validate-system.js"
   },
   "keywords": [],
   "author": "",
@@ -34,6 +49,7 @@
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "cls-hooked": "^4.2.2",
+    "colors": "^1.4.0",
     "compression": "^1.8.1",
     "continuation-local-storage": "^3.2.1",
     "cookie-parser": "^1.4.7",
@@ -46,7 +62,7 @@
     "express-rate-limit": "^8.2.1",
     "firebase-admin": "^13.7.0",
     "helmet": "^8.1.0",
-    "http-errors": "^2.0.0",
+    "http-errors": "^2.0.1",
     "ioredis": "^5.10.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
@@ -57,13 +73,14 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.17.2",
-    "pg": "^8.18.0",
+    "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
     "rate-limit-redis": "^4.3.1",
     "razorpay": "^2.9.5",
     "redis": "^5.11.0",
-    "sequelize": "^6.32.1",
-    "socket.io": "^4.8.3"
+    "sequelize": "^6.37.8",
+    "socket.io": "^4.8.3",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
@@ -73,14 +90,9 @@
   "jest": {
     "testEnvironment": "node",
     "coverageDirectory": "coverage",
-    "collectCoverageFrom": [
-      "**/*.{js,jsx}",
-      "!**/node_modules/**",
-      "!**/coverage/**",
-      "!**/tests/**"
-    ],
     "testMatch": [
-      "**/tests/**/*.test.js"
+      "**/tests/**/*.test.js",
+      "**/scripts/**/*.test.js"
     ],
     "setupFilesAfterEnv": [
       "./tests/setup.js"

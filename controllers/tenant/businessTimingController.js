@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const createHttpError = require('http-errors');
 
 /**
- * Business Timing Controller - Neon-Safe Version
+ * BUSINESS TIMING CONTROLLER - Neon-Safe Version
  * Standardized for transaction-scoped model access
  */
 const businessTimingController = {
@@ -11,15 +11,15 @@ const businessTimingController = {
      */
     getTimings: async (req, res, next) => {
         try {
-            const { businessId } = req;
-            const outletId = req.outletId || req.headers['x-outlet-id'];
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
 
-            const timings = await req.readWithTenant(async (context) => {
+            const result = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Timing } = models;
 
-                const whereClause = { businessId };
-                if (outletId) whereClause.outletId = outletId;
+                const whereClause = { businessId: business_id };
+                if (outlet_id) whereClause.outletId = outlet_id;
 
                 return await Timing.findAll({
                     where: whereClause,
@@ -27,10 +27,13 @@ const businessTimingController = {
                 });
             });
 
+            const timings = result.data || result || [];
+
             res.json({
                 success: true,
                 data: timings,
-                count: timings.length
+                count: timings.length,
+                message: "Business timings retrieved successfully"
             });
         } catch (error) {
             next(error);
@@ -42,8 +45,8 @@ const businessTimingController = {
      */
     createTiming: async (req, res, next) => {
         try {
-            const { businessId } = req;
-            const outletId = req.outletId || req.headers['x-outlet-id'];
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
             const { day, openTime, closeTime, isClosed } = req.body;
 
             if (day === undefined || !openTime || !closeTime) {
@@ -56,7 +59,7 @@ const businessTimingController = {
 
                 // Check if timing for this day already exists
                 const existing = await Timing.findOne({
-                    where: { businessId, outletId: outletId || null, day },
+                    where: { businessId: business_id, outletId: outlet_id || null, day },
                     transaction
                 });
 
@@ -67,34 +70,27 @@ const businessTimingController = {
                         isClosed: isClosed !== undefined ? isClosed : false
                     }, { transaction });
 
-                    return {
-                        message: 'Timing updated successfully',
-                        data: existing,
-                        created: false
-                    };
+                    return existing;
                 }
 
                 // Create new timing
-                const timing = await Timing.create({
+                return await Timing.create({
                     id: uuidv4(),
-                    businessId,
-                    outletId: outletId || null,
+                    businessId: business_id,
+                    outletId: outlet_id || null,
                     day,
                     openTime,
                     closeTime,
                     isClosed: isClosed !== undefined ? isClosed : false
                 }, { transaction });
-
-                return {
-                    message: 'Timing created successfully',
-                    data: timing,
-                    created: true
-                };
             });
 
-            res.status(result.created ? 201 : 200).json({
+            const data = result.data || result;
+
+            res.status(200).json({
                 success: true,
-                ...result
+                data: data,
+                message: 'Business timing updated successfully'
             });
         } catch (error) {
             next(error);

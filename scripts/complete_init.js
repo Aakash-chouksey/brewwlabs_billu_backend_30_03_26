@@ -76,37 +76,43 @@ async function completeInit() {
             'PartnerWallet', 'FeatureFlag', 'WebContent'
         ];
 
-        console.log('🔄 Syncing public models...');
+        console.log('⚠️  DEPRECATED: sync() operations removed for Data-First compliance');
+        console.log('📋 Use: npm run migrate:control-plane');
+        
+        // Check which tables exist (verification only)
+        const [existingTables] = await sequelize.query(`
+            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
+        `);
+        const foundTables = existingTables.map(t => t.table_name);
+        
         for (const name of publicModels) {
             if (models[name]) {
-                process.stdout.write(`  - ${name}... `);
-                await models[name].sync({ alter: true });
-                console.log('✅');
+                const tableName = models[name].tableName || name.toLowerCase() + 's';
+                const exists = foundTables.includes(tableName);
+                console.log(`  - ${name}: ${exists ? '✅ exists' : '❌ missing (run migrations)'}`);
             }
         }
 
-        console.log('⚠️ Skipping tenant models in complete_init (these belong in tenant schemas)');
+        console.log('⚠️ Skipping tenant models (belong in tenant schemas)');
 
-        // 5. CP Models
+        // 5. CP Models - verification only
         const cpModelsDir = path.join(__dirname, '../control_plane_models');
         if (fs.existsSync(cpModelsDir)) {
-            console.log('🔄 Syncing CP models...');
+            console.log('� Checking CP models...');
             const cpModels = require(cpModelsDir);
             for (const [name, modelDef] of Object.entries(cpModels)) {
-                // CP models are already initialized in the require, but let's be sure
                 try {
-                    process.stdout.write(`  - CP ${name}... `);
-                    // Use the model's own sync if possible
-                    await sequelize.getQueryInterface().showIndex(modelDef.tableName).catch(() => {});
-                    await modelDef.sync({ alter: true });
-                    console.log('✅');
+                    const tableName = modelDef.tableName;
+                    const exists = foundTables.includes(tableName);
+                    console.log(`  - CP ${name}: ${exists ? '✅ exists' : '❌ missing'}`);
                 } catch (e) {
-                    console.log(`❌ ${e.message}`);
+                    console.log(`  - CP ${name}: ⚠️ ${e.message}`);
                 }
             }
         }
 
-        console.log('\n🎉 ALL TABLES INITIALIZED SUCCESSFULLY');
+        console.log('\n🎉 MIGRATION-BASED INITIALIZATION COMPLETE');
+        console.log('⚠️  Note: complete_init.js is DEPRECATED - use migrations instead');
         
     } catch (error) {
         console.error('\n❌ FAILED:', error.message);
@@ -116,4 +122,10 @@ async function completeInit() {
     }
 }
 
-completeInit();
+// DEPRECATED: This script no longer runs sync operations
+// All schema changes should go through migrations
+console.log('⚠️  DEPRECATED: complete_init.js no longer performs sync operations');
+console.log('📋 Use migration runner instead: npm run migrate:control-plane');
+process.exit(0);
+
+// completeInit(); // DISABLED - Data-First compliance

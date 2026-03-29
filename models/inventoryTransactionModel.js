@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const InventoryTransaction = sequelize.define('InventoryTransaction', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -10,7 +11,7 @@ module.exports = (sequelize) => {
         inventoryId: {
             field: 'inventory_id',
             type: DataTypes.UUID,
-            allowNull: false
+            allowNull: true
         },
         inventoryItemId: {
             field: 'inventory_item_id',
@@ -33,6 +34,7 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         type: {
+            field: 'type',
             type: DataTypes.STRING,
             allowNull: true
         },
@@ -42,53 +44,67 @@ module.exports = (sequelize) => {
             allowNull: true
         },
         quantity: {
+            field: 'quantity',
             type: DataTypes.DECIMAL(10, 3),
             allowNull: false
         },
         unitCost: {
-            type: DataTypes.DECIMAL(10, 2),
-            field: 'unit_cost'
+            field: 'unit_cost',
+            type: DataTypes.DECIMAL(10, 2)
         },
         costPerUnit: {
-            type: DataTypes.DECIMAL(10, 2),
-            field: 'cost_per_unit'
+            field: 'cost_per_unit',
+            type: DataTypes.DECIMAL(10, 2)
         },
         totalCost: {
-            type: DataTypes.DECIMAL(10, 2),
-            field: 'total_cost'
+            field: 'total_cost',
+            type: DataTypes.DECIMAL(10, 2)
         },
         previousQuantity: {
-            type: DataTypes.DECIMAL(10, 3),
-            field: 'previous_quantity'
+            field: 'previous_quantity',
+            type: DataTypes.DECIMAL(10, 3)
         },
         previousStock: {
-            type: DataTypes.DECIMAL(10, 3),
-            field: 'previous_stock'
+            field: 'previous_stock',
+            type: DataTypes.DECIMAL(10, 3)
         },
         newQuantity: {
-            type: DataTypes.DECIMAL(10, 3),
-            field: 'new_quantity'
+            field: 'new_quantity',
+            type: DataTypes.DECIMAL(10, 3)
         },
         newStock: {
-            type: DataTypes.DECIMAL(10, 3),
-            field: 'new_stock'
+            field: 'new_stock',
+            type: DataTypes.DECIMAL(10, 3)
         },
         performedBy: {
-            type: DataTypes.UUID,
-            field: 'performed_by'
+            field: 'performed_by',
+            type: DataTypes.UUID
         },
         createdBy: {
-            type: DataTypes.UUID,
-            field: 'created_by'
+            field: 'created_by',
+            type: DataTypes.UUID
         },
         reference: {
+            field: 'reference',
             type: DataTypes.STRING
         },
         reason: {
+            field: 'reason',
             type: DataTypes.TEXT
         },
         notes: {
+            field: 'notes',
             type: DataTypes.TEXT
+        },
+        invoiceNumber: {
+            field: 'invoice_number',
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        supplierId: {
+            field: 'supplier_id',
+            type: DataTypes.UUID,
+            allowNull: true
         }
     }, {
         tableName: 'inventory_transactions',
@@ -101,8 +117,6 @@ module.exports = (sequelize) => {
             { fields: ['business_id'] },
             { fields: ['business_id', 'outlet_id'] },
             { fields: ['inventory_id'] },
-            { fields: ['product_id'] },
-            { fields: ['type'] },
             { fields: ['created_at'] }
         ]
     });
@@ -111,6 +125,7 @@ module.exports = (sequelize) => {
         InventoryTransaction.belongsTo(models.Inventory, { foreignKey: 'inventoryId', as: 'inventory' });
         InventoryTransaction.belongsTo(models.InventoryItem, { foreignKey: 'inventoryItemId', as: 'inventoryItem' });
         InventoryTransaction.belongsTo(models.Product, { foreignKey: 'productId', as: 'product' });
+        InventoryTransaction.belongsTo(models.Supplier, { foreignKey: 'supplierId', as: 'supplier' });
     };
 
     return InventoryTransaction;

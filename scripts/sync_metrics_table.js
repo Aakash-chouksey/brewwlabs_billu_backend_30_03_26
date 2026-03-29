@@ -11,13 +11,19 @@ const { controlPlaneSequelize, SystemMetrics } = require('../control_plane_model
 
 async function sync() {
     try {
-        console.log('🔄 Syncing SystemMetrics table to public schema...');
+        console.log('🔄 Checking SystemMetrics table via migrations...');
         await controlPlaneSequelize.authenticate();
-        await SystemMetrics.sync({ force: false });
-        console.log('✅ SystemMetrics table synchronized.');
+        
+        // Run migrations instead of sync
+        const migrationRunner = require('../src/architecture/migrationRunner');
+        const SchemaVersion = require('../models/schemaVersionModel')(controlPlaneSequelize);
+        const tenantModels = { SchemaVersion: SchemaVersion.schema('public') };
+        
+        await migrationRunner.runPendingMigrations(controlPlaneSequelize, 'public', tenantModels);
+        console.log('✅ SystemMetrics migration complete.');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Sync failed:', error.message);
+        console.error('❌ Migration failed:', error.message);
         process.exit(1);
     }
 }

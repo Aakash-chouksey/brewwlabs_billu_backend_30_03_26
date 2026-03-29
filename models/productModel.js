@@ -5,39 +5,38 @@ module.exports = (sequelize) => {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
-            primaryKey: true
+            primaryKey: true,
+            field: 'id'
         },
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
             field: 'outlet_id',
             type: DataTypes.UUID,
             allowNull: false,
-            field: 'outlet_id',
             comment: 'Every product must belong to a specific outlet'
         },
         categoryId: {
             field: 'category_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'category_id'
+            allowNull: false
         },
         productTypeId: {
             field: 'product_type_id',
             type: DataTypes.UUID,
-            allowNull: true, // Fixed: set to true to avoid breaking existing data
-            field: 'product_type_id'
+            allowNull: true
         },
         name: {
+            field: 'name',
             type: DataTypes.STRING,
             allowNull: false,
             validate: { notEmpty: true }
         },
         price: {
+            field: 'price',
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
             defaultValue: 0.00,
@@ -46,29 +45,38 @@ module.exports = (sequelize) => {
         isActive: {
             field: 'is_active',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_active'
+            defaultValue: true
         },
         description: {
-            type: DataTypes.TEXT,
-            field: 'description'
+            field: 'description',
+            type: DataTypes.TEXT
         },
         image: {
-            type: DataTypes.STRING,
-            field: 'image'
+            field: 'image',
+            type: DataTypes.STRING
         },
         sku: {
-            type: DataTypes.STRING,
             field: 'sku',
+            type: DataTypes.STRING,
             allowNull: true
         },
-        currentStock: {
-            field: 'current_stock',
+        barcode: {
+            field: 'barcode',
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        cost: {
+            field: 'cost',
             type: DataTypes.DECIMAL(15, 2),
-            allowNull: true,
-            defaultValue: 0.00,
-            field: 'current_stock'
-        }
+            allowNull: false,
+            defaultValue: 0.00
+        },
+        taxRate: {
+            field: 'tax_rate',
+            type: DataTypes.DECIMAL(5, 2),
+            allowNull: false,
+            defaultValue: 0.00
+        },
     }, {
         tableName: 'products',
         timestamps: true,
@@ -91,9 +99,10 @@ module.exports = (sequelize) => {
 
     Product.associate = function(models) {
         // REMOVED cross-schema association to Business
-        Product.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category', constraints: false });
-        Product.belongsTo(models.Outlet, { foreignKey: 'outlet_id', as: 'outlet', constraints: false });
-        Product.belongsTo(models.ProductType, { foreignKey: 'product_type_id', as: 'productType', constraints: false });
+        Product.belongsTo(models.Category, { foreignKey: 'categoryId', as: 'category', constraints: false });
+        Product.belongsTo(models.Outlet, { foreignKey: 'outletId', as: 'outlet', constraints: false });
+        Product.belongsTo(models.ProductType, { foreignKey: 'productTypeId', as: 'productType', constraints: false });
+        Product.hasOne(models.Inventory, { foreignKey: 'productId', as: 'inventory' });
     };
 
     return Product;

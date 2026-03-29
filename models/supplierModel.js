@@ -5,14 +5,12 @@ module.exports = (sequelize) => {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
-            primaryKey: true,
-            field: 'id'
+            primaryKey: true
         },
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,
@@ -50,8 +48,7 @@ module.exports = (sequelize) => {
         isActive: {
             field: 'is_active',
             type: DataTypes.BOOLEAN,
-            defaultValue: true,
-            field: 'is_active'
+            defaultValue: true
         },
         createdAt: {
             type: DataTypes.DATE,

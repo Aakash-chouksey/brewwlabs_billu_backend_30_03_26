@@ -56,48 +56,19 @@ const onboardingController = {
             }
 
             const data = result.data;
-            const accessToken = authService.generateAccessToken(data.user);
-            const refreshToken = authService.generateRefreshToken(data.user);
-
-            const cookieOptions = {
-                httpOnly: true,
-                secure: config.nodeEnv === 'production',
-                sameSite: config.nodeEnv === 'production' ? 'strict' : 'lax',
-                path: '/'
-            };
-
-            res.cookie('accessToken', accessToken, {
-                ...cookieOptions,
-                maxAge: 60 * 60 * 1000
-            });
-
-            res.cookie('refreshToken', refreshToken, {
-                ...cookieOptions,
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
-
-            console.log('🔍 [ONBOARDING] Response data before sending:', {
-                success: true,
-                hasBusiness: !!data.business,
-                hasOutlet: !!data.outlet,
-                hasUser: !!data.user,
-                hasAccessToken: !!accessToken,
-                hasRefreshToken: !!refreshToken
-            });
-
-            const responseData = {
-                success: true,
-                message: 'Business onboarded successfully.',
-                business: data.business && typeof data.business.get === 'function' ? data.business.get({ plain: true }) : data.business,
-                outlet: data.outlet && typeof data.outlet.get === 'function' ? data.outlet.get({ plain: true }) : data.outlet,
-                user: data.user && typeof data.user.get === 'function' ? data.user.get({ plain: true }) : data.user,
-                accessToken,
-                refreshToken
-            };
             
-            console.log('🔍 [ONBOARDING] Full response:', JSON.stringify(responseData, null, 2));
+            console.log('🔍 [ONBOARDING] Phase 1 Response data:', {
+                success: true,
+                tenantId: data.tenantId,
+                status: 'PENDING'
+            });
 
-            return res.status(201).json(responseData);
+            return res.status(201).json({
+                success: true,
+                message: "Tenant created. Setup in progress.",
+                tenantId: data.tenantId,
+                status: 'PENDING'
+            });
 
         } catch (error) {
             if (error.message && (

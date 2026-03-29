@@ -10,8 +10,7 @@ module.exports = (sequelize) => {
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,

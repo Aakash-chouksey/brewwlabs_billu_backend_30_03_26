@@ -37,14 +37,24 @@ async function init() {
       // Add other control plane models specifically if they exist in this script's imports
     ];
 
-    console.log('⏳ Synchronizing public models only...');
-    for (const model of publicModels) {
-      if (model && typeof model.sync === 'function') {
-        console.log(`  - Syncing ${model.name || 'model'}...`);
-        await model.sync({ alter: true });
-      }
+    console.log('⏳ Verifying public schema tables exist...');
+    
+    // Check if tables exist (they should be created via migrations)
+    const [existingTables] = await sequelize.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+    `);
+    
+    const requiredTables = ['users', 'businesses', 'subscriptions', 'billing_configs', 'roll_trackings', 'audit_logs'];
+    const foundTables = existingTables.map(t => t.table_name);
+    const missingTables = requiredTables.filter(t => !foundTables.includes(t));
+    
+    if (missingTables.length > 0) {
+      console.log(`⚠️  Missing tables (run migrations): ${missingTables.join(', ')}`);
+    } else {
+      console.log('✅ All public schema tables verified.');
     }
-    console.log('✅ Public schema models synchronized.');
 
     console.log('🎉 Initialization COMPLETED successfully.');
     process.exit(0);

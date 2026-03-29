@@ -105,10 +105,55 @@ class AuthService {
                     
                     // Return domain-compatible object
                     const rawUser = user.toJSON();
+                    
+                    // 5. Fetch outlets for this user from tenant schema
+                    // Use outletIds from user record - outlets are in tenant schema
+                    let outlets = [];
+                    const outletIdsRaw = rawUser.outlet_ids || rawUser.outletIds || [];
+                    let outletIds = [];
+
+                    if (typeof outletIdsRaw === 'string') {
+                        try {
+                            outletIds = JSON.parse(outletIdsRaw);
+                        } catch (e) {
+                            outletIds = outletIdsRaw.split(',').map(id => id.trim());
+                        }
+                    } else if (Array.isArray(outletIdsRaw)) {
+                        outletIds = outletIdsRaw;
+                    }
+
+                    // 6. ENRICHMENT: Fetch real outlet details from tenant schema
+                    const businessId = rawUser.business_id || rawUser.businessId;
+                    if (businessId && outletIds.length > 0) {
+                        try {
+                            console.log(`🔍 [LOGIN ENRICH] Fetching ${outletIds.length} outlets for business ${businessId}`);
+                            const outletResult = await neonTransactionSafeExecutor.readWithTenant(businessId, async (tenantContext) => {
+                                const { Outlet } = tenantContext.transactionModels;
+                                return await Outlet.findAll({
+                                    where: { id: outletIds },
+                                    attributes: ['id', 'name', 'address', 'phone', 'isHeadOffice', 'isActive']
+                                });
+                            });
+                            
+                            if (outletResult.success && outletResult.data) {
+                                outlets = outletResult.data.map(o => o.toJSON ? o.toJSON() : o);
+                                console.log(`✅ [LOGIN ENRICH] Found ${outlets.length} outlets in tenant schema`);
+                            }
+                        } catch (enrichError) {
+                            console.warn(`⚠️ [LOGIN ENRICH] Failed to fetch tenant outlets: ${enrichError.message}`);
+                            // Fallback to basic objects if tenant schema isn't ready or accessible
+                            outlets = outletIds.map(id => ({ id, name: 'Outlet', status: 'active' }));
+                        }
+                    }
+                    
+                    console.log(`🔍 [LOGIN DEBUG] Login enrichment complete for ${rawUser.email}. Outlets: ${outlets.length}`);
+                    
                     return {
                         ...rawUser,
                         role: isSuperAdmin ? 'SUPER_ADMIN' : rawUser.role,
-                        panelType: isSuperAdmin ? 'ADMIN' : 'TENANT'
+                        panelType: isSuperAdmin ? 'ADMIN' : 'TENANT',
+                        outletIds: outletIds,
+                        outlets: outlets
                     };
                 }
             );
@@ -149,7 +194,7 @@ class AuthService {
                         tenantId: CONTROL_PLANE 
                     });
                     
-                    if (!user || !user.isActive) {
+                    if (!user || user.isActive === false) {
                         return null;
                     }
                     
@@ -272,8 +317,8 @@ class AuthService {
                         email: email.toLowerCase(),
                         password: hashedPassword,
                         role,
-                        businessId,
-                        outletId,
+                        businessId: businessId,
+                        outletId: outletId,
                         isActive: true,
                         isVerified: true, // Default to true for now as per current onboarding flow
                         tokenVersion: 0,
@@ -300,25 +345,36 @@ class AuthService {
      * Helper methods (Pure Logic)
      */
     generateAccessToken(user) {
+        // Support both snake_case (DB) and camelCase (JS) property names
+        const businessId = user.businessId || user.business_id;
+        const outletId = user.outletId || user.outlet_id;
+        
         const payload = {
-            id: user.id,
+            id: user.id || user._id,
             email: user.email,
             name: user.name,
             role: user.role,
-            businessId: user.businessId,
-            outletId: user.outletId,
-            panelType: user.panelType || (user.role === 'SUPER_ADMIN' ? 'ADMIN' : 'TENANT'),
-            tokenVersion: user.tokenVersion || 0
+            // Include both formats for compatibility
+            businessId: businessId,
+            business_id: businessId,
+            outletId: outletId,
+            outlet_id: outletId,
+            panelType: user.panelType || user.panel_type || (user.role === 'SUPER_ADMIN' ? 'ADMIN' : 'TENANT'),
+            tokenVersion: user.tokenVersion || user.token_version || 0
         };
+        
+        console.log(`🔍 [TOKEN DEBUG] Generating token with business_id: ${businessId}, outlet_id: ${outletId}`);
+        
         return tokenService.generateAccessToken(payload);
     }
 
     generateRefreshToken(user) {
         const payload = {
-            id: user.id,
+            id: user.id || user._id,
             email: user.email,
             role: user.role,
-            tokenVersion: user.tokenVersion || 0
+            tokenVersion: user.tokenVersion || user.token_version || 0,
+            type: 'refresh'
         };
         return tokenService.generateRefreshToken(payload);
     }

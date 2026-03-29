@@ -60,79 +60,34 @@ async function checkEnvironment() {
   return true;
 }
 
+/**
+ * 🔧 DATA-FIRST INITIALIZATION
+ * Uses migrations instead of sync()
+ */
 async function initializeControlPlane() {
   try {
-    log('cyan', '🚀 Starting control plane initialization...');
+    log('cyan', '🚀 Starting control plane initialization (DATA-FIRST MODE)...');
     
     // 1. Test database connection
     log('blue', '🔌 Testing database connection...');
     await controlPlaneSequelize.authenticate();
     log('green', '✅ Database connection successful');
     
-    // 2. Check existing tables
-    log('blue', '🔍 Checking existing tables...');
-    const [existingTables] = await controlPlaneSequelize.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-      ORDER BY table_name
-    `);
+    // 2. Run migrations instead of sync()
+    log('blue', '🔧 Running control plane migrations...');
+    const migrationRunner = require('../src/architecture/migrationRunner');
+    const path = require('path');
     
-    log('cyan', `📋 Found ${existingTables.length} existing tables:`);
-    existingTables.forEach(table => {
-      log('cyan', `  - ${table.table_name}`);
-    });
+    // Create a minimal tenant models object for migration tracking
+    const SchemaVersion = require('../models/schemaVersionModel')(controlPlaneSequelize);
+    const tenantModels = { SchemaVersion: SchemaVersion.schema('public') };
     
-    // 3. Initialize models
-    log('blue', '🏗️ Initializing control plane models...');
-    const controlModels = require('../control_plane_models');
+    const migrationPath = path.join(__dirname, '../migrations/control-plane');
+    await migrationRunner.runPendingMigrations(controlPlaneSequelize, 'public', tenantModels, migrationPath);
+    log('green', '✅ Migrations complete');
     
-    // Initialize the models first
-    await controlModels.init();
-    log('green', '✅ Model factory initialized');
-    
-    const { Business, TenantConnection, Subscription, SuperAdminUser, ClusterMetadata, TenantMigrationLog, Plan, AuditLog, TenantRegistry } = controlModels;
-    // Also include the unified User and Outlet models for public schema access
-    const User = require('../control_plane_models/userModel')(controlPlaneSequelize, require('sequelize').DataTypes);
-    const Outlet = require('../models/outletModel')(controlPlaneSequelize, require('sequelize').DataTypes);
-    
-    // 4. Create tables if they don't exist
-    log('blue', '🔧 Creating tables if needed...');
-    
-    const tables = [
-      { name: 'businesses', model: Business },
-      { name: 'users', model: User },
-      { name: 'outlets', model: Outlet },
-      { name: 'tenant_connections', model: TenantConnection },
-      { name: 'plans', model: Plan },
-      { name: 'subscriptions', model: Subscription },
-      { name: 'super_admin_users', model: SuperAdminUser },
-      { name: 'cluster_metadata', model: ClusterMetadata },
-      { name: 'tenant_migration_log', model: TenantMigrationLog },
-      { name: 'audit_logs', model: AuditLog },
-      { name: 'tenant_registry', model: TenantRegistry }
-    ];
-    
-    for (const table of tables) {
-      try {
-        log('yellow', `🔧 Checking ${table.name} table...`);
-        // Force sync to public schema strictly
-        await table.model.schema('public').sync({ force: true });
-        log('green', `✅ ${table.name} table ready`);
-      } catch (error) {
-        if (error.message.includes('does not exist') || error.message.includes('relation')) {
-          log('yellow', `🔧 Creating ${table.name} table...`);
-          await table.model.schema('public').sync({ force: true });
-          log('green', `✅ ${table.name} table created`);
-        } else {
-          log('red', `❌ Error with ${table.name} table: ${error.message}`);
-          throw error;
-        }
-      }
-    }
-    
-    // 5. Verify tables exist
-    log('blue', '🔍 Verifying all tables exist...');
+    // 3. Verify tables exist
+    log('blue', '🔍 Verifying tables...');
     const [finalTables] = await controlPlaneSequelize.query(`
       SELECT table_name 
       FROM information_schema.tables 
@@ -140,7 +95,9 @@ async function initializeControlPlane() {
       ORDER BY table_name
     `);
     
-    const requiredTables = ['businesses', 'users', 'outlets', 'tenant_connections', 'subscriptions', 'super_admin_users', 'cluster_metadata', 'tenant_migration_log', 'plans', 'audit_logs', 'tenant_registry'];
+    const requiredTables = ['businesses', 'users', 'tenant_connections', 
+                           'subscriptions', 'super_admin_users', 'cluster_metadata', 
+                           'tenant_migration_log', 'plans', 'audit_logs', 'tenant_registry'];
     const missingTables = requiredTables.filter(table => 
       !finalTables.some(t => t.table_name === table)
     );
@@ -152,45 +109,22 @@ async function initializeControlPlane() {
     
     log('green', '✅ All required tables exist');
     
-    // 6. Test business creation
+    // 4. Test business creation
     log('blue', '🧪 Testing business creation...');
-    try {
-      const testBusiness = await Business.schema('public').create({
-        name: 'Test Business',
-        email: 'test@example.com',
-        status: 'active'
-      });
-      
-      log('green', `✅ Test business created with ID: ${testBusiness.id}`);
-      
-      // Clean up test business
-      await Business.schema('public').destroy({ where: { id: testBusiness.id } });
-      log('green', '✅ Test business cleaned up');
-    } catch (error) {
-      log('red', `❌ Business creation test failed: ${error.message}`);
-      throw error;
-    }
+    const controlModels = require('../control_plane_models');
+    await controlModels.init();
     
-    // 7. Run schema fixes if needed
-    log('blue', '🔧 Applying schema fixes...');
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      
-      const migrationPath = path.join(__dirname, '../migrations/011_fix_control_plane_schema.sql');
-      if (fs.existsSync(migrationPath)) {
-        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-        await controlPlaneSequelize.query(migrationSQL);
-        log('green', '✅ Schema fixes applied');
-      } else {
-        log('yellow', '⚠️ Schema fixes migration file not found, skipping...');
-      }
-    } catch (error) {
-      log('yellow', `⚠️ Schema fixes already applied or not needed: ${error.message}`);
-    }
+    const testBusiness = await controlModels.Business.create({
+      name: 'Test Business',
+      email: 'test@example.com',
+      status: 'active'
+    });
     
-    log('green', '🎉 Control plane initialization completed successfully!');
+    log('green', `✅ Test business created: ${testBusiness.id}`);
+    await testBusiness.destroy();
+    log('green', '✅ Cleanup complete');
     
+    log('green', '🎉 Control plane initialization completed!');
     return true;
     
   } catch (error) {

@@ -21,7 +21,12 @@ class SuperAdminController {
                 });
             }, CONTROL_PLANE);
 
-            res.json(result);
+            const data = result.data || result;
+            res.json({
+                success: true,
+                data: data,
+                message: "Tenants retrieved successfully"
+            });
         } catch (error) {
             next(error);
         }
@@ -39,14 +44,19 @@ class SuperAdminController {
                 const { TenantRegistry, Business } = models;
 
                 return await TenantRegistry.findOne({
-                    where: { businessId: tenantId },
+                    where: { business_id: tenantId },
                     include: [{ model: Business, as: 'business' }]
                 });
             }, CONTROL_PLANE);
 
-            if (!result) throw new Error('Tenant not found');
+            const data = result.data || result;
+            if (!data) throw new Error('Tenant not found');
 
-            res.json(result);
+            res.json({
+                success: true,
+                data: data,
+                message: "Tenant details retrieved successfully"
+            });
         } catch (error) {
             next(error);
         }
@@ -64,12 +74,11 @@ class SuperAdminController {
             const exists = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { TenantRegistry } = models;
-                return await TenantRegistry.findOne({ where: { businessId: tenantId } });
+                return await TenantRegistry.findOne({ where: { business_id: tenantId } });
             }, CONTROL_PLANE);
 
             if (!exists) throw new Error('Tenant not found');
 
-            // Securely access tenant-specific data
             const orders = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Order } = models;
@@ -79,7 +88,11 @@ class SuperAdminController {
                 });
             }, tenantId);
 
-            res.json(orders);
+            res.json({
+                success: true,
+                data: orders.data || orders,
+                message: "Tenant orders retrieved successfully"
+            });
         } catch (error) {
             next(error);
         }
@@ -103,9 +116,9 @@ class SuperAdminController {
 
             const result = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
-                const { TenantRegistry, Business } = models;
+                const { TenantRegistry, Business, User } = models;
 
-                const registry = await TenantRegistry.findOne({ where: { businessId: tenantId }, transaction });
+                const registry = await TenantRegistry.findOne({ where: { business_id: tenantId }, transaction });
                 if (!registry) throw new Error('Tenant not found');
 
                 const oldStatus = registry.status;
@@ -113,7 +126,22 @@ class SuperAdminController {
                 
                 const business = await Business.findOne({ where: { id: tenantId }, transaction });
                 if (business) {
-                    await business.update({ status: status === 'active' ? 'active' : 'inactive' }, { transaction });
+                    const isClosing = status === 'suspended';
+                    const businessStatus = status === 'active' ? 'active' : 'inactive';
+                    await business.update({ status: businessStatus }, { transaction });
+                    
+                    // Cascade status to users
+                    if (status === 'active') {
+                        await User.update(
+                            { status: 'ACTIVE', isActive: true, isVerified: true },
+                            { where: { businessId: tenantId }, transaction }
+                        );
+                    } else if (isClosing) {
+                        await User.update(
+                            { isActive: false },
+                            { where: { businessId: tenantId }, transaction }
+                        );
+                    }
                 }
 
                 return { oldStatus, newStatus: status, businessName: business?.name };
@@ -187,7 +215,7 @@ class SuperAdminController {
 
                 // Get registry entry for this business
                 const registry = await TenantRegistry.findOne({
-                    where: { businessId: business.id },
+                    where: { business_id: business.id },
                     attributes: ['status', 'schema_name', 'created_at']
                 });
 
@@ -230,18 +258,71 @@ class SuperAdminController {
 
             if (!metrics) {
                 return res.json({
+                    success: true,
                     message: "Metrics are being calculated. Check back in 15 minutes.",
-                    isPending: true
+                    data: { isPending: true }
                 });
             }
 
             res.json({
-                ...metrics.metricValue,
-                lastUpdated: metrics.lastUpdated
+                success: true,
+                message: "System metrics retrieved successfully",
+                data: {
+                    ...metrics.metricValue,
+                    lastUpdated: metrics.lastUpdated
+                }
             });
         } catch (error) {
             next(error);
         }
+    }
+
+    /**
+     * GET /admin/dashboard
+     * Dashboard statistics for super admin
+     */
+    async getPlatformStats(req, res, next) {
+        return this.getSystemMetrics(req, res, next);
+    }
+
+    /**
+     * GET /admin/businesses
+     * Alias for getAllTenants
+     */
+    async getBusinesses(req, res, next) {
+        return this.getAllTenants(req, res, next);
+    }
+
+    /**
+     * POST /admin/businesses/:id/status
+     */
+    async updateBusinessStatus(req, res, next) {
+        req.params.tenantId = req.params.id;
+        return this.updateTenantStatus(req, res, next);
+    }
+
+    /**
+     * POST /admin/businesses/:id/approve
+     */
+    async approveBusiness(req, res, next) {
+        try {
+            req.params.tenantId = req.params.id;
+            req.body.status = 'active';
+            return this.updateTenantStatus(req, res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Generic Not Implemented Handler
+     */
+    async notImplemented(req, res, next) {
+        res.status(501).json({
+            success: false,
+            message: `Endpoint ${req.method} ${req.originalUrl} is not yet implemented in the Neon-safe architecture.`,
+            data: null
+        });
     }
 }
 

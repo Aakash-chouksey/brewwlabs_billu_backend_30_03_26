@@ -12,7 +12,9 @@ const stockController = {
      */
     purchaseStock: async (req, res, next) => {
         try {
-            const { businessId, auth } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
+            const user_id = req.user?.id;
             const { inventoryId, quantity, costPerUnit, purchaseDate, supplierId, invoiceNumber } = req.body;
 
             const txn = await req.executeWithTenant(async (context) => {
@@ -21,7 +23,7 @@ const stockController = {
 
                 // Add to inventory
                 const inventory = await Inventory.findOne({
-                    where: { id: inventoryId || req.body.inventoryItemId, businessId },
+                    where: { id: inventoryId || req.body.inventoryItemId, businessId: business_id },
                     transaction
                 });
 
@@ -37,7 +39,8 @@ const stockController = {
                 // Record transaction
                 return await InventoryTransaction.create({
                     id: uuidv4(),
-                    businessId,
+                    businessId: business_id,
+                    outletId: outlet_id,
                     inventoryId: inventory.id,
                     type: 'PURCHASE',
                     quantity: Number(quantity),
@@ -48,7 +51,7 @@ const stockController = {
                     supplierId,
                     invoiceNumber,
                     notes: `Stock purchase: ${invoiceNumber || 'N/A'}`,
-                    performedBy: auth?.id
+                    performedBy: user_id
                 }, { transaction });
             });
 
@@ -68,8 +71,10 @@ const stockController = {
      */
     selfConsumeStock: async (req, res, next) => {
         try {
-            const { businessId, auth } = req;
-            const { inventoryId, quantity, reason, recipeId } = req.body;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
+            const user_id = req.user?.id;
+            const { inventoryId, quantity, reason } = req.body;
 
             const txn = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
@@ -77,7 +82,7 @@ const stockController = {
 
                 // Check stock
                 const inventory = await Inventory.findOne({
-                    where: { id: inventoryId || req.body.inventoryItemId, businessId },
+                    where: { id: inventoryId || req.body.inventoryItemId, businessId: business_id },
                     transaction
                 });
 
@@ -94,7 +99,8 @@ const stockController = {
                 // Record transaction
                 return await InventoryTransaction.create({
                     id: uuidv4(),
-                    businessId,
+                    businessId: business_id,
+                    outletId: outlet_id,
                     inventoryId: inventory.id,
                     type: 'SELF_CONSUME',
                     quantity: -Number(quantity),
@@ -102,7 +108,7 @@ const stockController = {
                     newQuantity: newQty,
                     reason,
                     notes: `Self consumption: ${reason || 'N/A'}`,
-                    performedBy: auth?.id
+                    performedBy: user_id
                 }, { transaction });
             });
 
@@ -122,7 +128,9 @@ const stockController = {
      */
     adjustStock: async (req, res, next) => {
         try {
-            const { businessId, auth } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
+            const user_id = req.user?.id;
             const { inventoryId, quantity, adjustmentType, reason } = req.body;
 
             const txn = await req.executeWithTenant(async (context) => {
@@ -130,7 +138,7 @@ const stockController = {
                 const { Inventory, InventoryTransaction } = models;
 
                 const inventory = await Inventory.findOne({
-                    where: { id: inventoryId || req.body.inventoryItemId, businessId },
+                    where: { id: inventoryId || req.body.inventoryItemId, businessId: business_id },
                     transaction
                 });
 
@@ -152,7 +160,8 @@ const stockController = {
                 // Record transaction
                 return await InventoryTransaction.create({
                     id: uuidv4(),
-                    businessId,
+                    businessId: business_id,
+                    outletId: outlet_id,
                     inventoryId: inventory.id,
                     type: 'ADJUSTMENT',
                     quantity: adjustQty,
@@ -160,7 +169,7 @@ const stockController = {
                     newQuantity: newQty,
                     reason,
                     notes: `Stock adjustment: ${reason || 'Manual'}`,
-                    performedBy: auth?.id
+                    performedBy: user_id
                 }, { transaction });
             });
 
@@ -180,14 +189,14 @@ const stockController = {
      */
     getTransactions: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
             const { inventoryId, type, startDate, endDate } = req.query;
 
             const transactions = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { InventoryTransaction, Inventory, Product } = models;
 
-                const whereClause = { businessId };
+                const whereClause = { businessId: business_id };
                 if (inventoryId || req.query.inventoryItemId) {
                     whereClause.inventoryId = inventoryId || req.query.inventoryItemId;
                 }
@@ -204,7 +213,7 @@ const stockController = {
                         include: [{ 
                             model: Product, 
                             as: 'product', 
-                            attributes: ['id', 'name', 'sku', 'price', 'currentStock', 'isActive'] 
+                            attributes: ['id', 'name', 'sku', 'price', 'isActive'] 
                         }] 
                     }],
                     order: [['created_at', 'DESC']]
@@ -213,7 +222,8 @@ const stockController = {
 
             res.json({
                 success: true,
-                data: transactions
+                data: transactions,
+                message: "Transactions retrieved successfully"
             });
 
         } catch (error) {
@@ -226,7 +236,7 @@ const stockController = {
      */
     getLowStockItems: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
 
             const items = await req.readWithTenant(async (context) => {
                 const { transactionModels: models, sequelize } = context;
@@ -234,7 +244,7 @@ const stockController = {
 
                 return await Inventory.findAll({
                     where: {
-                        businessId,
+                        businessId: business_id,
                         quantity: { [Op.lte]: sequelize.col('reorder_level') }
                     },
                     include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
@@ -245,7 +255,8 @@ const stockController = {
             res.json({
                 success: true,
                 data: items,
-                count: items.length
+                count: items.length,
+                message: "Low stock items retrieved successfully"
             });
 
         } catch (error) {

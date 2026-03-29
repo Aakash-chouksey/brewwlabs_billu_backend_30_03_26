@@ -90,12 +90,6 @@ const AuditLog = controlPlaneSequelize && controlPlaneSequelize.define ?
       field: 'tenant_id',
       comment: 'Tenant context for the action'
     },
-    brandId: {
-            type: DataTypes.UUID,
-      allowNull: true,
-      field: 'brand_id',
-      comment: 'Brand context for the action'
-    },
     severityLevel: {
             type: DataTypes.STRING,
       defaultValue: 'LOW',

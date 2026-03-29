@@ -33,8 +33,8 @@ module.exports = (sequelize) => {
         freezeTableName: true,
         indexes: [
             { fields: ['business_id'] },
-            { fields: ['business_id', 'outlet_id'] },
-            { fields: ['business_id', 'page'], unique: true }
+            { fields: ['business_id', 'outlet_id'] }
+            // { fields: ['business_id', 'page'], unique: true }  // TODO: Re-enable after fixing Neon issue
         ]
     });
 

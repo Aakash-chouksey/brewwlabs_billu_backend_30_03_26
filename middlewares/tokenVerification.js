@@ -71,76 +71,123 @@ const isVerifiedUser = async (req, res, next) => {
         // ---- Tenant User Case ----
         else {
             if (!req.path.includes('/logout')) {
-                const businessId = decodeToken.businessId;
-                if (!businessId) {
+                const business_id = decodeToken.business_id || decodeToken.businessId;
+                if (!business_id) {
                     return next(createHttpError(401, "Invalid token: Missing tenant identifier"));
                 }
 
                 try {
-                    // CRITICAL: Force public schema for control plane queries
-                    await sequelize.query(`SET search_path TO "${PUBLIC_SCHEMA}"`);
+                    // OPTIMIZATION: Use neonTransactionSafeExecutor for transaction-scoped queries
+                    const neonTransactionSafeExecutor = require('../services/neonTransactionSafeExecutor');
                     
-                    // OPTIMIZATION: Use direct model queries without executor overhead
-                    // Ensure models are initialized on the global instance
-                    const models = await ModelFactory.createModels(sequelize);
-                    const { User, TenantRegistry, Business } = models;
+                    // Define cache key before the callback so it's accessible after
+                    const cacheKey = `${userId}:${business_id}`;
                     
-                    // Check cache first
-                    const cacheKey = `${userId}:${businessId}`;
+                    // Check cache first before making DB calls
                     const cached = userCache.get(cacheKey);
                     if (cached && (Date.now() - cached.timestamp < USER_CACHE_TTL)) {
-                        user = cached.data.user;
-                        req.tenant = cached.data.tenant;
-                        // Still validate token version even from cache
-                        if (user.token_version !== decodeToken.tokenVersion) {
-                            return next(createHttpError(401, "Token version mismatch - session invalidated"));
-                        }
-                        if (!user.is_active) {
-                            return next(createHttpError(403, "User account is disabled"));
-                        }
+                        const { user: cachedUser, tenant: cachedTenant } = cached.data;
+                        user = cachedUser;
+                        req.tenant = cachedTenant;
+                        console.log(`🔒 [Auth/Verify] Cache hit for user: ${userId}`);
                     } else {
-                        // Parallel query for tenant registry, user, AND business (ALL-IN-ONE)
-                        // models are already available in scope from above
+                        // Cache miss - fetch from database
+                        const authResult = await neonTransactionSafeExecutor.executeInPublic(async ({ models }) => {
+                            const { User, TenantRegistry, Business } = models;
+                            
+                            // DEBUG: Log all TenantRegistry attributes for troubleshooting
+                            const rawAttrs = TenantRegistry?.rawAttributes || {};
+                            const attrNames = Object.keys(rawAttrs);
+                            console.log('🔍 [AUTH DEBUG] TenantRegistry rawAttributes:', attrNames.join(', '));
+                            
+                            // Check for businessId (camelCase attribute name)
+                            if (rawAttrs.businessId) {
+                                console.log('✅ [AUTH DEBUG] businessId attribute found');
+                                console.log('   - field mapping:', rawAttrs.businessId.field);
+                                console.log('   - type:', rawAttrs.businessId.type?.key || 'unknown');
+                            } else {
+                                console.error('❌ [AUTH DEBUG] businessId attribute MISSING in TenantRegistry');
+                                console.error('   Available attributes:', attrNames);
+                            }
+                            
+                            // Also check for other critical fields
+                            const criticalFields = ['id', 'schemaName', 'status', 'createdAt'];
+                            const missingFields = criticalFields.filter(f => !rawAttrs[f]);
+                            if (missingFields.length > 0) {
+                                console.warn('⚠️ [AUTH DEBUG] Missing critical fields:', missingFields);
+                            }
+                            
+                            // Parallel query for tenant registry, user, AND business (ALL-IN-ONE)
+                            const [tenantRegistry, dbUser, dbBusiness] = await Promise.all([
+                                TenantRegistry.findOne({
+                                    where: { businessId: business_id },
+                                    attributes: ['status']
+                                }),
+                                User.findByPk(userId, {
+                                    attributes: ['id', 'email', 'name', 'role', 'tokenVersion', 'businessId', 'outletId', 'panelType', 'isActive']
+                                }),
+                                Business.findByPk(business_id, {
+                                    attributes: ['id', 'name', 'status', 'isActive', 'type']
+                                })
+                            ]);
+                            
+                            return { tenantRegistry, dbUser, dbBusiness };
+                        });
                         
-                        const [tenantRegistry, dbUser, dbBusiness] = await Promise.all([
-                            TenantRegistry.findOne({
-                                where: { businessId },
-                                attributes: ['status']
-                            }),
-                            User.findByPk(userId, {
-                                attributes: ['id', 'email', 'role', 'token_version', 'business_id', 'outlet_id', 'panel_type', 'is_active']
-                            }),
-                            Business.findByPk(businessId, {
-                                attributes: ['id', 'name', 'status', 'isActive', 'type']
-                            })
-                        ]);
+                        const { tenantRegistry, dbUser, dbBusiness } = authResult.data;
+                            
+                        // CRITICAL: Check tenant status BEFORE allowing auth with detailed error messages
+                        const status = (tenantRegistry?.status || '').toUpperCase();
                         
-                        // CRITICAL: Check tenant status BEFORE allowing auth
-                        // Allow both 'active' and 'onboarding' - onboarding means schema is being initialized
-                        const allowedStatuses = ['active', 'onboarding'];
-                        if (!tenantRegistry || !allowedStatuses.includes(tenantRegistry.status)) {
-                            return next(createHttpError(503, 'Tenant not ready, please retry'));
+                        console.log(`🔒 [Auth/Verify] Tenant: ${business_id} | Status: ${status}`);
+
+                        // Handle specific statuses with meaningful errors
+                        if (!tenantRegistry) {
+                            console.warn(`🚫 [Auth/Verify] Tenant not found in registry: ${business_id}`);
+                            return next(createHttpError(404, 'Tenant not found. The business ID provided does not exist in our registry.'));
+                        }
+                        
+                        if (status === 'INIT_FAILED') {
+                            console.warn(`🚫 [Auth/Verify] Tenant setup failed: ${business_id}`);
+                            return next(createHttpError(403, 'Tenant initialization failed. The database schema could not be created correctly. Please contact support.'));
+                        }
+                        
+                        if (status === 'INIT_IN_PROGRESS' || status === 'CREATING' || status === 'PROVISIONING') {
+                            console.warn(`⏳ [Auth/Verify] Tenant still initializing: ${business_id}`);
+                            return next(createHttpError(503, 'Tenant not initialized. The system is currently setting up your workspace. Please try again in a few seconds.'));
+                        }
+                        
+                        if (status === 'SUSPENDED' || status === 'INACTIVE' || status === 'DEACTIVATED') {
+                            console.warn(`🚫 [Auth/Verify] Tenant suspended: ${business_id}`);
+                            return next(createHttpError(403, 'Tenant account is currently suspended or inactive. Please contact support to resolve this.'));
+                        }
+                        
+                        // Allowed statuses for normal operation
+                        const allowedStatuses = ['ACTIVE', 'READY'];
+                        if (!allowedStatuses.includes(status)) {
+                            console.warn(`🚫 [Auth/Verify] Tenant blocked. Registry status: ${status}`);
+                            return next(createHttpError(403, `Tenant not ready for access (Current status: ${status}).`));
                         }
                         
                         if (!dbBusiness || dbBusiness.status === 'SUSPENDED' || dbBusiness.isActive === false) {
-                            return next(createHttpError(403, 'Tenant is suspended or inactive'));
+                            return next(createHttpError(403, 'The business account is suspended or inactive.'));
                         }
 
                         if (!dbUser) {
-                            return next(createHttpError(401, "User not found"));
+                            return next(createHttpError(401, "Authenticated user not found in this tenant context."));
                         }
                         
                         user = dbUser.get ? dbUser.get({ plain: true }) : dbUser;
                         const tenant = dbBusiness.get ? dbBusiness.get({ plain: true }) : dbBusiness;
                         
                         // Validate token version
-                        if (user.token_version !== decodeToken.tokenVersion) {
-                            return next(createHttpError(401, "Token version mismatch - session invalidated"));
+                        if (user.tokenVersion !== decodeToken.tokenVersion) {
+                            return next(createHttpError(401, "Session has expired or been invalidated. Please log in again."));
                         }
                         
                         // Check if user is active
-                        if (!user.is_active) {
-                            return next(createHttpError(403, "User account is disabled"));
+                        if (!user.isActive) {
+                            return next(createHttpError(403, "Your user account has been disabled."));
                         }
                         
                         // Cache the aggregated data
@@ -150,9 +197,18 @@ const isVerifiedUser = async (req, res, next) => {
                         });
                         req.tenant = tenant;
                     }
+                    
                 } catch (dbError) {
-                    console.error('🔍 Auth DB Error:', dbError.message);
-                    return next(createHttpError(503, 'Authentication service unavailable'));
+                    console.error('🔍 [Auth/Verify] DB Error:', dbError.message);
+                    
+                    // More specific error message for database connection issues
+                    if (dbError.message?.includes('does not exist') || dbError.message?.includes('not found')) {
+                        return next(createHttpError(404, 'Tenant database schema not found. Provisioning may be incomplete.'));
+                    }
+                    if (dbError.message?.includes('ECONNREFUSED') || dbError.message?.includes('timeout')) {
+                        return next(createHttpError(503, 'Database connection temporary failure. Please try again.'));
+                    }
+                    return next(createHttpError(503, 'Authentication service temporarily unavailable due to system overhead.'));
                 }
             }
         }
@@ -167,22 +223,24 @@ const isVerifiedUser = async (req, res, next) => {
         req.user = plainUser;
         req.userRole = decodeToken.role;
         
-        // CRITICAL FIX: Only use JWT values if they exist, don't override with null/undefined
+        // CRITICAL FIX: Standardize on snake_case (business_id, outlet_id)
         req.auth = {
             ...req.auth,
-            ...(decodeToken.businessId && { businessId: decodeToken.businessId }),
-            ...(decodeToken.outletId && { outletId: decodeToken.outletId }),
-            ...(decodeToken.brandId && { brandId: decodeToken.brandId })
+            business_id: decodeToken.business_id || decodeToken.businessId,
+            outlet_id: decodeToken.outlet_id || decodeToken.outletId,
+            brand_id: decodeToken.brand_id || decodeToken.brandId
         };
         
         // Strict Outlet Isolation Hardening
-        req.businessId = req.auth.businessId;
-        req.outletId = req.auth.outletId;
+        req.business_id = req.auth.business_id;
+        req.businessId = req.auth.business_id; // Legacy support
+        req.outlet_id = req.auth.outlet_id;
+        req.outletId = req.auth.outlet_id; // Legacy support
         
-        // Validate strictly - missing outletId immediately invalidates token context for outlet staff
+        // Validate strictly - missing outlet_id immediately invalidates token context for outlet staff
         const currentRole = decodeToken.role;
-        if (!req.outletId && currentRole !== 'SUPER_ADMIN' && currentRole !== 'BusinessAdmin') {
-            return next(createHttpError(403, "🚨 Access Denied: outletId missing in token. Strict outlet isolation enforced."));
+        if (!req.outlet_id && currentRole !== 'SUPER_ADMIN' && currentRole !== 'BusinessAdmin') {
+            return next(createHttpError(403, "🚨 Access Denied: outlet_id missing in token. Strict outlet isolation enforced."));
         }
         
         // Final fallback for panelType

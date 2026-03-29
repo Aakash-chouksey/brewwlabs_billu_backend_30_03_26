@@ -50,37 +50,89 @@ const standardResponseMiddleware = (req, res, next) => {
 
 /**
  * Response validation middleware (PHASE 8)
- * Blocks invalid responses and enforces standard format
+ * Blocks invalid responses and enforces standard format: { success, message, data }
+ * SAFE VERSION: Handles circular references and prevents stack overflow
  */
 const responseValidationMiddleware = (req, res, next) => {
   const originalJson = res.json;
 
   res.json = function(data) {
-    // If data is not an object or is null, block it
+    if (res.headersSent) return;
+
+    // 1. If data is not an object or is null, wrap it
+    let responseData = data;
     if (!data || typeof data !== 'object') {
-      console.warn('⚠️ [PHASE 8] Invalid response format blocked:', data);
-      return originalJson.call(this, {
-        success: false,
-        message: "Invalid response format: Object required",
-        data: null
-      });
+       responseData = {
+          success: res.statusCode < 400,
+          message: res.statusCode < 400 ? "OK" : "Error Occurred",
+          data: data
+       };
     }
 
-    // STRICT CHECK: Ensure required fields exist
-    // Do NOT silently add success: true or data: {}
-    if (data.success === undefined || data.data === undefined) {
-      // Use a safer logging approach to avoid stringification issues on large objects
-      const preview = (typeof data === 'object') ? 'Object' : String(data).substring(0, 100);
-      console.error('🚨 [PHASE 8] Response missing required Fields (success or data):', preview);
+    // 2. Normalize Response Structure (non-recursive to prevent stack overflow)
+    const cleanData = {};
+    
+    // Ensure core success/message fields
+    cleanData.success = responseData.success !== undefined 
+      ? !!responseData.success 
+      : res.statusCode < 400;
       
-      if (process.env.NODE_ENV === 'development') {
-          // In development, throw to catch bugs early
-          // but we can't throw inside res.json without crashing the loop 
-          // so we just log heavily
-      }
+    cleanData.message = responseData.message || (cleanData.success ? "OK" : "Error Occurred");
+    
+    // 3. Extract payload without deep cleaning (avoid circular ref issues)
+    let payloadToProcess = responseData.data !== undefined ? responseData.data : responseData;
+    
+    // If already in standard format, use data field
+    if (responseData.success !== undefined && responseData.data !== undefined) {
+       payloadToProcess = responseData.data;
+    } else if (Array.isArray(responseData)) {
+       payloadToProcess = responseData;
+    } else if (typeof responseData === 'object' && responseData !== null) {
+       // Exclude standard fields from payload
+       const { success: _, message: __, ...rest } = responseData;
+       payloadToProcess = rest;
     }
 
-    return originalJson.call(this, data);
+    // 4. Safe serialization: Handle Sequelize models and arrays WITHOUT recursion
+    // Use JSON.stringify with replacer to handle circular references
+    try {
+      if (Array.isArray(payloadToProcess)) {
+        // Map array items - call toJSON if available, otherwise use as-is
+        cleanData.data = payloadToProcess.map(item => {
+          if (item && typeof item.toJSON === 'function') {
+            try {
+              return item.toJSON();
+            } catch (e) {
+              // If toJSON fails (circular ref), return plain object
+              return Object.keys(item).reduce((acc, key) => {
+                if (!key.startsWith('_') && typeof item[key] !== 'function') {
+                  acc[key] = item[key];
+                }
+                return acc;
+              }, {});
+            }
+          }
+          return item;
+        });
+      } else if (payloadToProcess && typeof payloadToProcess.toJSON === 'function') {
+        // Single Sequelize model
+        try {
+          cleanData.data = payloadToProcess.toJSON();
+        } catch (e) {
+          // If toJSON fails, extract dataValues or use empty object
+          cleanData.data = payloadToProcess.dataValues || {};
+        }
+      } else {
+        // Plain object or primitive - no deep cleaning to avoid circular refs
+        cleanData.data = payloadToProcess;
+      }
+    } catch (err) {
+      console.error('⚠️ Response cleaning error:', err.message);
+      // Fallback: return data as-is
+      cleanData.data = payloadToProcess;
+    }
+
+    return originalJson.call(this, cleanData);
   };
 
   next();

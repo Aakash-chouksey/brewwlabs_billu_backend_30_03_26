@@ -12,15 +12,15 @@ router.get('/dashboard', superAdminController.getPlatformStats);
 router.get('/businesses', superAdminController.getBusinesses);
 router.post('/businesses/:id/status', superAdminController.updateBusinessStatus);
 router.post('/businesses/:id/approve', superAdminController.approveBusiness);
-router.post('/businesses/:id/reject', superAdminController.rejectBusiness);
-router.post('/businesses/:id/subscription', superAdminController.updateBusinessSubscription);
+router.post('/businesses/:id/reject', superAdminController.notImplemented);
+router.post('/businesses/:id/subscription', superAdminController.notImplemented);
 
 // User Management (SuperAdmin only)
-router.get('/users/all', superAdminController.getAllUsers);
-router.post('/users/:userId/status', superAdminController.updateUserStatus);
+router.get('/users/all', superAdminController.notImplemented);
+router.post('/users/:userId/status', superAdminController.notImplemented);
 
 // Orders
-router.get('/orders/all', superAdminController.getAllOrders);
+router.get('/orders/all', superAdminController.notImplemented);
 
 // Accounting Management (Admin Accounting APIs)
 router.get('/accounting/accounts', adminAccountingController.getAllAccounts);
@@ -29,54 +29,54 @@ router.get('/accounting/analytics', adminAccountingController.getFinancialAnalyt
 router.get('/accounting/reconciliation', adminAccountingController.getAccountReconciliation);
 
 // Membership Plans
-router.get('/membership-plans', superAdminController.getMembershipPlans);
-router.post('/membership-plans', superAdminController.createMembershipPlan);
-router.put('/membership-plans/:id', superAdminController.updateMembershipPlan);
-router.delete('/membership-plans/:id', superAdminController.deleteMembershipPlan);
+router.get('/membership-plans', superAdminController.notImplemented);
+router.post('/membership-plans', superAdminController.notImplemented);
+router.put('/membership-plans/:id', superAdminController.notImplemented);
+router.delete('/membership-plans/:id', superAdminController.notImplemented);
 
 // Partner Types
-router.get('/partner-types', superAdminController.getPartnerTypes);
-router.post('/partner-types', superAdminController.createPartnerType);
-router.put('/partner-types/:id', superAdminController.updatePartnerType);
-router.delete('/partner-types/:id', superAdminController.deletePartnerType);
+router.get('/partner-types', superAdminController.notImplemented);
+router.post('/partner-types', superAdminController.notImplemented);
+router.put('/partner-types/:id', superAdminController.notImplemented);
+router.delete('/partner-types/:id', superAdminController.notImplemented);
 
 // Partner Wallets
-router.get('/partner-wallets', superAdminController.getPartnerWallets);
-router.post('/partner-wallets/credit', superAdminController.creditPartnerWallet);
+router.get('/partner-wallets', superAdminController.notImplemented);
+router.post('/partner-wallets/credit', superAdminController.notImplemented);
 
 // Partner Memberships
-router.get('/partner-memberships', superAdminController.getPartnerMemberships);
+router.get('/partner-memberships', superAdminController.notImplemented);
 
 // Settings
-router.get('/settings', superAdminController.getSettings);
-router.put('/settings', superAdminController.updateSettings);
+router.get('/settings', superAdminController.notImplemented);
+router.put('/settings', superAdminController.notImplemented);
 
 // Web Content
-router.get('/web-content/:page', superAdminController.getWebContent);
-router.put('/web-content/:page', superAdminController.updateWebContent);
+router.get('/web-content/:page', superAdminController.notImplemented);
+router.put('/web-content/:page', superAdminController.notImplemented);
 
 // User Permissions
-router.post('/users/:userId/permissions', superAdminController.updateSubAdminPermissions);
+router.post('/users/:userId/permissions', superAdminController.notImplemented);
 
 // Sub Admin Creation
-router.post('/users/create-sub-admin', superAdminController.createSubAdmin);
+router.post('/users/create-sub-admin', superAdminController.notImplemented);
 
 // Feature Flags
-router.get('/feature-flags', superAdminController.getFeatureFlags);
-router.post('/feature-flags', superAdminController.createFeatureFlag);
-router.put('/feature-flags/:id', superAdminController.updateFeatureFlag);
-router.delete('/feature-flags/:id', superAdminController.deleteFeatureFlag);
-router.post('/feature-flags/:id/toggle', superAdminController.toggleFeatureFlag);
+router.get('/feature-flags', superAdminController.notImplemented);
+router.post('/feature-flags', superAdminController.notImplemented);
+router.put('/feature-flags/:id', superAdminController.notImplemented);
+router.delete('/feature-flags/:id', superAdminController.notImplemented);
+router.post('/feature-flags/:id/toggle', superAdminController.notImplemented);
 
 // Audit Logs
-router.get('/logs', superAdminController.getAuditLogs);
+router.get('/logs', superAdminController.notImplemented);
 
 // Analytics & Infrastructure
-router.get('/analytics', superAdminController.getAnalyticsData);
-router.get('/infrastructure', superAdminController.getInfrastructureStatus);
+router.get('/analytics', superAdminController.notImplemented);
+router.get('/infrastructure', superAdminController.notImplemented);
 
 // User Impersonation
-router.post('/users/:userId/impersonate', superAdminController.impersonateUser);
+router.post('/users/:userId/impersonate', superAdminController.notImplemented);
 
 // Stats
 router.get('/stats', superAdminController.getPlatformStats);

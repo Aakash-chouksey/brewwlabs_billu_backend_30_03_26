@@ -10,20 +10,17 @@ module.exports = (sequelize) => {
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         outletId: {
             field: 'outlet_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'outlet_id'
+            allowNull: false
         },
         supplierId: {
             field: 'supplier_id',
             type: DataTypes.UUID,
-            allowNull: true,
-            field: 'supplier_id'
+            allowNull: true
         },
         supplierName: {
             field: 'supplier_name',
@@ -35,14 +32,17 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         items: {
-            type: DataTypes.JSONB, // List of items purchased
+            field: 'items',
+            type: DataTypes.JSONB,
             defaultValue: []
         },
         date: {
+            field: 'date',
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW
         },
         status: {
+            field: 'status',
             type: DataTypes.STRING,
             defaultValue: 'Completed'
         }

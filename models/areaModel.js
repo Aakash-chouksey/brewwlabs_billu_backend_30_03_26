@@ -3,54 +3,60 @@ const { DataTypes } = require('sequelize');
 // Factory function to create Area model for given sequelize instance
 module.exports = (sequelize) => {
     const Area = sequelize.define('Area', {
-    id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true
-    },
-    businessId: {
+        id: {
+            field: 'id',
             type: DataTypes.UUID,
-        allowNull: false,
-        field: 'business_id'
-    },
-    outletId: {
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true
+        },
+        businessId: {
+            field: 'business_id',
             type: DataTypes.UUID,
-        allowNull: false,
-        field: 'outlet_id'
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    description: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    capacity: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 20
-    },
-    layout: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: 'square'
-    },
-    status: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: 'active'
-    }
-}, {
-    timestamps: true,
-    underscored: true,
+            allowNull: false
+        },
+        outletId: {
+            field: 'outlet_id',
+            type: DataTypes.UUID,
+            allowNull: false
+        },
+        name: {
+            field: 'name',
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        description: {
+            field: 'description',
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        capacity: {
+            field: 'capacity',
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 20
+        },
+        layout: {
+            field: 'layout',
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'square'
+        },
+        status: {
+            field: 'status',
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'active'
+        }
+    }, {
+        timestamps: true,
+        underscored: true,
         freezeTableName: true,
-    tableName: 'table_areas',
-    indexes: [
-        { fields: ['business_id'] },
-        { fields: ['business_id', 'outlet_id'] }
-    ]
-});
+        tableName: 'table_areas',
+        indexes: [
+            { fields: ['business_id'] },
+            { fields: ['business_id', 'outlet_id'] }
+        ]
+    });
 
     // Define associations
     Area.associate = function(models) {

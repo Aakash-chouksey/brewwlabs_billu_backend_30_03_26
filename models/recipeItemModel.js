@@ -10,8 +10,7 @@ module.exports = (sequelize) => {
         recipeId: {
             field: 'recipe_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'recipe_id'
+            allowNull: false
         },
         inventoryItemId: {
             field: 'inventory_item_id',
@@ -34,16 +33,17 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         unit: {
+            field: 'unit',
             type: DataTypes.STRING,
             allowNull: false
         },
         isOptional: {
             field: 'is_optional',
             type: DataTypes.BOOLEAN,
-            defaultValue: false,
-            field: 'is_optional'
+            defaultValue: false
         },
         notes: {
+            field: 'notes',
             type: DataTypes.TEXT
         }
     }, {

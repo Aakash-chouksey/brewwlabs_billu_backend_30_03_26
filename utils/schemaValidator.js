@@ -8,7 +8,7 @@
  * 4. Required columns exist in each table
  */
 
-const { CONTROL_PLANE, TENANT_SCHEMA_PREFIX } = require('../utils/constants');
+const { CONTROL_PLANE, TENANT_SCHEMA_PREFIX } = require('../src/utils/constants');
 
 /**
  * Get all tenant schemas from database
@@ -154,22 +154,106 @@ async function detectSchemaDrift(sequelize) {
 }
 
 /**
- * Validate specific tenant has all required tables
+ * Validate specific tenant has all required tables AND required columns
  */
-async function validateTenantSchemaComplete(sequelize, tenantId) {
-    const schemaName = `${TENANT_SCHEMA_PREFIX}${tenantId}`;
-    const requiredTables = [
-        'products', 'categories', 'inventory', 'inventory_transactions',
-        'orders', 'order_items', 'customers', 'outlets', 'tables', 'areas'
-    ];
+async function validateTenantSchemaComplete(sequelize, businessId) {
+    const schemaName = `${TENANT_SCHEMA_PREFIX}${businessId}`;
+    const { TENANT_MODELS } = require('../src/utils/constants');
     
+    // Map model names to table names (standard Sequelize convention or explicitly specified)
+    // Most follow the snake_case plural pattern
+    const modelToTable = (modelName) => {
+        if (modelName === 'Category') return 'categories';
+        if (modelName === 'Product') return 'products';
+        if (modelName === 'Order') return 'orders';
+        if (modelName === 'OrderItem') return 'order_items';
+        if (modelName === 'InventoryItem') return 'inventory_items';
+        if (modelName === 'InventoryTransaction') return 'inventory_transactions';
+        if (modelName === 'BillingConfig') return 'billing_configs';
+        if (modelName === 'CustomerLedger') return 'customer_ledger';
+        if (modelName === 'CustomerTransaction') return 'customer_transactions';
+        if (modelName === 'ExpenseType') return 'expense_types';
+        if (modelName === 'FeatureFlag') return 'feature_flags';
+        if (modelName === 'InventoryCategory') return 'inventory_categories';
+        if (modelName === 'MembershipPlan') return 'membership_plans';
+        if (modelName === 'OperationTiming') return 'operation_timings';
+        if (modelName === 'PartnerMembership') return 'partner_memberships';
+        if (modelName === 'PartnerType') return 'partner_types';
+        if (modelName === 'PartnerWallet') return 'partner_wallets';
+        if (modelName === 'ProductType') return 'product_types';
+        if (modelName === 'PurchaseItem') return 'purchase_items';
+        if (modelName === 'RecipeItem') return 'recipe_items';
+        if (modelName === 'RollTracking') return 'roll_trackings';
+        if (modelName === 'SchemaVersion') return 'schema_versions';
+        if (modelName === 'StockTransaction') return 'stock_transactions';
+        if (modelName === 'TenantAuditLog') return 'audit_logs';
+        if (modelName === 'AccountTransaction') return 'account_transactions';
+        if (modelName === 'WebContent') return 'web_contents';
+        if (modelName === 'Area') return 'table_areas';
+        if (modelName === 'Inventory') return 'inventory';
+        
+        // Default to plural snake_case
+        return modelName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '') + 's';
+    };
+
+    const requiredTables = TENANT_MODELS.map(modelToTable);
+    
+    // Define CRITICAL columns that MUST exist
+    const systemColumns = ['id', 'business_id', 'created_at', 'updated_at'];
+    const outletScopedTables = [
+        'products', 'orders', 'inventory', 'inventory_items', 'categories', 
+        'tables', 'table_areas', 'order_items', 'payments', 'expenses', 
+        'incomes', 'purchases'
+    ];
+    const skuTables = ['products', 'inventory_items'];
+
     const existingTables = await getTablesInSchema(sequelize, schemaName);
     const missingTables = requiredTables.filter(t => !existingTables.includes(t));
     
+    const columnIssues = [];
+    for (const table of existingTables) {
+        // Skip table if not in our required list (though they should all be there)
+        if (!requiredTables.includes(table)) continue;
+        
+        const columns = await getTableColumns(sequelize, schemaName, table);
+        const columnNames = columns.map(c => c.column_name);
+        
+        const missingCols = [];
+        
+        // Check system columns
+        for (const col of systemColumns) {
+            if (!columnNames.includes(col)) missingCols.push(col);
+        }
+        
+        // Check outlet_id for scoped tables
+        if (outletScopedTables.includes(table) && !columnNames.includes('outlet_id')) {
+            missingCols.push('outlet_id');
+        }
+        
+        // Check sku for relevant tables
+        if (skuTables.includes(table) && !columnNames.includes('sku')) {
+            missingCols.push('sku');
+        }
+        
+        if (missingCols.length > 0) {
+            columnIssues.push({ table, missingColumns: missingCols });
+        }
+    }
+    
+    // Also check for schema_versions specifically
+    if (existingTables.includes('schema_versions')) {
+        const columns = await getTableColumns(sequelize, schemaName, 'schema_versions');
+        const columnNames = columns.map(c => c.column_name);
+        if (!columnNames.includes('version')) {
+            columnIssues.push({ table: 'schema_versions', missingColumns: ['version'] });
+        }
+    }
+    
     return {
         schema: schemaName,
-        complete: missingTables.length === 0,
+        complete: missingTables.length === 0 && columnIssues.length === 0,
         missingTables,
+        columnIssues,
         existingTables
     };
 }
@@ -218,6 +302,84 @@ async function validateMultiTenantSetup(sequelize) {
     return report;
 }
 
+/**
+ * Validate before tenant activation - comprehensive pre-activation check
+ */
+async function validateBeforeActivation(sequelize, schemaName, tenantModels) {
+    console.log(`[SchemaValidator] 🛡️ Pre-activation validation for ${schemaName}`);
+
+    const checks = {
+        schemaValid: false,
+        requiredDataPresent: false,
+        canActivate: false,
+        details: {}
+    };
+
+    // 1. Schema structure validation
+    const schemaValidation = await validateTenantSchemaComplete(sequelize, schemaName.replace('tenant_', ''));
+    checks.schemaValid = schemaValidation.complete;
+    checks.details.schema = schemaValidation;
+
+    // 2. Required data validation (using models)
+    try {
+        const dataChecks = await validateRequiredData(tenantModels);
+        checks.requiredDataPresent = dataChecks.valid;
+        checks.details.data = dataChecks;
+    } catch (error) {
+        checks.details.data = { valid: false, error: error.message };
+    }
+
+    // 3. Final decision
+    checks.canActivate = checks.schemaValid && checks.requiredDataPresent;
+
+    console.log(`[SchemaValidator] 🛡️ Pre-activation result: ${checks.canActivate ? 'CAN ACTIVATE' : 'CANNOT ACTIVATE'}`);
+    return checks;
+}
+
+/**
+ * Validate required data exists
+ */
+async function validateRequiredData(tenantModels) {
+    const checks = {
+        valid: true,
+        categories: false,
+        settings: false,
+        outlet: false,
+        errors: []
+    };
+
+    try {
+        // Check categories (at least 1 required)
+        if (tenantModels.Category) {
+            const catCount = await tenantModels.Category.count();
+            checks.categories = catCount >= 1;
+            if (!checks.categories) checks.errors.push('At least 1 category required');
+        }
+
+        // Check settings (at least 1 required)
+        if (tenantModels.Setting) {
+            const settingCount = await tenantModels.Setting.count();
+            checks.settings = settingCount >= 1;
+            if (!checks.settings) checks.errors.push('Settings record required');
+        }
+
+        // Check outlet (at least 1 required)
+        if (tenantModels.Outlet) {
+            const outletCount = await tenantModels.Outlet.count();
+            checks.outlet = outletCount >= 1;
+            if (!checks.outlet) checks.errors.push('At least 1 outlet required');
+        }
+
+        checks.valid = checks.categories && checks.settings && checks.outlet;
+
+    } catch (error) {
+        checks.valid = false;
+        checks.errors.push(`Data validation error: ${error.message}`);
+    }
+
+    return checks;
+}
+
 module.exports = {
     validateMultiTenantSetup,
     validateTenantSchemaComplete,
@@ -225,5 +387,7 @@ module.exports = {
     validateTenantIsolation,
     getTenantSchemas,
     getTablesInSchema,
-    getTableColumns
+    getTableColumns,
+    validateBeforeActivation,
+    validateRequiredData
 };

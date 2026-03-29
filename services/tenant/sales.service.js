@@ -9,7 +9,8 @@ const { Op } = require('sequelize');
  * Get dashboard metrics
  */
 const getDashboardMetrics = async (req) => {
-    const { businessId, outletId } = req;
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
     
     return await req.readWithTenant(async (context) => {
         const { transactionModels: models } = context;
@@ -18,8 +19,8 @@ const getDashboardMetrics = async (req) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const whereClause = { businessId };
-        if (outletId) whereClause.outletId = outletId;
+        const whereClause = { businessId: business_id };
+        if (outlet_id) whereClause.outletId = outlet_id;
         whereClause.createdAt = { [Op.gte]: today };
         whereClause.status = { [Op.notIn]: ['CANCELLED', 'VOID'] };
 
@@ -43,7 +44,8 @@ const getDashboardMetrics = async (req) => {
  * Get daily sales data
  */
 const getDailySales = async (req) => {
-    const { businessId, outletId } = req;
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
     const { date } = req.query;
     
     return await req.readWithTenant(async (context) => {
@@ -55,8 +57,8 @@ const getDailySales = async (req) => {
         const nextDate = new Date(targetDate);
         nextDate.setDate(nextDate.getDate() + 1);
         
-        const whereClause = { businessId };
-        if (outletId) whereClause.outletId = outletId;
+        const whereClause = { businessId: business_id };
+        if (outlet_id) whereClause.outletId = outlet_id;
         whereClause.createdAt = { [Op.gte]: targetDate, [Op.lt]: nextDate };
         whereClause.status = { [Op.notIn]: ['CANCELLED', 'VOID'] };
 
@@ -90,7 +92,8 @@ const getDailySales = async (req) => {
  * Get item sales report
  */
 const getItemSales = async (req) => {
-    const { businessId, outletId } = req;
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
     const { period = 'today' } = req.query;
     
     return await req.readWithTenant(async (context) => {
@@ -101,8 +104,8 @@ const getItemSales = async (req) => {
 
         const orders = await Order.findAll({
             where: {
-                businessId,
-                ...(outletId && { outletId }),
+                businessId: business_id,
+                ...(outlet_id && { outletId: outlet_id }),
                 createdAt: { [Op.gte]: startDate },
                 status: { [Op.notIn]: ['CANCELLED', 'VOID'] }
             },
@@ -171,19 +174,20 @@ const getItemSales = async (req) => {
  * Get category sales report
  */
 const getCategorySales = async (req) => {
-    const { businessId, outletId } = req;
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
     const { period = 'today' } = req.query;
     
     return await req.readWithTenant(async (context) => {
         const { transactionModels: models } = context;
-        const { Order, OrderItem, Product, Category } = models;
+        const { Order, OrderItem, Category } = models;
 
         const startDate = calculateStartDate(period);
 
         const orders = await Order.findAll({
             where: {
-                businessId,
-                ...(outletId && { outletId }),
+                businessId: business_id,
+                ...(outlet_id && { outletId: outlet_id }),
                 createdAt: { [Op.gte]: startDate },
                 status: { [Op.notIn]: ['CANCELLED', 'VOID'] }
             },
@@ -191,7 +195,7 @@ const getCategorySales = async (req) => {
                 model: OrderItem,
                 as: 'items',
                 include: [{
-                    model: Product,
+                    model: 'Product', // Assuming Product model is loaded
                     as: 'product',
                     include: [{ model: Category, as: 'category' }]
                 }]
@@ -243,7 +247,8 @@ const getCategorySales = async (req) => {
  * Get payment methods report
  */
 const getPaymentSales = async (req) => {
-    const { businessId, outletId } = req;
+    const business_id = req.business_id || req.businessId;
+    const outlet_id = req.outlet_id || req.outletId;
     const { period = 'today' } = req.query;
     
     return await req.readWithTenant(async (context) => {
@@ -254,8 +259,8 @@ const getPaymentSales = async (req) => {
 
         const orders = await Order.findAll({
             where: {
-                businessId,
-                ...(outletId && { outletId }),
+                businessId: business_id,
+                ...(outlet_id && { outletId: outlet_id }),
                 createdAt: { [Op.gte]: startDate },
                 status: { [Op.notIn]: ['CANCELLED', 'VOID'] }
             }

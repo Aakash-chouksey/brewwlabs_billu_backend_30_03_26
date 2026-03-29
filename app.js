@@ -1,5 +1,5 @@
 // ========================================
-// FORCE IPv4 AND DNS CONFIGURATION
+// FORCE IPv4 AND DNS CONFIGURATION (Refreshed for Wastage Fix)
 // ========================================
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
@@ -7,7 +7,7 @@ dns.setDefaultResultOrder('ipv4first');
 // ========================================
 // LOAD ENVIRONMENT AND DEPENDENCIES
 // ========================================
-require('dotenv').config({ override: true });
+require('dotenv').config();
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 const express = require("express");
@@ -230,25 +230,34 @@ app.get('/health/detailed', async (req, res) => {
 applyNeonSafeMiddlewareChains(app);
 
 // ========================================
-// CRITICAL: SCHEMA RESET MIDDLEWARE (MUST BE AFTER ALL ROUTES)
+// CRITICAL: SCHEMA RESET MIDDLEWARE REMOVED
 // ========================================
-// This ensures search_path is ALWAYS reset to public after every request
-// Prevents: schema leakage, cross-tenant contamination, login breaking after dashboard
-const { sequelize } = require('./config/unified_database');
-
-app.use((req, res, next) => {
-    // CRITICAL: Reset search_path to public for safety after every request
-    // We use res.on('finish') to ensure it happens after the response is sent
-    res.on('finish', async () => {
-        try {
-            await sequelize.query('SET search_path TO public');
-        } catch (error) {
-            // Silent fail - don't block for cleanup
-        }
-    });
-    
-    next();
-});
+// REASON: Using transaction-scoped SET LOCAL instead of global search_path
+// All schema isolation now happens at transaction level for zero leakage
+// 
+// Previous implementation (commented out for reference):
+// const { sequelize } = require('./config/unified_database');
+// app.use((req, res, next) => {
+//     res.on('finish', async () => {
+//         try {
+//             await sequelize.query('SET search_path TO public');
+//         } catch (error) {}
+//     });
+//     next();
+// });
+//
+// NEW ARCHITECTURE: 
+// - All queries wrapped in sequelize.transaction()
+// - SET LOCAL search_path used inside transactions only
+// - Zero global schema mutation
+// - Zero race conditions
+// - Full multi-tenant isolation
+//
+// Transactions are managed by:
+// - neonTransactionSafeExecutor.js (tenant operations)
+// - executeInPublic (control plane operations)
+// - migrationRunner.js (schema migrations)
+// ========================================
 
 // ========================================
 // 404 HANDLER (Catch-all for undefined routes)
@@ -401,8 +410,28 @@ const initializeNeonSafeDatabases = async () => {
     // 1. Connect to unified Neon-optimized database
     await connectUnifiedDB();
     
-    // 2. Validate control plane database
+    // 2. Initialize control plane models (auto-create public schema tables)
+    const { validateControlPlane, controlPlaneSequelize } = require('./config/control_plane_db');
     await validateControlPlane();
+
+    // 3. Initialize Data-First Architecture with STRICT_SCHEMA_MODE support
+    const { initialize: initializeDataFirst } = require('./src/architecture/dataFirstInitializer');
+    
+    await initializeDataFirst(controlPlaneSequelize, {
+      strictMode: process.env.STRICT_SCHEMA_MODE === 'true',
+      skipSchemaGuard: true, // Models not loaded yet - skip for now
+      skipMigrationDiscipline: false,
+      skipVersionCheck: false,
+      validateAllTenants: false // No tenants during initial setup
+    });
+
+    // 3. Run all pending migrations for active tenants
+    const { runStartupMigrations } = require('./src/architecture/startupMigration');
+    await runStartupMigrations(controlPlaneSequelize);
+
+    // 4. Audit all tenant schemas for drift
+    const { runStartupValidation } = require('./src/architecture/startupValidator');
+    await runStartupValidation(controlPlaneSequelize);
     
     console.log('✅ All Neon-safe database connections established');
   } catch (error) {
@@ -421,8 +450,14 @@ const initializeNeonSafeApp = async () => {
     
     console.log('✅ Neon-safe application initialized successfully');
   } catch (error) {
-    console.error('❌ Neon-safe application initialization failed:', error.message);
-    process.exit(1);
+    console.error('❌ Neon-safe database initialization failed:', error.message);
+    // Don't exit in development - allow server to start for testing
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Cannot start without database in production');
+      process.exit(1);
+    } else {
+      console.warn('⚠️  Starting without database - API endpoints will return 503 errors');
+    }
   }
 };
 

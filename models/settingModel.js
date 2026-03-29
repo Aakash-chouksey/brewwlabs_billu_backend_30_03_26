@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Setting = sequelize.define('Setting', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -10,50 +11,47 @@ module.exports = (sequelize) => {
         businessId: {
             field: 'business_id',
             type: DataTypes.UUID,
-            allowNull: false,
-            field: 'business_id'
+            allowNull: false
         },
         appName: {
             field: 'app_name',
             type: DataTypes.STRING, 
-            defaultValue: 'BrewwLabs POS',
-            field: 'app_name'
+            defaultValue: 'BrewwLabs POS'
         },
         logoUrl: {
-            type: DataTypes.STRING,
-            field: 'logo_url'
+            field: 'logo_url',
+            type: DataTypes.STRING
         },
         supportEmail: {
-            type: DataTypes.STRING,
-            field: 'support_email'
+            field: 'support_email',
+            type: DataTypes.STRING
         },
         supportPhone: {
-            type: DataTypes.STRING,
-            field: 'support_phone'
+            field: 'support_phone',
+            type: DataTypes.STRING
         },
         termsUrl: {
-            type: DataTypes.STRING,
-            field: 'terms_url'
+            field: 'terms_url',
+            type: DataTypes.STRING
         },
         privacyUrl: {
-            type: DataTypes.STRING,
-            field: 'privacy_url'
+            field: 'privacy_url',
+            type: DataTypes.STRING
         },
         maintenanceMode: {
             field: 'maintenance_mode',
             type: DataTypes.BOOLEAN, 
-            defaultValue: false,
-            field: 'maintenance_mode'
+            defaultValue: false
         },
         currency: {
+            field: 'currency',
             type: DataTypes.STRING,
-            defaultValue: 'INR',
-            field: 'currency'
+            defaultValue: 'INR'
         },
         timezone: {
+            field: 'timezone',
             type: DataTypes.STRING,
-            defaultValue: 'Asia/Kolkata',
-            field: 'timezone'
+            defaultValue: 'Asia/Kolkata'
         }
     }, {
         tableName: 'settings',

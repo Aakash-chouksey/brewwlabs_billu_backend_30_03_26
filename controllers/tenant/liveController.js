@@ -1,6 +1,6 @@
 /**
- * Live Controller - Neon-Safe Version
- * Standardized for transaction-scoped model access and fail-safe operations
+ * LIVE CONTROLLER - Neon-Safe Version
+ * Standardized for transaction-scoped model access and real-time POS monitoring
  */
 
 const { Op } = require('sequelize');
@@ -11,16 +11,17 @@ const liveController = {
      */
     getLiveOrders: async (req, res, next) => {
         try {
-            const { businessId, outletId } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
 
-            const orders = await req.readWithTenant(async (context) => {
+            const result = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Order, OrderItem, Product, Table, Customer } = models;
 
                 return await Order.findAll({
                     where: {
-                        businessId,
-                        outletId,
+                        businessId: business_id,
+                        outletId: outlet_id,
                         status: {
                             [Op.notIn]: ['COMPLETED', 'CANCELLED', 'ARCHIVED']
                         }
@@ -35,10 +36,13 @@ const liveController = {
                 });
             });
 
+            const data = result.data || result || [];
+
             res.json({
                 success: true,
-                data: orders || [],
-                count: (orders || []).length
+                data: data,
+                count: data.length,
+                message: "Live orders retrieved successfully"
             });
 
         } catch (error) {
@@ -51,9 +55,10 @@ const liveController = {
      */
     getLiveStats: async (req, res, next) => {
         try {
-            const { businessId, outletId } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
 
-            const stats = await req.readWithTenant(async (context) => {
+            const result = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
                 const { Order, Table } = models;
 
@@ -63,43 +68,46 @@ const liveController = {
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
 
-                // Phase 5: Force Fail-Safe APIs using safeQuery
-                const activeOrdersCount = await Order.count({
-                    where: {
-                        businessId,
-                        outletId,
-                        status: { [Op.notIn]: ['COMPLETED', 'CANCELLED'] }
-                    }
-                });
-
-                const todayOrdersCount = await Order.count({
-                    where: {
-                        businessId,
-                        outletId,
-                        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow }
-                    }
-                });
-
-                const todayRevenueSum = await Order.sum('billing_total', {
-                    where: {
-                        businessId,
-                        outletId,
-                        createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
-                        status: { [Op.notIn]: ['CANCELLED'] }
-                    }
-                }) || 0;
-
-                const occupiedTablesCount = await Table.count({
-                    where: {
-                        businessId,
-                        outletId,
-                        status: 'OCCUPIED'
-                    }
-                });
-
-                const totalTablesCount = await Table.count({
-                    where: { businessId, outletId }
-                });
+                const [
+                    activeOrdersCount,
+                    todayOrdersCount,
+                    todayRevenueSum,
+                    occupiedTablesCount,
+                    totalTablesCount
+                ] = await Promise.all([
+                    Order.count({
+                        where: {
+                            businessId: business_id,
+                            outletId: outlet_id,
+                            status: { [Op.notIn]: ['COMPLETED', 'CANCELLED'] }
+                        }
+                    }),
+                    Order.count({
+                        where: {
+                            businessId: business_id,
+                            outletId: outlet_id,
+                            createdAt: { [Op.gte]: today, [Op.lt]: tomorrow }
+                        }
+                    }),
+                    Order.sum('billingTotal', { // Standardized field mapping
+                        where: {
+                            businessId: business_id,
+                            outletId: outlet_id,
+                            createdAt: { [Op.gte]: today, [Op.lt]: tomorrow },
+                            status: { [Op.notIn]: ['CANCELLED'] }
+                        }
+                    }) || 0,
+                    Table.count({
+                        where: {
+                            businessId: business_id,
+                            outletId: outlet_id,
+                            status: 'OCCUPIED'
+                        }
+                    }),
+                    Table.count({
+                        where: { businessId: business_id, outletId: outlet_id }
+                    })
+                ]);
 
                 return {
                     activeOrders: activeOrdersCount,
@@ -111,10 +119,12 @@ const liveController = {
                 };
             });
 
+            const data = result.data || result;
+
             res.json({
                 success: true,
-                data: stats, // Use data wrapper for consistency (Phase 7)
-                stats // Backward compatibility
+                data: data,
+                message: "Live statistics retrieved successfully"
             });
 
         } catch (error) {

@@ -124,14 +124,10 @@ async function syncTenantDatabase() {
             }
         }
         
-        // Sync database schema
-        console.log('🔄 Syncing database schema...');
-        await tenantSequelize.sync({ 
-            alter: true, // Update existing tables
-            force: false  // Don't drop tables
-        });
-        
-        console.log('✅ Database schema synced successfully!');
+        // ❌ REMOVED: Sync database schema - Data-First Compliance
+        // Migrations should be run separately via migration runner
+        console.log('⚠️  Migrations must be run separately via: npm run migrate:tenant');
+        console.log('✅ Skipping sync - assuming schema already exists via migrations');
         
         // Verify tables were created
         const [finalTables] = await tenantSequelize.query(`

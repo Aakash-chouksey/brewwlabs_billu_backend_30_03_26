@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     const Expense = sequelize.define('Expense', {
         id: {
+            field: 'id',
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
@@ -23,13 +24,16 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         amount: {
+            field: 'amount',
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
         description: {
+            field: 'description',
             type: DataTypes.STRING
         },
         date: {
+            field: 'date',
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW
         },

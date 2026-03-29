@@ -1,8 +1,6 @@
 const path = require('path');
 const { neonSafeTenantMiddleware, neonSafeModelInjection } = require('../../middlewares/tenantMiddleware');
 const tenantStatusMiddleware = require('../../middlewares/tenantStatusMiddleware');
-const { globalErrorHandler } = require('../../middlewares/globalErrorHandlers');
-const { connectUnifiedDB } = require('../../config/unified_database');
 const neonTransactionSafeExecutor = require('../../services/neonTransactionSafeExecutor');
 const { enforcePublicSchema, resetSchemaToPublic } = require('../../middlewares/schemaEnforcement');
 
@@ -13,17 +11,18 @@ const applyNeonSafeMiddlewareChains = (app) => {
     console.log('🔐 Applying Neon-safe middleware chains...');
 
     // 🔒 LAZY DEFINITION: Created inside the function to ensure all modules are fully loaded
-    // This prevents "ReferenceError" or "undefined middleware" crashes due to circular dependencies
+    const { standardResponseMiddleware: standardResponse } = require('../../utils/standardResponse');
+
     const adminChain = [
         require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(30000),
-        require('../../middlewares/globalErrorHandlers').responseValidationMiddleware,
+        standardResponse,
         require('../../middlewares/tokenVerification').isVerifiedUser,
         require('../../middlewares/tokenVerification').adminOnlyMiddleware
     ];
 
     const tenantChain = [
         require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(30000),
-        require('../../middlewares/globalErrorHandlers').responseValidationMiddleware,
+        standardResponse,
         require('../../middlewares/tokenVerification').isVerifiedUser,
         neonSafeTenantMiddleware,
         neonSafeModelInjection,
@@ -33,22 +32,9 @@ const applyNeonSafeMiddlewareChains = (app) => {
 
     const publicChain = [
         require('cookie-parser')(),
-        require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(300000), // Increased to 5min for intensive 8-level onboarding sync
-        require('../../middlewares/globalErrorHandlers').responseValidationMiddleware
+        require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(120000),
+        standardResponse
     ];
-
-    // Initialize transaction executor health check
-    neonTransactionSafeExecutor.healthCheck()
-        .then(healthCheck => {
-            if (healthCheck.healthy) {
-                console.log('✅ Neon transaction executor is healthy');
-            } else {
-                console.error('❌ Neon transaction executor health check failed:', healthCheck.message);
-            }
-        })
-        .catch(error => {
-            console.error('❌ Failed to initialize transaction executor:', error.message);
-        });
 
     // Helper to get absolute path
     const getRoutePath = (relativePath) => path.resolve(process.cwd(), relativePath);
@@ -58,44 +44,41 @@ const applyNeonSafeMiddlewareChains = (app) => {
         try {
             const fullPath = getRoutePath(relativePath);
             const route = require(fullPath);
+            
+            // Safety: Ensure route is not undefined (prevents Express crash)
+            if (!route) {
+                console.warn(`⚠️  Route module ${relativePath} exported undefined`);
+                return (req, res) => res.status(501).json({ success: false, message: `Route module exported undefined: ${relativePath}` });
+            }
+            
             return route;
         } catch (error) {
-            console.warn(`⚠️  Route not found: ${relativePath} - ${error.message}`);
+            console.error(`❌ FAILED TO LOAD ROUTE: ${relativePath}`);
+            console.error(`   Error: ${error.message}`);
+            console.error(`   Stack: ${error.stack}`);
             return (req, res) => {
                 res.status(501).json({ 
                     success: false,
-                    message: `Route not implemented: ${relativePath}`,
+                    message: `Route module failed to load: ${relativePath}`,
                     data: null,
                     error: error.message,
+                    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
                     path: relativePath 
                 });
             };
         }
     };
 
-    // ADMIN ROUTES
+    // ==========================================
+    // CONTROL PLANE ROUTES (Public Schema)
+    // ==========================================
     app.use("/api/admin", ...adminChain, loadRoute('routes/adminRoute.js'));
-    
-    // TENANT ROUTES
-    app.use("/api/tenant", ...tenantChain, loadRoute('routes/tenant/tenant.routes.js'));
-    
-    // INVENTORY ROUTES
-    app.use("/api/inventory", ...tenantChain, loadRoute('routes/inventoryRoutes.js'));
-    
-    // ACCOUNTING ROUTES
-    app.use("/api/tenant/accounting", ...tenantChain, loadRoute('routes/accountingRoute.js'));
-    
-    // REPORT ROUTES (CRITICAL: Added missing report routes with tenant middleware)
-    app.use("/api/reports", ...tenantChain, loadRoute('routes/reportRoute.js'));
-    
-    // LEGACY & PUBLIC
-    app.use("/api", ...publicChain, loadRoute('routes/legacyRoute.js'));
+    app.use("/api/super-admin", ...publicChain, loadRoute('routes/superAdminRoute.js'));
     app.use("/api/auth", ...publicChain, loadRoute('src/auth/auth.routes.js'));
     app.use("/api/user", ...publicChain, loadRoute('routes/userRoute.js'));
-    app.use("/api/super-admin", ...publicChain, loadRoute('routes/superAdminRoute.js'));
     app.use("/api/upload", ...publicChain, loadRoute('routes/uploadRoute.js'));
     
-    // ONBOARDING (CRITICAL: Public Schema forced)
+    // ONBOARDING (Strict Public Schema Enforcement)
     app.use("/api/onboarding", 
         enforcePublicSchema, 
         ...publicChain, 
@@ -103,36 +86,22 @@ const applyNeonSafeMiddlewareChains = (app) => {
         resetSchemaToPublic
     );
     
+    // ==========================================
+    // TENANT ROUTES (Consolidated & Neon-Safe)
+    // ==========================================
+    // Primary mount point for all tenant operations
+    app.use("/api/tenant", ...tenantChain, loadRoute('routes/tenant/tenant.routes.js'));
+    
+    // Legacy mount points kept for backward compatibility but using the same tenantChain
+    app.use("/api/inventory", ...tenantChain, loadRoute('routes/tenant/tenant.routes.js'));
+    app.use("/api/reports", ...tenantChain, loadRoute('routes/tenant/tenant.routes.js'));
+    
+    // Legacy /api mount (use with caution)
+    app.use("/api", ...publicChain, loadRoute('routes/legacyRoute.js'));
+    
     console.log('✅ Neon-safe middleware chains applied successfully');
 };
 
 module.exports = {
-    applyNeonSafeMiddlewareChains,
-    // Add getters for external access to prevent uninitialized access
-    get neonSafeAdminMiddlewareChain() {
-        return [
-            require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(30000),
-            require('../../middlewares/globalErrorHandlers').responseValidationMiddleware,
-            require('../../middlewares/tokenVerification').isVerifiedUser,
-            require('../../middlewares/tokenVerification').adminOnlyMiddleware
-        ];
-    },
-    get tenantMiddlewareChain() {
-        return [
-            require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(30000),
-            require('../../middlewares/globalErrorHandlers').responseValidationMiddleware,
-            require('../../middlewares/tokenVerification').isVerifiedUser,
-            require('../../middlewares/tenantMiddleware').neonSafeTenantMiddleware,
-            require('../../middlewares/tenantMiddleware').neonSafeModelInjection,
-            require('../../middlewares/tenantStatusMiddleware'),
-            require('../../middlewares/tokenVerification').tenantOnlyMiddleware
-        ];
-    },
-    get neonSafePublicMiddlewareChain() {
-        return [
-            require('cookie-parser')(),
-            require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(120000),
-            require('../../middlewares/globalErrorHandlers').responseValidationMiddleware
-        ];
-    }
+    applyNeonSafeMiddlewareChains
 };

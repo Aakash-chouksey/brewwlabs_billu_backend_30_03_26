@@ -22,7 +22,7 @@ if (process.env.NODE_ENV !== 'production') {
     router.get('/debug/reports', async (req, res) => {
         try {
             console.log('🔧 DEBUG: Public reports endpoint called');
-            const reportController = require('../../controllers/reportController');
+            const reportController = require('../../controllers/tenant/reportController');
             const { sequelize } = require('../../config/unified_database');
             
             const businessId = req.query.businessId || 'test-business-id';

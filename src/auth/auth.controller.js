@@ -63,14 +63,14 @@ const authController = {
 
             // Log successful login (fire-and-forget, non-blocking)
             logAuthEvent({
-                userId: user.id,
+                user_id: user.id,
                 email: user.email,
                 role: user.role,
                 action: 'LOGIN_SUCCESS',
                 ip: clientIP,
                 userAgent,
                 duration: Date.now() - startTime,
-                businessId: user.businessId
+                business_id: user.businessId || user.business_id
             });
 
             res.status(200).json({
@@ -81,11 +81,11 @@ const authController = {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    businessId: user.businessId,
-                    outletId: user.outletId,
-                    outlets: (user.get ? user.get('outlets') : user.outlets) || [],
-                    lastLogin: user.lastLogin,
-                    panelType: user.panelType
+                    businessId: user.businessId || user.business_id,
+                    outletId: user.outletId || user.outlet_id,
+                    outlets: user.outletIds || user.outlet_ids || [],
+                    lastLogin: user.lastLogin || user.last_login,
+                    panelType: user.panelType || user.panel_type
                 },
                 accessToken,
                 refreshToken
@@ -153,13 +153,13 @@ const authController = {
             
             if (user) {
                 logAuthEvent({
-                    userId: user.id,
+                    user_id: user.id,
                     email: user.email,
                     role: user.role,
                     action: 'LOGOUT_SUCCESS',
                     ip: clientIP,
                     userAgent,
-                    businessId: user.businessId
+                    business_id: user.businessId || user.business_id
                 });
             }
             
@@ -185,8 +185,9 @@ const authController = {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                businessId: user.businessId,
-                panelType: req.auth?.panelType || (user.role === 'SUPER_ADMIN' ? 'ADMIN' : 'TENANT')
+                businessId: user.businessId || user.business_id,
+                outletId: user.outletId || user.outlet_id,
+                panelType: user.panelType || user.panel_type || (user.role === 'SUPER_ADMIN' ? 'ADMIN' : 'TENANT')
             };
 
             res.status(200).json({ success: true, user: userData });

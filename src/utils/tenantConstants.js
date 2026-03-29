@@ -1,0 +1,27 @@
+/**
+ * Tenant Status Constants
+ * Consistent lifecycle for multi-tenant registry entries
+ */
+const TENANT_STATUS = {
+    ACTIVE: 'ACTIVE',
+    READY: 'READY',
+    PENDING: 'PENDING',
+    CREATING: 'CREATING',
+    ONBOARDING: 'ONBOARDING',
+    SUSPENDED: 'SUSPENDED',
+    INACTIVE: 'INACTIVE',
+    INIT_FAILED: 'INIT_FAILED',
+    INIT_IN_PROGRESS: 'INIT_IN_PROGRESS',
+    TRIAL: 'TRIAL'
+};
+
+const ALLOWED_PROTECTED_STATUSES = [
+    TENANT_STATUS.ACTIVE,
+    TENANT_STATUS.READY,
+    TENANT_STATUS.TRIAL
+];
+
+module.exports = {
+    TENANT_STATUS,
+    ALLOWED_PROTECTED_STATUSES
+};

@@ -11,26 +11,40 @@ const wastageController = {
      */
     getWastageRecords: async (req, res, next) => {
         try {
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
 
             const records = await req.readWithTenant(async (context) => {
                 const { transactionModels: models } = context;
-                const { Wastage, Inventory, Product } = models;
+                const { Wastage, Inventory, InventoryItem, Product, InventoryCategory } = models;
+
+                const whereClause = { businessId: business_id };
+                if (outlet_id) whereClause.outletId = outlet_id;
 
                 return await Wastage.findAll({
-                    where: { businessId },
-                    order: [['wastageDate', 'DESC']],
-                    include: [{ 
-                        model: Inventory, 
-                        as: 'inventory',
-                        include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }]
-                    }]
+                    where: whereClause,
+                    order: [['wastage_date', 'DESC']],
+                    include: [
+                        { 
+                            model: Inventory, 
+                            as: 'inventory',
+                            required: false,
+                            include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }]
+                        },
+                        {
+                            model: InventoryItem,
+                            as: 'inventoryItem',
+                            required: false,
+                            include: [{ model: InventoryCategory, as: 'category', attributes: ['name'] }]
+                        }
+                    ]
                 });
             });
 
             res.json({
                 success: true,
-                data: records
+                data: records,
+                message: "Wastage records retrieved successfully"
             });
 
         } catch (error) {
@@ -43,51 +57,79 @@ const wastageController = {
      */
     addWastageRecord: async (req, res, next) => {
         try {
-            const { businessId, auth } = req;
-            const { inventoryId, quantity, reason, wastageDate, notes } = req.body;
+            const business_id = req.business_id || req.businessId;
+            const outlet_id = req.outlet_id || req.outletId;
+            const user_id = req.user?.id;
+            const { inventoryId, inventoryItemId, quantity, reason, wastageDate, notes } = req.body;
 
             const wastage = await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
-                const { Wastage, Inventory } = models;
+                const { Wastage, Inventory, InventoryItem } = models;
 
-                // Check inventory item exists
-                const inventory = await Inventory.findOne({
-                    where: { id: inventoryId || req.body.inventoryItemId, businessId },
+                let targetItem = null;
+                let sourceType = null;
+                const primaryId = inventoryId || inventoryItemId || req.body.id;
+
+                if (!primaryId) {
+                    throw new Error('No inventory item ID provided');
+                }
+
+                // 1. Try Inventory (Product Store)
+                targetItem = await Inventory.findOne({
+                    where: { id: primaryId, businessId: business_id },
                     transaction
                 });
 
-                if (!inventory) {
-                    throw new Error('Inventory item not found');
+                if (targetItem) {
+                    sourceType = 'INVENTORY';
+                } else {
+                    // 2. Try InventoryItem (Raw Materials)
+                    targetItem = await InventoryItem.findOne({
+                        where: { id: primaryId, businessId: business_id },
+                        transaction
+                    });
+                    if (targetItem) sourceType = 'RAW_MATERIAL';
                 }
 
-                if (Number(inventory.quantity || 0) < Number(quantity)) {
-                    throw new Error(`Insufficient stock. Available: ${inventory.quantity}`);
+                if (!targetItem) {
+                    throw new Error(`Inventory item not found: ${primaryId}`);
                 }
+
+                const currentStock = Number(targetItem.quantity !== undefined ? targetItem.quantity : targetItem.currentStock || 0);
+                if (currentStock < Number(quantity)) {
+                    throw new Error(`Insufficient stock. Available: ${currentStock}`);
+                }
+
+                const costPerUnit = Number(targetItem.costPerUnit || (targetItem.product?.costPrice) || 0);
 
                 // Create wastage record
                 const newWastage = await Wastage.create({
                     id: uuidv4(),
-                    businessId,
-                    inventoryItemId: inventory.id,
+                    businessId: business_id,
+                    outletId: outlet_id,
+                    inventoryId: sourceType === 'INVENTORY' ? targetItem.id : null,
+                    inventoryItemId: sourceType === 'RAW_MATERIAL' ? targetItem.id : null,
                     quantity: Number(quantity),
-                    reason,
+                    reason: reason || 'OTHER',
                     wastageDate: wastageDate || new Date(),
                     notes,
-                    recordedBy: auth?.id
+                    recordedBy: user_id,
+                    costValue: costPerUnit * Number(quantity)
                 }, { transaction });
 
-                // Deduct from inventory
-                await inventory.decrement('quantity', {
-                    by: Number(quantity),
-                    transaction
-                });
+                // Deduct from correct table
+                if (sourceType === 'INVENTORY') {
+                    await targetItem.decrement('quantity', { by: Number(quantity), transaction });
+                } else {
+                    await targetItem.decrement('current_stock', { by: Number(quantity), transaction });
+                }
 
                 return newWastage;
             });
 
             res.status(201).json({
                 success: true,
-                message: 'Wastage record created',
+                message: 'Wastage record created successfully',
                 data: wastage
             });
 
@@ -102,14 +144,14 @@ const wastageController = {
     deleteWastageRecord: async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { businessId } = req;
+            const business_id = req.business_id || req.businessId;
 
             await req.executeWithTenant(async (context) => {
                 const { transaction, transactionModels: models } = context;
                 const { Wastage } = models;
 
                 const record = await Wastage.findOne({
-                    where: { id, businessId },
+                    where: { id, businessId: business_id },
                     transaction
                 });
 
@@ -122,8 +164,7 @@ const wastageController = {
 
             res.json({
                 success: true,
-                message: 'Wastage record deleted',
-                data: null
+                message: 'Wastage record deleted successfully'
             });
 
         } catch (error) {

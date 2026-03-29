@@ -37,14 +37,13 @@ async function fixAllTenantSchemas() {
                 // Ensure search_path is set (Phase 8 fallback safety)
                 await sequelize.query(`SET search_path TO "${schema_name}"`);
 
-                // Iteratively sync each model with alter: true
-                for (const model of modelList) {
-                    // Use .schema() to ensure we are targeting the CORRECT schema
-                    // and use sync({ alter: true }) for safe incremental updates
-                    await model.schema(schema_name).sync({ alter: true });
-                }
-
-                console.log(`  ✅ ${schema_name} repaired successfully.`);
+                // Run migrations instead of sync - Data-First Compliance
+                const migrationRunner = require('../src/architecture/migrationRunner');
+                const SchemaVersion = models.SchemaVersion;
+                const tenantModels = { SchemaVersion: SchemaVersion.schema(schema_name) };
+                
+                await migrationRunner.runPendingMigrations(sequelize, schema_name, tenantModels);
+                console.log(`  ✅ ${schema_name} migrated successfully.`);
                 successCount++;
             } catch (err) {
                 console.error(`  ❌ Failed to repair ${schema_name}:`, err.message);
