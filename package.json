@@ -47,7 +47,7 @@
     "axios": "^1.13.6",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
-    "cloudinary": "^2.9.0",
+    "cloudinary": "^1.41.0",
     "cls-hooked": "^4.2.2",
     "colors": "^1.4.0",
     "compression": "^1.8.1",
