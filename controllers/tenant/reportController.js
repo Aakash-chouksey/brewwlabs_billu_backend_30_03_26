@@ -1,5 +1,5 @@
 const { enforceOutletScope, buildStrictWhereClause } = require("../../utils/outletGuard");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 /**
  * REPORT CONTROLLER - Neon-Safe Transaction Pattern
@@ -179,6 +179,172 @@ exports.getSystemStats = async (req, res, next) => {
             message: "System statistics retrieved successfully"
         });
     } catch (error) {
+        next(error);
+    }
+};
+/**
+ * Get aggregated reports overview
+ */
+exports.getReportsOverview = async (req, res, next) => {
+    try {
+        enforceOutletScope(req);
+        const business_id = req.business_id || req.businessId;
+        const { period = 'today', outletId } = req.query;
+
+        console.log(`🔍 [ReportController] Getting overview report | Business: ${business_id} | Outlet: ${outletId} | Period: ${period}`);
+
+        const result = await req.readWithTenant(async (context) => {
+            const { transactionModels: models } = context;
+            const { Order, OrderItem, Product, Category, Customer } = models;
+            // Safely get optional models
+            const InventoryItem = models.InventoryItem || null;
+            const Wastage = models.Wastage || null;
+            
+            const { whereClause: baseWhere } = buildStrictWhereClause(req, { status: 'COMPLETED' });
+            
+            // Build date range based on period
+            const now = new Date();
+            let startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+
+            if (period === 'week') {
+                const day = now.getDay();
+                startDate.setDate(now.getDate() - day);
+            } else if (period === 'month') {
+                startDate.setDate(1);
+            } else if (period === 'quarter') {
+                const month = now.getMonth();
+                startDate.setMonth(month - (month % 3));
+                startDate.setDate(1);
+            } else if (period === 'year') {
+                startDate.setMonth(0);
+                startDate.setDate(1);
+            }
+
+            const dateWhere = { ...baseWhere, createdAt: { [Op.gte]: startDate } };
+
+            // 1. OVERVIEW STATS
+            const orders = await Order.findAll({
+                where: dateWhere,
+                attributes: ['billingTotal', 'id']
+            });
+
+            const totalRevenue = orders.reduce((sum, o) => sum + Number(o.billingTotal || 0), 0);
+            const totalOrders = orders.length;
+            const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+            const uniqueCustomers = await Customer.count({ 
+                where: { businessId: business_id, ...(outletId && { outletId }) } 
+            });
+
+            // 2. SALES BY CATEGORY & ITEM
+            const orderItems = await OrderItem.findAll({
+                include: [
+                    {
+                        model: Order,
+                        as: 'order',
+                        where: dateWhere,
+                        attributes: []
+                    },
+                    {
+                        model: Product,
+                        as: 'product',
+                        attributes: ['id', 'name'],
+                        include: [{ model: Category, as: 'category', attributes: ['name'] }]
+                    }
+                ]
+            });
+
+            const categorySales = {};
+            const itemSales = {};
+
+            orderItems.forEach(item => {
+                const prod = item.product;
+                if (!prod) return;
+
+                // Category aggregate
+                const catName = prod.category?.name || 'Uncategorized';
+                if (!categorySales[catName]) categorySales[catName] = { category: catName, orders: 0, revenue: 0 };
+                categorySales[catName].orders++;
+                categorySales[catName].revenue += Number(item.total || 0);
+
+                // Item aggregate
+                const prodName = prod.name;
+                if (!itemSales[prodName]) itemSales[prodName] = { name: prodName, quantity: 0, revenue: 0 };
+                itemSales[prodName].quantity += Number(item.quantity || 0);
+                itemSales[prodName].revenue += Number(item.total || 0);
+            });
+
+            // 3. INVENTORY HEALTH - Handle missing models gracefully
+            let lowStockItems = [];
+            let recentWastage = [];
+            
+            try {
+                if (InventoryItem) {
+                    lowStockItems = await InventoryItem.findAll({
+                        where: { 
+                            businessId: business_id, 
+                            ...(outletId && { outletId }),
+                            currentStock: { [Op.lte]: Sequelize.col('minimum_stock') }
+                        },
+                        attributes: ['name', 'currentStock', 'minimumStock', 'unit'],
+                        limit: 10
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ [ReportController] Could not fetch low stock items:', error.message);
+            }
+            
+            try {
+                if (Wastage && InventoryItem) {
+                    recentWastage = await Wastage.findAll({
+                        where: { businessId: business_id, ...(outletId && { outletId }) },
+                        include: [{ model: InventoryItem, as: 'inventoryItem', attributes: ['name'] }],
+                        order: [['createdAt', 'DESC']],
+                        limit: 5
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ [ReportController] Could not fetch wastage data:', error.message);
+            }
+
+            return {
+                overview: {
+                    totalRevenue: Math.round(totalRevenue * 100) / 100,
+                    totalOrders,
+                    averageOrderValue: Math.round(avgOrderValue * 100) / 100,
+                    customerCount: uniqueCustomers
+                },
+                sales: {
+                    byCategory: Object.values(categorySales).sort((a, b) => b.revenue - a.revenue),
+                    byItem: Object.values(itemSales).sort((a, b) => b.revenue - a.revenue).slice(0, 10),
+                    payments: [] // Add payment summary support later
+                },
+                inventory: {
+                    lowStock: lowStockItems.map(i => ({ 
+                        name: i.name, 
+                        current: i.currentStock, 
+                        min: i.minimumStock, 
+                        unit: i.unit 
+                    })),
+                    wastage: recentWastage.map(w => ({
+                        item: w.inventoryItem?.name || w.reason, 
+                        reason: w.reason,
+                        cost: w.costValue
+                    }))
+                }
+            };
+        });
+
+        const data = result.data || result;
+        console.log(`✅ [ReportController] Overview report generated successfully`);
+        
+        return res.json({ 
+            success: true, 
+            data: data,
+            message: "Reports overview retrieved successfully"
+        });
+    } catch (error) {
+        console.error(`🚨 [ReportController] Error generating overview report:`, error);
         next(error);
     }
 };

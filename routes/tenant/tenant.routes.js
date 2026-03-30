@@ -138,6 +138,7 @@ router.get('/sales/payments', salesController.getPaymentSales);
 router.get('/sales/dashboard', salesController.getSalesDashboard);
 router.get('/reports/daily-sales', reportController.getDailySales);
 router.get('/reports/item-wise', reportController.getItemWiseSales);
+router.get('/reports/overview', reportController.getReportsOverview);
 
 // ==========================================
 // DASHBOARD ROUTES
@@ -158,6 +159,7 @@ router.get('/analytics/staff-performance', analyticsController.getAvgTicketsPerA
 // ==========================================
 router.get('/purchases', purchaseController.getPurchases);
 router.post('/purchases', purchaseController.addPurchase);
+router.delete('/purchases/:id', purchaseController.deletePurchase);
 
 // ==========================================
 // INVENTORY SALE ROUTES

@@ -218,3 +218,87 @@ exports.getPurchases = async (req, res, next) => {
         next(error);
     }
 };
+
+/**
+ * Delete purchase
+ */
+exports.deletePurchase = async (req, res, next) => {
+    try {
+        const business_id = req.business_id || req.businessId;
+        const { id } = req.params;
+
+        if (!id) {
+            throw createHttpError(400, "Purchase ID is required");
+        }
+
+        const result = await req.executeWithTenant(async (context) => {
+            const { transaction, transactionModels: models } = context;
+            const { Purchase, PurchaseItem, Inventory, InventoryTransaction } = models;
+            
+            // Find the purchase with its items
+            const purchase = await Purchase.findOne({
+                where: { id, businessId: business_id },
+                include: [{ model: PurchaseItem, as: 'items' }],
+                transaction
+            });
+
+            if (!purchase) {
+                throw createHttpError(404, "Purchase not found");
+            }
+
+            // Reverse inventory updates for each item
+            for (const item of purchase.items) {
+                await Inventory.decrement(
+                    { 
+                        quantity: item.quantity,
+                        totalCost: item.totalCost
+                    },
+                    { 
+                        where: { 
+                            productId: item.productId,
+                            businessId: business_id
+                        },
+                        transaction
+                    }
+                );
+
+                // Create inventory transaction record for the reversal
+                await InventoryTransaction.create({
+                    businessId: business_id,
+                    outletId: purchase.outletId,
+                    productId: item.productId,
+                    type: 'PURCHASE_REVERSAL',
+                    quantity: -item.quantity, // Negative for reversal
+                    unitCost: item.unitPrice,
+                    totalCost: -item.totalCost,
+                    notes: `Purchase reversal - Purchase #${purchase.invoiceNumber || purchase.id}`,
+                    performedBy: req.user?.id,
+                    referenceId: purchase.id,
+                    referenceType: 'PURCHASE'
+                }, { transaction });
+            }
+
+            // Delete purchase items first (due to foreign key constraint)
+            await PurchaseItem.destroy({
+                where: { purchaseId: id },
+                transaction
+            });
+
+            // Delete the purchase
+            await Purchase.destroy({
+                where: { id },
+                transaction
+            });
+
+            return { deleted: true, id };
+        });
+
+        res.json({
+            success: true,
+            data: result,
+            message: "Purchase deleted successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
