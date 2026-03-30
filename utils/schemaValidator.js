@@ -203,9 +203,19 @@ async function validateTenantSchemaComplete(sequelize, businessId) {
     const outletScopedTables = [
         'products', 'orders', 'inventory', 'inventory_items', 'categories', 
         'tables', 'table_areas', 'order_items', 'payments', 'expenses', 
-        'incomes', 'purchases'
+        'incomes', 'purchases', 'product_types'
     ];
     const skuTables = ['products', 'inventory_items'];
+    
+    // Define table-specific REQUIRED columns (adds to system columns)
+    const tableRequiredColumns = {
+        'product_types': ['status', 'name', 'outlet_id'],
+        'products': ['is_active', 'tax_rate', 'price', 'category_id'],
+        'categories': ['is_enabled', 'name', 'outlet_id'],
+        'tables': ['status', 'table_no', 'capacity'],
+        'orders': ['status', 'order_number', 'billing_total'],
+        'outlets': ['status', 'is_active', 'name']
+    };
 
     const existingTables = await getTablesInSchema(sequelize, schemaName);
     const missingTables = requiredTables.filter(t => !existingTables.includes(t));
@@ -233,6 +243,15 @@ async function validateTenantSchemaComplete(sequelize, businessId) {
         // Check sku for relevant tables
         if (skuTables.includes(table) && !columnNames.includes('sku')) {
             missingCols.push('sku');
+        }
+        
+        // Check table-specific required columns
+        if (tableRequiredColumns[table]) {
+            for (const col of tableRequiredColumns[table]) {
+                if (!columnNames.includes(col)) {
+                    missingCols.push(col);
+                }
+            }
         }
         
         if (missingCols.length > 0) {

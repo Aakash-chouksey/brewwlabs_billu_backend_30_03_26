@@ -41,8 +41,9 @@ module.exports = (sequelize) => {
         },
         status: {
             field: 'status',
-            type: DataTypes.STRING,
-            defaultValue: 'Available'
+            type: DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: 'AVAILABLE'
         },
         currentOrderId: {
             field: 'current_order_id',

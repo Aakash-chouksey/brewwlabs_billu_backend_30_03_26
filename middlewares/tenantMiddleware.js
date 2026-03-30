@@ -63,8 +63,8 @@ const neonSafeTenantMiddleware = async (req, res, next) => {
         // 7. Set tenant context (NO SCHEMA SWITCHING - CRITICAL)
         req.tenantId = tenantId;
         req.tenantSchema = `tenant_${tenantId}`; // Reference only
-        req.businessId = req.auth.businessId;
-        req.outletId = req.auth.outletId || null;
+        req.businessId = req.businessId || req.auth.businessId;
+        req.outletId = req.outletId || req.auth.outletId || null;
         req.isSuperAdmin = false;
         req.neonSafe = true;
 

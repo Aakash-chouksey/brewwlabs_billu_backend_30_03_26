@@ -30,7 +30,7 @@ async function runStartupMigrations(controlPlaneSequelize) {
 
         // 2. Fetch all active tenants
         const tenants = await TenantRegistry.findAll({
-            where: { status: 'active' }
+            where: { status: ['active', 'ACTIVE'] }
         });
 
         console.log(`[StartupMigration] 🔍 Found ${tenants.length} active tenants to check.`);

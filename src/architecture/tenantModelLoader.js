@@ -215,7 +215,7 @@ class TenantModelLoader {
         // 5. Initialize schema_versions table tracking
         console.time('⏱️ [Timing] Initialize schema_versions');
         
-        const latestVersion = 9;
+        const latestVersion = 12;
         const SchemaVersion = allModels.SchemaVersion;
         
         if (SchemaVersion) {
@@ -262,6 +262,18 @@ class TenantModelLoader {
         }
         
         console.timeEnd('⏱️ [Timing] Initialize schema_versions');
+        
+        // 6. RUN ANY REMAINING MIGRATIONS (beyond baseline)
+        console.time('⏱️ [Timing] Run pending migrations');
+        try {
+            const tenantMigrationService = require('../../services/tenantMigrationService');
+            // Extract businessId from schemaName (tenant_uuid)
+            const businessId = schemaName.replace('tenant_', '');
+            await tenantMigrationService.runPendingMigrations(businessId);
+        } catch (error) {
+            console.warn(`[TenantModelLoader] ⚠️ Potential issue running migrations after sync:`, error.message);
+        }
+        console.timeEnd('⏱️ [Timing] Run pending migrations');
 
         const duration = Date.now() - totalStartTime;
         console.log(`[TenantModelLoader] ✅ SCHEMA-FIRST INIT COMPLETE: ${schemaName} in ${duration}ms`);

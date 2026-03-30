@@ -24,6 +24,12 @@ exports.addPurchase = async (req, res, next) => {
             
             // OPTIMIZATION 1: Batch fetch all products in a single query
             const productIds = [...new Set(items.map(i => i.productId))];
+            
+            // Validate product IDs to prevent dangerous queries
+            if (!productIds.length || productIds.includes(undefined)) {
+                throw createHttpError(400, "Invalid product IDs provided");
+            }
+            
             const products = await Product.findAll({
                 where: { id: { [Op.in]: productIds }, businessId: business_id },
                 transaction

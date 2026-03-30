@@ -90,7 +90,7 @@ exports.addProduct = async (req, res, next) => {
 
         const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
-            const { Product, Category } = models;
+            const { Product, Category, ProductType } = models;
             
             // Check if SKU is unique within outlet
             if (sku) {
@@ -107,6 +107,15 @@ exports.addProduct = async (req, res, next) => {
                 transaction
             });
             if (!category) throw createHttpError(404, "Selected category not found in this outlet");
+
+            // Verify productType exists if provided
+            if (productTypeId) {
+                const productType = await ProductType.findOne({
+                    where: { id: productTypeId, businessId: business_id, outletId: outlet_id },
+                    transaction
+                });
+                if (!productType) throw createHttpError(404, "Selected product type not found in this outlet");
+            }
 
             // Handle image upload if present
             let finalImageUrl = image;
@@ -156,7 +165,7 @@ exports.updateProduct = async (req, res, next) => {
 
         const result = await req.executeWithTenant(async (context) => {
             const { transaction, transactionModels: models } = context;
-            const { Product } = models;
+            const { Product, ProductType } = models;
             
             const product = await Product.findOne({ where: { id, businessId: business_id, outletId: outlet_id }, transaction });
             if (!product) throw createHttpError(404, "Product not found");
@@ -170,10 +179,24 @@ exports.updateProduct = async (req, res, next) => {
                 if (existing) throw createHttpError(400, "SKU already exists in this outlet");
             }
 
+            // Verify productType exists if provided and changing
+            if (updateData.productTypeId && updateData.productTypeId !== product.productTypeId) {
+                const productType = await ProductType.findOne({
+                    where: { id: updateData.productTypeId, businessId: business_id, outletId: outlet_id },
+                    transaction
+                });
+                if (!productType) throw createHttpError(404, "Selected product type not found in this outlet");
+            }
+
             // Handle image upload if present
             if (req.file) {
                 const uploadResult = await uploadImageToCloudinary(req.file.buffer, 'products');
                 updateData.image = uploadResult.url;
+            }
+
+            // Clean up productTypeId - set to null if empty string
+            if (updateData.productTypeId === '' || updateData.productTypeId === undefined) {
+                updateData.productTypeId = null;
             }
 
             await product.update(updateData, { transaction });

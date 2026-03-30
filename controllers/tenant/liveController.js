@@ -23,7 +23,7 @@ const liveController = {
                         businessId: business_id,
                         outletId: outlet_id,
                         status: {
-                            [Op.notIn]: ['COMPLETED', 'CANCELLED', 'ARCHIVED']
+                            [Op.in]: ['CREATED', 'KOT_SENT']
                         }
                     },
                     include: [
@@ -37,6 +37,7 @@ const liveController = {
             });
 
             const data = result.data || result || [];
+            console.log("LIVE ORDERS RESPONSE:", data.length);
 
             res.json({
                 success: true,

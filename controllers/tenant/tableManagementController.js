@@ -31,9 +31,8 @@ const tableManagementController = {
 
             res.json({
                 success: true,
-                data: tables,
-                count: tables.length,
-                message: "Tables retrieved successfully"
+                message: "Tables retrieved successfully",
+                data: tables
             });
         } catch (error) {
             next(error);
@@ -48,8 +47,10 @@ const tableManagementController = {
             const business_id = req.business_id || req.businessId;
             const outlet_id = req.outlet_id || req.outletId;
             const { tableNo, name, capacity, areaId, status, positionX, positionY } = req.body;
+            console.log('📬 [tableManagementController.createTable] Received body:', JSON.stringify(req.body, null, 2));
 
-            if (!tableNo) {
+            if (!tableNo || tableNo.trim() === "") {
+                console.error('❌ [tableManagementController.createTable] Missing tableNo:', req.body);
                 throw createHttpError(400, 'Table number is required');
             }
 
@@ -81,11 +82,7 @@ const tableManagementController = {
                 }, { transaction });
             });
 
-            res.status(201).json({
-                success: true,
-                message: 'Table created successfully',
-                data: table
-            });
+            res.status(201).json(table);
         } catch (error) {
             next(error);
         }
@@ -129,7 +126,7 @@ const tableManagementController = {
 
             res.json({
                 success: true,
-                message: 'Table updated successfully',
+                message: "Table updated successfully",
                 data: updated
             });
         } catch (error) {

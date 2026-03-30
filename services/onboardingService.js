@@ -139,7 +139,7 @@ class OnboardingService {
             await this._insertDefaultData(tenantModels, schemaName, outletId, businessId, adminId);
 
             // 5. COMPREHENSIVE SCHEMA VALIDATION (Step 4 of requirements)
-            console.log('🔍 [ONBOARDING] Step 6: Running comprehensive schema validation...');
+            console.log('🔍 [OnboardingService] Step 6: Running comprehensive schema validation...');
             const { validateTenantSchemaComplete } = require('../utils/schemaValidator');
             const validation = await validateTenantSchemaComplete(sequelize, businessId);
             
@@ -151,12 +151,18 @@ class OnboardingService {
                 if (validation.columnIssues.length > 0) {
                     errors.push(`Missing columns: ${validation.columnIssues.map(c => `${c.table}(${c.missingColumns.join(', ')})`).join('; ')}`);
                 }
+                console.log(`🚨 [OnboardingService] STEP 6: Schema validation failed: ${errors.join('; ')}`);
                 throw new Error(`Schema validation failed: ${errors.join('; ')}`);
             }
-            console.log(`✅ [ONBOARDING] Schema validation passed - all tables and columns present`);
+            console.log(`✅ [OnboardingService] STEP 6: Schema validation passed - all tables and columns present`);
 
-            // 6. ACTIVATE TENANT
-            console.log('✅ [ONBOARDING] Step 7: Activating tenant...');
+            // 6. ONBOARDING COMPLETENESS VALIDATION (NEW STEP)
+            console.log('🔍 [OnboardingService] Step 7: Validating onboarding completeness...');
+            await this._validateOnboardingCompleteness(tenantModels, schemaName, businessId, outletId);
+            console.log(`✅ [OnboardingService] STEP 7: Onboarding completeness validated`);
+
+            // 7. ACTIVATE TENANT
+            console.log('✅ [ONBOARDING] Step 8: Activating tenant...');
             await sequelize.query(
                 `UPDATE "public"."tenant_registry" 
                  SET "status" = 'ACTIVE', "activated_at" = NOW(), "updated_at" = NOW()
@@ -234,12 +240,15 @@ class OnboardingService {
         const records = [];
         let outlet = null;
 
+        console.log(`🔍 [OnboardingService] STEP 1: Inserting default data for ${schemaName}`);
+        
         if (!models || typeof models !== 'object') {
             console.error('[OnboardingService] 🚨 CRITICAL: Models object is invalid');
             return { records: [], outlet: null };
         }
 
         try {
+            console.log(`🔍 [OnboardingService] STEP 2: Creating outlet...`);
             // Create Outlet first
             if (models.Outlet) {
                 outlet = await models.Outlet.schema(schemaName).create({
@@ -251,8 +260,12 @@ class OnboardingService {
                     isActive: true
                 });
                 records.push({ type: 'outlet', id: outlet.id });
+                console.log(`✅ [OnboardingService] STEP 2: Outlet created - ID: ${outlet.id}`);
+            } else {
+                console.log(`🚨 [OnboardingService] STEP 2: Outlet model not available`);
             }
 
+            console.log(`🔍 [OnboardingService] STEP 3: Creating categories, areas, and tables...`);
             // Create remaining records
             const otherPromises = [];
 
@@ -264,22 +277,47 @@ class OnboardingService {
                         outletId: outletId,
                         name: 'Default Category',
                         isEnabled: true
-                    }).then(c => records.push({ type: 'category', id: c.id }))
+                    }).then(c => {
+                        records.push({ type: 'category', id: c.id });
+                        console.log(`✅ [OnboardingService] STEP 3: Category created - ID: ${c.id}`);
+                    })
                 );
             }
 
+            let mainAreaId = uuidv4();
             if (models.Area) {
-                otherPromises.push(
-                    models.Area.schema(schemaName).create({
-                        id: uuidv4(),
-                        businessId: businessId,
-                        outletId: outletId,
-                        name: 'Main Area',
-                        status: 'active'
-                    }).then(a => records.push({ type: 'area', id: a.id }))
-                );
+                await models.Area.schema(schemaName).create({
+                    id: mainAreaId,
+                    businessId: businessId,
+                    outletId: outletId,
+                    name: 'Main Area',
+                    status: 'active'
+                });
+                records.push({ type: 'area', id: mainAreaId });
+                console.log(`✅ [OnboardingService] STEP 3: Area created - ID: ${mainAreaId}`);
             }
 
+            // 🚨 STEP 2: ENFORCE TABLE EXISTENCE IN ONBOARDING
+            if (models.Table) {
+                const tableId = uuidv4();
+                await models.Table.schema(schemaName).create({
+                    id: tableId,
+                    businessId: businessId,
+                    outletId: outletId,
+                    areaId: mainAreaId,
+                    tableNo: 'T1',
+                    name: 'Table 1',
+                    capacity: 4,
+                    status: 'AVAILABLE' // 🚨 STEP 3: STATUS STANDARDIZATION
+                });
+                records.push({ type: 'table', id: tableId });
+                console.log(`✅ [OnboardingService] STEP 2: Table created - ID: ${tableId} | TableNo: T1`);
+            } else {
+                console.error(`🚨 [OnboardingService] STEP 2: CRITICAL - Table model not available for seeding`);
+                throw new Error("Critical error: Table model not available during onboarding.");
+            }
+
+            console.log(`🔍 [OnboardingService] STEP 4: Creating inventory and products...`);
             if (models.InventoryCategory) {
                 otherPromises.push(
                     models.InventoryCategory.schema(schemaName).create({
@@ -287,18 +325,107 @@ class OnboardingService {
                         businessId: businessId,
                         outletId: outletId,
                         name: 'Default Inventory Category'
-                    }).then(ic => records.push({ type: 'inventory_category', id: ic.id }))
+                    }).then(ic => {
+                        records.push({ type: 'inventory_category', id: ic.id });
+                        console.log(`✅ [OnboardingService] STEP 4: Inventory Category created - ID: ${ic.id}`);
+                    })
                 );
             }
 
+            // Create default product
+            if (models.Product) {
+                const productId = uuidv4();
+                await models.Product.schema(schemaName).create({
+                    id: productId,
+                    businessId: businessId,
+                    outletId: outletId,
+                    name: 'Sample Product',
+                    description: 'Default product created during onboarding',
+                    price: 100.00,
+                    sku: 'SAMPLE-001',
+                    isActive: true,
+                    categoryId: records.find(r => r.type === 'category')?.id
+                });
+                records.push({ type: 'product', id: productId });
+                console.log(`✅ [OnboardingService] STEP 4: Product created - ID: ${productId} | Name: Sample Product`);
+            }
+
             await Promise.all(otherPromises);
-            console.log(`[OnboardingService] ✅ Default data inserted in ${Date.now() - startTime}ms`);
+            console.log(`✅ [OnboardingService] STEP 5: All default data inserted in ${Date.now() - startTime}ms`);
+            console.log(`🔍 [OnboardingService] STEP 5: Created records:`, records);
 
         } catch (error) {
-            console.error('[OnboardingService] ⚠️ Default data insertion error:', error.message);
+            console.error('[OnboardingService] 🚨 CRITICAL: Default data insertion error:', error.message);
+            throw error;
         }
 
         return { records, outlet };
+    }
+
+    async _validateOnboardingCompleteness(models, schemaName, businessId, outletId) {
+        console.log(`🔍 [OnboardingService] VALIDATING: Ensuring all required data exists for ${schemaName}`);
+        
+        const requirements = {
+            outlet: { model: 'Outlet', name: 'Outlet', required: true },
+            area: { model: 'Area', name: 'Area', required: true },
+            table: { model: 'Table', name: 'Table', required: true },
+            category: { model: 'Category', name: 'Category', required: true },
+            product: { model: 'Product', name: 'Product', required: true }
+        };
+
+        const validationResults = {};
+
+        try {
+            for (const [key, config] of Object.entries(requirements)) {
+                console.log(`🔍 [OnboardingService] Checking ${config.name} existence...`);
+                
+                if (!models[config.model]) {
+                    console.log(`🚨 [OnboardingService] Model ${config.model} not available`);
+                    validationResults[key] = { exists: false, count: 0, error: 'Model not available' };
+                    continue;
+                }
+
+                const count = await models[config.model].schema(schemaName).count({
+                    where: { businessId }
+                });
+
+                validationResults[key] = { 
+                    exists: count > 0, 
+                    count,
+                    required: config.required 
+                };
+
+                if (config.required && count === 0) {
+                    console.log(`🚨 [OnboardingService] REQUIRED ${config.name} MISSING - Count: ${count}`);
+                } else {
+                    console.log(`✅ [OnboardingService] ${config.name} exists - Count: ${count}`);
+                }
+            }
+
+            // Check for missing required data
+            const missingRequired = Object.entries(validationResults)
+                .filter(([key, result]) => result.required && !result.exists)
+                .map(([key]) => key);
+
+            if (missingRequired.length > 0) {
+                const errorDetails = {
+                    missing: missingRequired,
+                    details: validationResults,
+                    businessId,
+                    schemaName
+                };
+                
+                console.log(`🚨 [OnboardingService] ONBOARDING INCOMPLETE: Missing ${missingRequired.join(', ')}`);
+                throw new Error(`Onboarding incomplete: Missing required data - ${missingRequired.join(', ')}`);
+            }
+
+            console.log(`✅ [OnboardingService] ONBOARDING COMPLETE: All required data exists`);
+            return { success: true, validationResults };
+
+        } catch (error) {
+            console.error(`🚨 [OnboardingService] Onboarding validation failed:`, error.message);
+            throw error;
+        }
     }
 
     async getOnboardingStatus(businessId) {

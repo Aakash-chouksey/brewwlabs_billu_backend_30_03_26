@@ -20,6 +20,7 @@ const businessTimingController = wrapController(require('../../controllers/tenan
 const outletController = wrapController(require('../../controllers/tenant/outletController'));
 const paymentController = wrapController(require('../../controllers/tenant/paymentController'));
 const orderController = wrapController(require('../../controllers/tenant/orderController'));
+const settlementController = wrapController(require('../../controllers/tenant/settlementController'));
 const ebillController = wrapController(require('../../controllers/tenant/ebillController'));
 const salesController = wrapController(require('../../controllers/tenant/salesController'));
 const reportController = wrapController(require('../../controllers/tenant/reportController'));
@@ -32,6 +33,7 @@ const inventoryController = wrapController(require('../../controllers/tenant/inv
 const inventoryCategoryController = wrapController(require('../../controllers/tenant/inventoryCategoryController'));
 const recipeController = wrapController(require('../../controllers/tenant/recipeController'));
 const rollTrackingController = wrapController(require('../../controllers/tenant/rollTrackingController'));
+const kitchenController = wrapController(require('../../controllers/tenant/kitchenController'));
 const whatsappController = wrapController(require('../../controllers/tenant/whatsappController'));
 const wastageController = wrapController(require('../../controllers/tenant/wastageController'));
 const stockController = wrapController(require('../../controllers/tenant/stockController'));
@@ -119,6 +121,7 @@ router.post('/orders', orderController.addOrder);
 router.get('/orders/archived', orderController.getArchivedOrders);
 router.get('/orders/:id', orderController.getOrderById);
 router.put('/orders/:id', orderController.updateOrder);
+router.post('/orders/:id/settle', settlementController.settleOrder);
 
 // ==========================================
 // E-BILL ROUTES
@@ -241,12 +244,16 @@ router.delete('/inventory/suppliers/:id', supplierController.deleteSupplier);
 // ==========================================
 router.get('/users', staffController.getUsers);
 router.post('/users', staffController.createStaff);
+router.put('/users/:id', staffController.updateStaff);
+router.delete('/users/:id', staffController.deleteStaff);
 
 // ==========================================
 // PRODUCT TYPE ROUTES
 // ==========================================
 router.get('/product-types', productTypeController.getProductTypes);
 router.post('/product-types', productTypeController.createProductType);
+router.put('/product-types/:id', productTypeController.updateProductType);
+router.delete('/product-types/:id', productTypeController.deleteProductType);
 
 // ==========================================
 // EXPENSE TYPE ROUTES
@@ -269,6 +276,13 @@ router.delete('/tables-management/:id', tableManagementController.deleteTable);
 // ==========================================
 router.get('/live-orders', liveController.getLiveOrders);
 router.get('/live-stats', liveController.getLiveStats);
+
+// ==========================================
+// KITCHEN/KOT ROUTES
+// ==========================================
+router.get('/kitchen/orders', kitchenController.getKitchenOrders);
+router.put('/kitchen/orders/:id/status', kitchenController.updateKitchenOrderStatus);
+router.get('/kitchen/stats', kitchenController.getKitchenStats);
 
 // ==========================================
 // CONTROL CENTER ROUTES

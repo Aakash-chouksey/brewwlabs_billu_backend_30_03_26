@@ -1,0 +1,721 @@
+{
+  "info": {
+    "_postman_id": "brewwlabs-pos-api-v2",
+    "name": "BrewwLabs POS API - Verified Collection",
+    "description": "Complete and verified API collection for BrewwLabs POS. All routes verified from backend source code.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8000", "type": "string"},
+    {"key": "accessToken", "value": "YOUR_ACCESS_TOKEN", "type": "string"},
+    {"key": "outletId", "value": "YOUR_OUTLET_ID", "type": "string"},
+    {"key": "userId", "value": "USER_ID", "type": "string"},
+    {"key": "orderId", "value": "ORDER_ID", "type": "string"},
+    {"key": "tableId", "value": "TABLE_ID", "type": "string"},
+    {"key": "productId", "value": "PRODUCT_ID", "type": "string"},
+    {"key": "categoryId", "value": "CATEGORY_ID", "type": "string"},
+    {"key": "areaId", "value": "AREA_ID", "type": "string"}
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"your-email@cafe.com\",\n  \"password\": \"your-password\",\n  \"latitude\": 0,\n  \"longitude\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Cookie", "value": "refreshToken=YOUR_REFRESH_TOKEN"}],
+            "url": "{{baseUrl}}/api/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 Onboarding",
+      "item": [
+        {
+          "name": "Register Business",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/onboarding/business",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Billu Cafe\",\n  \"businessEmail\": \"billu@cafe.com\",\n  \"adminName\": \"Billu Owner\",\n  \"adminEmail\": \"billu@cafe.com\",\n  \"adminPassword\": \"password123\",\n  \"businessType\": \"CAFE\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Users/Staff - /api/tenant/users",
+      "item": [
+        {
+          "name": "Get All Staff",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/users"
+          }
+        },
+        {
+          "name": "Create Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@cafe.com\",\n  \"password\": \"password123\",\n  \"role\": \"Waiter\",\n  \"phone\": \"+1234567890\",\n  \"salary\": 5000,\n  \"outletId\": \"{{outletId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Staff",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/users/{{userId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Updated\",\n  \"role\": \"Manager\",\n  \"salary\": 6000\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/users/{{userId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Products - /api/tenant/products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenant/products?categoryId={{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tenant", "products"],
+              "query": [{"key": "categoryId", "value": "{{categoryId}}"}]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/products",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "name", "value": "Cappuccino", "type": "text"},
+                {"key": "price", "value": "150", "type": "text"},
+                {"key": "categoryId", "value": "{{categoryId}}", "type": "text"},
+                {"key": "description", "value": "Rich coffee", "type": "text"},
+                {"key": "isActive", "value": "true", "type": "text"},
+                {"key": "taxRate", "value": "5", "type": "text"},
+                {"key": "image", "type": "file", "src": "/path/to/image.jpg"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/products/{{productId}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "name", "value": "Updated Name", "type": "text"},
+                {"key": "price", "value": "175", "type": "text"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/products/{{productId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📁 Categories - /api/tenant/categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/categories"
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/categories",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "name", "value": "Beverages", "type": "text"},
+                {"key": "image", "type": "file", "src": "/path/to/image.jpg"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/categories/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/categories/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Orders - /api/tenant/orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenant/orders?outletId={{outletId}}&status=&startDate=&endDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tenant", "orders"],
+              "query": [
+                {"key": "outletId", "value": "{{outletId}}"},
+                {"key": "status", "value": ""},
+                {"key": "startDate", "value": ""},
+                {"key": "endDate", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{userId}}\",\n  \"tableId\": \"{{tableId}}\",\n  \"items\": [{\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 2,\n    \"notes\": \"Less sugar\"\n  }],\n  \"type\": \"DINE_IN\",\n  \"discount\": 10,\n  \"tax\": 18\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/orders/{{orderId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CLOSED\",\n  \"discount\": 20,\n  \"tax\": 18\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Archived Orders",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/orders/archived"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🍽️ Tables - /api/tenant/tables",
+      "item": [
+        {
+          "name": "Get All Tables",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenant/tables?outletId={{outletId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tenant", "tables"],
+              "query": [{"key": "outletId", "value": "{{outletId}}"}]
+            }
+          }
+        },
+        {
+          "name": "Create Table",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/tables",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableNo\": \"T-01\",\n  \"name\": \"Table 1\",\n  \"capacity\": 4,\n  \"areaId\": \"{{areaId}}\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Table",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/tables/{{tableId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"VIP Table\",\n  \"capacity\": 6\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Table",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/tables/{{tableId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 Areas - /api/tenant/areas",
+      "item": [
+        {
+          "name": "Get All Areas",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenant/areas?outletId={{outletId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tenant", "areas"],
+              "query": [{"key": "outletId", "value": "{{outletId}}"}]
+            }
+          }
+        },
+        {
+          "name": "Create Area",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/areas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Hall\",\n  \"description\": \"Main dining area\",\n  \"outletId\": \"{{outletId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Area",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/areas/{{areaId}}"
+          }
+        },
+        {
+          "name": "Delete Area",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/areas/{{areaId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏪 Outlets - /api/tenant/outlets",
+      "item": [
+        {
+          "name": "Get All Outlets",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/outlets"
+          }
+        },
+        {
+          "name": "Create Outlet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/outlets",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Downtown Branch\",\n  \"address\": \"123 Main St\",\n  \"phone\": \"+1234567890\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Outlet",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/outlets/{{outletId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "💰 Payments - /api/tenant/payments",
+      "item": [
+        {
+          "name": "Create Razorpay Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/payments/create-order",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500,\n  \"currency\": \"INR\",\n  \"receipt\": \"order_rcptid_11\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/payments/verify",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpayOrderId\": \"order_123\",\n  \"razorpayPaymentId\": \"pay_123\",\n  \"razorpaySignature\": \"sig_123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Reports - /api/tenant/sales",
+      "item": [
+        {
+          "name": "Daily Sales",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenant/sales/daily?date=2026-03-29",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tenant", "sales", "daily"],
+              "query": [{"key": "date", "value": "2026-03-29"}]
+            }
+          }
+        },
+        {
+          "name": "Category Sales",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/sales/categories"
+          }
+        },
+        {
+          "name": "Item Sales",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/sales/items"
+          }
+        },
+        {
+          "name": "Payment Sales",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/sales/payments"
+          }
+        },
+        {
+          "name": "Sales Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/sales/dashboard"
+          }
+        },
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenant/dashboard?outletId={{outletId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tenant", "dashboard"],
+              "query": [{"key": "outletId", "value": "{{outletId}}"}]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📧 E-Bill - /api/tenant/ebill",
+      "item": [
+        {
+          "name": "Send E-Bill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/ebill/send",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"email\": \"customer@example.com\",\n  \"phone\": \"+1234567890\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "Tenant Status",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/status"
+          }
+        },
+        {
+          "name": "System Health",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/system-health"
+          }
+        },
+        {
+          "name": "Tenant Health",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏭 Inventory - /api/tenant/inventory",
+      "item": [
+        {
+          "name": "Get Items",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/inventory/items"
+          }
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/inventory/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Coffee Beans\",\n  \"sku\": \"CB-001\",\n  \"currentStock\": 50,\n  \"unit\": \"kg\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Low Stock",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/inventory/low-stock"
+          }
+        },
+        {
+          "name": "Get Suppliers",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/inventory/suppliers"
+          }
+        },
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/inventory/suppliers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ABC Supplies\",\n  \"contactPerson\": \"John\",\n  \"phone\": \"+1234567890\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Product Types - /api/tenant/product-types",
+      "item": [
+        {
+          "name": "Get Product Types",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/product-types"
+          }
+        },
+        {
+          "name": "Create Product Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/tenant/product-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vegan\",\n  \"description\": \"Plant-based\",\n  \"icon\": \"🌱\",\n  \"color\": \"#10B981\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📈 Analytics - /api/tenant/analytics",
+      "item": [
+        {
+          "name": "Sales Trends",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/analytics/trends"
+          }
+        },
+        {
+          "name": "Top Products",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/analytics/top-products"
+          }
+        },
+        {
+          "name": "Peak Hours",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/analytics/peak-hours"
+          }
+        },
+        {
+          "name": "Staff Performance",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": "{{baseUrl}}/api/tenant/analytics/staff-performance"
+          }
+        }
+      ]
+    }
+  ]
+}

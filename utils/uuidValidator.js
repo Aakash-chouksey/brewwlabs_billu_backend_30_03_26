@@ -36,13 +36,13 @@ function formatUUIDForDB(uuidString) {
     }
     
     try {
-        // Validate and normalize the UUID
-        const normalized = isValidUUIDString(uuidString);
-        if (!normalized) {
+        // Validate the UUID
+        const isValid = isValidUUIDString(uuidString);
+        if (!isValid) {
             return null;
         }
         
-        return normalized;
+        return uuidString;
     } catch (error) {
         console.warn(`⚠️  UUID formatting error for ${uuidString}: ${error.message}`);
         return null;

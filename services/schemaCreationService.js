@@ -60,7 +60,10 @@ class SchemaCreationService {
                  (6, 'v6_comprehensive_indexing', 'Comprehensive indexing - created via SchemaCreationService', 'schemaCreationService', NOW()),
                  (7, 'v7_baseline_complete', 'Complete baseline schema - SchemaCreationService', 'schemaCreationService', NOW()),
                  (8, 'v8_add_missing_fields', 'Added barcode, cost, tax_rate, type, notes - SchemaCreationService', 'schemaCreationService', NOW()),
-                 (9, 'v9_settings_verify', 'Settings table verification - SchemaCreationService', 'schemaCreationService', NOW())
+                 (9, 'v9_settings_verify', 'Settings table verification - SchemaCreationService', 'schemaCreationService', NOW()),
+                 (10, 'v10_inventory_transaction_null_fix', 'Inventory transaction null fix - SchemaCreationService', 'schemaCreationService', NOW()),
+                 (11, 'v11_wastage_inventory_item_fix', 'Wastage inventory item fix - SchemaCreationService', 'schemaCreationService', NOW()),
+                 (12, 'v12_add_product_type_status', 'Add status to product_types - SchemaCreationService', 'schemaCreationService', NOW())
                  ON CONFLICT (version) DO NOTHING`,
                 { transaction }
             );
@@ -435,7 +438,7 @@ class SchemaCreationService {
                 "table_id" UUID,
                 "customer_id" UUID,
                 "staff_id" UUID,
-                "status" VARCHAR(50) DEFAULT 'CREATED' NOT NULL,
+                "status" VARCHAR(50) DEFAULT 'KOT_SENT' NOT NULL,
                 "billing_subtotal" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
                 "billing_tax" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
                 "billing_discount" DECIMAL(15, 2) DEFAULT 0 NOT NULL,
@@ -552,6 +555,7 @@ class SchemaCreationService {
                 "icon" VARCHAR(255) DEFAULT '🥬',
                 "color" VARCHAR(255) DEFAULT '#10B981',
                 "category_id" UUID,
+                "status" VARCHAR(255) DEFAULT 'active',
                 "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
                 "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
             )`,
@@ -697,7 +701,7 @@ class SchemaCreationService {
                 "table_no" VARCHAR(255),
                 "capacity" INTEGER DEFAULT 4,
                 "area_id" UUID,
-                "status" VARCHAR(255) DEFAULT 'Available',
+                "status" VARCHAR(255) DEFAULT 'AVAILABLE',
                 "current_order_id" UUID,
                 "shape" VARCHAR(255) DEFAULT 'square',
                 "current_occupancy" INTEGER DEFAULT 0,

@@ -3345,7 +3345,7 @@
     "tableName": "products"
   },
   "ProductType": {
-    "hash": "5b9550932e95102e",
+    "hash": "dfdf39f275ef1679",
     "attributes": {
       "businessId": {
         "type": "UUID",
@@ -3408,6 +3408,13 @@
         "allowNull": false,
         "defaultValue": false,
         "field": "outlet_id",
+        "references": null
+      },
+      "status": {
+        "type": "STRING",
+        "allowNull": false,
+        "defaultValue": true,
+        "field": "status",
         "references": null
       },
       "updatedAt": {
@@ -4258,7 +4265,7 @@
     "tableName": "suppliers"
   },
   "Table": {
-    "hash": "65f774072ac81807",
+    "hash": "a9f5b1e7629a4a18",
     "attributes": {
       "areaId": {
         "type": "UUID",
@@ -4345,6 +4352,7 @@
       },
       "status": {
         "type": "STRING",
+        "allowNull": false,
         "defaultValue": true,
         "field": "status",
         "references": null

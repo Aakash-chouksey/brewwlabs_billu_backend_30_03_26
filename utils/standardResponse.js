@@ -61,74 +61,61 @@ const responseValidationMiddleware = (req, res, next) => {
 
     // 1. If data is not an object or is null, wrap it
     let responseData = data;
-    if (!data || typeof data !== 'object') {
+    if (data === null || data === undefined || typeof data !== 'object') {
        responseData = {
           success: res.statusCode < 400,
-          message: res.statusCode < 400 ? "OK" : "Error Occurred",
+          message: res.statusCode < 400 ? "Success" : "Error Occurred",
           data: data
        };
     }
 
-    // 2. Normalize Response Structure (non-recursive to prevent stack overflow)
+    // 2. Normalize Response Structure
     const cleanData = {};
     
-    // Ensure core success/message fields
-    cleanData.success = responseData.success !== undefined 
-      ? !!responseData.success 
-      : res.statusCode < 400;
+    // Explicitly check for success field
+    if (responseData.success !== undefined) {
+      cleanData.success = !!responseData.success;
+    } else {
+      cleanData.success = res.statusCode < 400;
+    }
       
-    cleanData.message = responseData.message || (cleanData.success ? "OK" : "Error Occurred");
+    cleanData.message = responseData.message || (cleanData.success ? "Success" : "Error Occurred");
     
-    // 3. Extract payload without deep cleaning (avoid circular ref issues)
-    let payloadToProcess = responseData.data !== undefined ? responseData.data : responseData;
+    // 3. Extract payload
+    let payloadToProcess;
     
-    // If already in standard format, use data field
+    // If it's already in the { success, message, data } format, use the data field
     if (responseData.success !== undefined && responseData.data !== undefined) {
-       payloadToProcess = responseData.data;
+      payloadToProcess = responseData.data;
     } else if (Array.isArray(responseData)) {
-       payloadToProcess = responseData;
-    } else if (typeof responseData === 'object' && responseData !== null) {
-       // Exclude standard fields from payload
-       const { success: _, message: __, ...rest } = responseData;
-       payloadToProcess = rest;
+      payloadToProcess = responseData;
+    } else {
+      // It's a plain object but doesn't follow the format, or it's a model
+      const { success, message, ...rest } = responseData;
+      // If after removing success/message there's nothing left, and it was a flat object
+      if (Object.keys(rest).length === 0 && (responseData.success !== undefined || responseData.message !== undefined)) {
+        payloadToProcess = null;
+      } else {
+        payloadToProcess = rest;
+      }
     }
 
-    // 4. Safe serialization: Handle Sequelize models and arrays WITHOUT recursion
-    // Use JSON.stringify with replacer to handle circular references
+    // 4. Safe serialization
     try {
       if (Array.isArray(payloadToProcess)) {
-        // Map array items - call toJSON if available, otherwise use as-is
         cleanData.data = payloadToProcess.map(item => {
           if (item && typeof item.toJSON === 'function') {
-            try {
-              return item.toJSON();
-            } catch (e) {
-              // If toJSON fails (circular ref), return plain object
-              return Object.keys(item).reduce((acc, key) => {
-                if (!key.startsWith('_') && typeof item[key] !== 'function') {
-                  acc[key] = item[key];
-                }
-                return acc;
-              }, {});
-            }
+            try { return item.toJSON(); } catch (e) { return item; }
           }
           return item;
         });
       } else if (payloadToProcess && typeof payloadToProcess.toJSON === 'function') {
-        // Single Sequelize model
-        try {
-          cleanData.data = payloadToProcess.toJSON();
-        } catch (e) {
-          // If toJSON fails, extract dataValues or use empty object
-          cleanData.data = payloadToProcess.dataValues || {};
-        }
+        try { cleanData.data = payloadToProcess.toJSON(); } catch (e) { cleanData.data = payloadToProcess; }
       } else {
-        // Plain object or primitive - no deep cleaning to avoid circular refs
         cleanData.data = payloadToProcess;
       }
     } catch (err) {
       console.error('⚠️ Response cleaning error:', err.message);
-      // Fallback: return data as-is
       cleanData.data = payloadToProcess;
     }
 

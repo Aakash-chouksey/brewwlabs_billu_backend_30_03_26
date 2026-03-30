@@ -28,6 +28,7 @@ const { globalErrorHandler } = require('./middlewares/globalErrorHandlers');
 // Legacy middleware removed for Neon safety
 const { standardResponseMiddleware, responseValidationMiddleware } = require('./utils/standardResponse');
 const neonTransactionSafeExecutor = require('./services/neonTransactionSafeExecutor');
+const socketService = require('./services/socketService');
 
 // Global handlers for production safety
 process.on('unhandledRejection', (reason, promise) => {
@@ -468,6 +469,10 @@ const initializeNeonSafeApp = async () => {
 const startNeonSafeServer = async () => {
   try {
     await initializeNeonSafeApp();
+    
+    // Initialize Socket.io
+    socketService.init(server);
+    console.log('📡 Socket.io initialized for real-time order tracking');
     
     server.listen(PORT, () => {
       console.log(`🚀 Neon-Safe Server running on port ${PORT}`);

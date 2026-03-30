@@ -47,7 +47,10 @@ module.exports = (sequelize) => {
             field: 'status',
             type: DataTypes.STRING(50),
             allowNull: false,
-            defaultValue: 'CREATED'
+            defaultValue: 'PENDING',
+            validate: {
+                isIn: [['PENDING', 'CREATED', 'KOT_SENT', 'IN_PROGRESS', 'PREPARING', 'READY', 'SERVED', 'COMPLETED', 'CLOSED', 'CANCELLED', 'ARCHIVED']]
+            }
         },
         billingSubtotal: {
             field: 'billing_subtotal',

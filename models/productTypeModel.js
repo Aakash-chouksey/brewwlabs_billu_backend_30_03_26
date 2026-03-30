@@ -45,6 +45,12 @@ module.exports = (sequelize) => {
             field: 'category_id',
             type: DataTypes.UUID,
             allowNull: true
+        },
+        status: {
+            field: 'status',
+            type: DataTypes.STRING,
+            defaultValue: 'active',
+            allowNull: false
         }
     }, {
         tableName: 'product_types',

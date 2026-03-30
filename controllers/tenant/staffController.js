@@ -64,17 +64,17 @@ exports.createStaff = async (req, res, next) => {
             if (existing) throw createHttpError(409, "Email already registered");
 
             return await User.create({
-                business_id: business_id,
-                outlet_id: outletId || null,
+                businessId: business_id,
+                outletId: outletId || null,
                 name,
                 email,
                 password: hashedPassword,
                 phone,
                 role,
                 salary: Number(salary) || 0,
-                is_active: true,
-                is_verified: true,
-                panel_type: 'TENANT'
+                isActive: true,
+                isVerified: true,
+                panelType: 'TENANT'
             }, { transaction });
         });
 

@@ -55,6 +55,7 @@ module.exports = {
                 "icon" VARCHAR(255) DEFAULT '🥬',
                 "color" VARCHAR(255) DEFAULT '#10B981',
                 "category_id" UUID,
+                "status" VARCHAR(50) DEFAULT 'active',
                 "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
                 "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
             )`,

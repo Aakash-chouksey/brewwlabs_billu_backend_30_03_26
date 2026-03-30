@@ -12,10 +12,10 @@ const { extractUUIDFromHeaders, isValidUUID, formatUUIDForDB } = require('../uti
  */
 const tenantContextEnhancer = (req, res, next) => {
     try {
-        // Extract UUIDs from headers with validation (optional)
-        const brandId = extractUUIDFromHeaders(req.headers, 'x-brand-id');
-        const tenantId = extractUUIDFromHeaders(req.headers, 'x-tenant-id');
-        const outletId = extractUUIDFromHeaders(req.headers, 'x-outlet-id');
+        // Extract UUIDs from headers with validation
+        const brandId = extractUUIDFromHeaders(req.headers, 'x-brand-id') || formatUUIDForDB(req.query.brandId);
+        const tenantId = extractUUIDFromHeaders(req.headers, 'x-tenant-id') || formatUUIDForDB(req.query.tenantId);
+        const outletId = extractUUIDFromHeaders(req.headers, 'x-outlet-id') || formatUUIDForDB(req.query.outletId);
         const businessId = brandId; // Alias for consistency
 
         // Enhanced tenant context (make fields optional)

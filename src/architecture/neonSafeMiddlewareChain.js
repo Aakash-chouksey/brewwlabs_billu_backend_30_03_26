@@ -1,6 +1,7 @@
 const path = require('path');
 const { neonSafeTenantMiddleware, neonSafeModelInjection } = require('../../middlewares/tenantMiddleware');
 const tenantStatusMiddleware = require('../../middlewares/tenantStatusMiddleware');
+const tenantContextEnhancer = require('../../middlewares/tenantContextEnhancer');
 const neonTransactionSafeExecutor = require('../../services/neonTransactionSafeExecutor');
 const { enforcePublicSchema, resetSchemaToPublic } = require('../../middlewares/schemaEnforcement');
 
@@ -24,6 +25,7 @@ const applyNeonSafeMiddlewareChains = (app) => {
         require('../../middlewares/globalErrorHandlers').requestTimeoutMiddleware(30000),
         standardResponse,
         require('../../middlewares/tokenVerification').isVerifiedUser,
+        tenantContextEnhancer,
         neonSafeTenantMiddleware,
         neonSafeModelInjection,
         tenantStatusMiddleware,

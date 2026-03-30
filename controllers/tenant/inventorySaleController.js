@@ -123,7 +123,11 @@ exports.getInventorySales = async (req, res, next) => {
 
         console.log('[INVENTORY SALE CONTROLLER] getInventorySales result count:', Array.isArray(plainData) ? plainData.length : 'non-array');
         
-        res.json({ success: true, data: plainData });
+        res.json({ 
+            success: true, 
+            message: "Inventory sales retrieved successfully",
+            data: plainData 
+        });
     } catch (error) {
         next(error);
     }

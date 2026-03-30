@@ -25,7 +25,11 @@ exports.getTimings = async (req, res, next) => {
         console.log('[TIMING CONTROLLER] getTimings result:', JSON.stringify(result, null, 2).substring(0, 500));
         
         const responseData = result.data || result;
-        res.json({ success: true, data: responseData });
+        res.json({ 
+            success: true, 
+            message: "Timings retrieved successfully",
+            data: responseData 
+        });
     } catch (error) {
         next(error);
     }
